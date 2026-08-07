@@ -72,6 +72,22 @@
     padding:5px 10px;border-radius:7px;}
   .del:hover{background:#fdecec;}
   .empty{padding:44px;text-align:center;color:var(--ink3);font-size:13.5px;}
+  .idBtn{border:0;background:none;padding:4px 0;color:var(--accent);font:inherit;
+    font-weight:800;text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+  #historyDialog{width:min(92vw,560px);border:0;border-radius:20px;padding:0;
+    color:var(--ink);background:var(--surface);box-shadow:var(--shadow-lg);}
+  #historyDialog::backdrop{background:rgba(21,29,51,.5);backdrop-filter:blur(3px);}
+  .historyHead{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;
+    border-bottom:1px solid var(--line);}
+  .historyHead h2{margin:0;font-size:17px;}
+  .historyHead button{border:0;background:#eef1f8;border-radius:9px;padding:7px 11px;cursor:pointer;}
+  .historyList{max-height:60vh;overflow:auto;padding:10px 20px 18px;}
+  .historyRow{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:11px 0;
+    border-bottom:1px solid var(--line);font-size:13px;}
+  .historyRow time{color:var(--ink2);}
+  .historyRow .ok{color:#16834b;font-weight:800;}
+  .historyRow .fail{color:var(--danger);font-weight:800;}
+  .historyRow small{grid-column:1/-1;color:var(--ink3);}
 </style>
 </head>
 <body>
@@ -120,6 +136,11 @@
     <div class="empty" id="empty" style="display:none">아직 가입한 사람이 없어요</div>
   </div>
 </div>
+
+<dialog id="historyDialog">
+  <div class="historyHead"><h2 id="historyTitle">로그인 기록</h2><button id="btnHistoryClose">닫기</button></div>
+  <div class="historyList" id="historyList"></div>
+</dialog>
 
 <script>
 'use strict';
@@ -185,7 +206,7 @@ function render(){
     const tr = document.createElement('tr');
     const cells = [
       ['rank' + (u.score>0 && i<3 ? ' top' : ''), u.score>0 ? (i+1) : '-'],
-      ['', u.id],
+      ['idCell', u.id],
       ['pwCell', u.pw],
       ['', u.nick],
       ['muted', u.gender === 'm' ? '남자' : u.gender === 'f' ? '여자' : '-'],
@@ -197,7 +218,13 @@ function render(){
     ];
     for (const [cls, val] of cells){
       const td = document.createElement('td');
-      if (cls === 'pwCell') {
+      if (cls === 'idCell') {
+        const idBtn = document.createElement('button');
+        idBtn.className = 'idBtn';
+        idBtn.textContent = val;
+        idBtn.onclick = () => showHistory(u);
+        td.appendChild(idBtn);
+      } else if (cls === 'pwCell') {
         const chip = document.createElement('span');
         chip.className = 'pw';
         chip.textContent = val;        // textContent: 값이 그대로 표시되고 실행되지 않음
@@ -221,6 +248,28 @@ function render(){
   $('empty').textContent = all.length ? '검색 결과가 없어요' : '아직 가입한 사람이 없어요';
 }
 
+function showHistory(user){
+  $('historyTitle').textContent = `${user.id} 로그인 기록`;
+  const box = $('historyList');
+  box.innerHTML = '';
+  const history = Array.isArray(user.loginHistory) ? [...user.loginHistory].reverse() : [];
+  if (!history.length) {
+    box.innerHTML = '<div class="empty">아직 로그인 기록이 없어요</div>';
+  } else {
+    history.forEach(item => {
+      const row = document.createElement('div'); row.className = 'historyRow';
+      const time = document.createElement('time'); time.textContent = fmtDate(item.at);
+      const result = document.createElement('span');
+      result.className = item.success ? 'ok' : 'fail';
+      result.textContent = item.success ? '성공' : '실패';
+      const detail = document.createElement('small');
+      detail.textContent = `${item.provider === 'naver' ? '네이버' : '일반'}${item.reason ? ' · ' + item.reason : ''}`;
+      row.append(time, result, detail); box.appendChild(row);
+    });
+  }
+  $('historyDialog').showModal();
+}
+
 async function del(id){
   if (!confirm(`"${id}" 계정을 삭제할까요? 되돌릴 수 없어요.`)) return;
   await fetch(API + '/api/admin/delete', {
@@ -239,6 +288,7 @@ function logout(){
 $('btnLogin').onclick = () => { location.href = '/'; };
 $('btnReload').onclick = load;
 $('btnLogout').onclick = logout;
+$('btnHistoryClose').onclick = () => $('historyDialog').close();
 $('q').oninput = render;
 
 if (!adminKey) {

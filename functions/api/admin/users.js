@@ -25,6 +25,7 @@ export async function onRequestGet({ request, env }) {
         plays: u.plays || 0,
         at: u.at,
         joined: u.joined,
+        loginHistory: Array.isArray(u.loginHistory) ? u.loginHistory : [],
       };
     })
   );

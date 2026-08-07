@@ -14,7 +14,7 @@ DIM  = 0.86                      # 바깥칸 밝기
 TILES = 5                        # index.html 의 AMBIENT_TILES 와 같아야 한다
 IMG = os.path.join(os.path.dirname(__file__), '..', 'public', 'img')
 
-for name in ('bg-auth', 'bg-lobby', 'bg-game'):
+for name in ('bg-auth', 'bg-lobby', 'bg-game', 'bg-play'):
     src = Image.open(os.path.join(IMG, name + '.webp')).convert('RGB')
     w, h = src.size
     flip = src.transpose(Image.FLIP_LEFT_RIGHT)

@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#eef1f8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="눈덩이">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="img/logo-icon.webp">
+<link rel="apple-touch-icon" href="img/app-icon-192.png">
 <title>눈덩이 Snowball</title>
 <meta name="description" content="쏠수록 불어나는 블록 파괴 게임 - 친구들과 순위를 겨뤄보세요">
 <!-- 카카오톡 등으로 링크를 공유했을 때 뜨는 미리보기 카드. 상대경로로 둬도 크롤러가
@@ -20,7 +27,8 @@
 <meta name="twitter:image" content="img/og-share.jpg">
 <style>
   :root{
-    color-scheme:dark;
+    /* 모든 게임 화면을 직접 칠하므로 브라우저의 자동 다크 폼 보정을 사용하지 않는다. */
+    color-scheme:light;
     --sky1:#0d1f4d;      /* 밤하늘 */
     --sky2:#1b4fa8;
     --sky3:#5aa8f0;
@@ -50,13 +58,15 @@
     --snow-drape:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 120'%3E%3Cg fill='%23ffffff'%3E%3Cellipse cx='20' cy='13' rx='28' ry='14'/%3E%3Cellipse cx='42' cy='9' rx='15' ry='7'/%3E%3Cellipse cx='12' cy='42' rx='12' ry='22'/%3E%3Cellipse cx='13' cy='70' rx='8.5' ry='16'/%3E%3Cellipse cx='13.5' cy='92' rx='5.5' ry='11'/%3E%3Cellipse cx='14' cy='106' rx='3' ry='6.5'/%3E%3C/g%3E%3C/svg%3E");
     /* 판 안쪽 모서리에 비치는 얼음 결정 단면(깎인 면들) */
     --ice-facet:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 90'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.5' stroke-width='1.6'%3E%3Cpath d='M8 30 30 8 52 22 34 52z' fill='%23ffffff' fill-opacity='.16'/%3E%3Cpath d='M30 8 52 22 62 6' fill='%23ffffff' fill-opacity='.1'/%3E%3Cpath d='M8 30 34 52 18 68z' fill='%23ffffff' fill-opacity='.12'/%3E%3Cpath d='M52 22 34 52 66 46z' fill='%23ffffff' fill-opacity='.09'/%3E%3C/g%3E%3C/svg%3E");
+    /* 판 바닥에 옅게 비치는 눈꽃 워터마크 */
+    --flake:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg stroke='%23bcd9f2' stroke-opacity='.26' stroke-width='4' stroke-linecap='round' fill='none'%3E%3Cg%3E%3Cpath d='M50 8v84M14 29l72 42M86 29 14 71'/%3E%3Cpath d='M50 22 40 32M50 22l10 10M50 78 40 68M50 78l10 10'/%3E%3Cpath d='m28 36 1.6 14M28 36l-13.6 3M72 64l-1.6-14M72 64l13.6-3'/%3E%3Cpath d='m72 36-1.6 14M72 36l13.6 3M28 64l1.6-14M28 64l-13.6-3'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     /* 스탯 상자 위에 걸터앉는 하늘색 왕관 */
     --crown-ice:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 26'%3E%3Cpath d='M3 23 1 6l10 7 9-11 9 11 10-7-2 17z' fill='%23a9d6f7' stroke='%23ffffff' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
   html,body{margin:0;height:100%;overflow:hidden;color:var(--onSky);
     font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Malgun Gothic',sans-serif;
-    -webkit-font-smoothing:antialiased;}
+    -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
   /* 바깥 여백: 지금 화면과 같은 그림을 흐리게 깔아 틀 밖으로 자연스럽게 이어지게 한다 */
   body{display:flex;align-items:center;justify-content:center;background:#0a1836;}
   /* 가로로 3배 넓게 만든 배경 한 장. 가운데가 게임 영역과 정확히 겹치고
@@ -67,6 +77,7 @@
   #ambient.bg-auth {background-color:#01123f;}
   #ambient.bg-lobby{background-color:#0a2f8e;}
   #ambient.bg-game {background-color:#7bb9fc;}
+  #ambient.bg-play {background-color:#0d2a63;}
   /* 흐린 판을 위에 겹치되, 가운데는 마스크로 뚫어 또렷하게 남긴다 */
 
   /* 기기 틀: 세로 9:19.5 를 유지하고 화면에 맞춰 통째로 축소된다.
@@ -87,47 +98,82 @@
     width:100%;position:absolute;inset:0;
     opacity:0;pointer-events:none;transition:opacity .2s ease;}
   body.playing #app{opacity:1;pointer-events:auto;}
+  /* 게임 화면의 밤 배경. 폰에서는 #ambient 가 꺼지므로(아래 미디어쿼리) 여기서 직접 깐다 -
+     안 그러면 게임판 바깥이 맨 남색으로 남는다. */
+  #app{background:#0a1836 url("img/bg-play.webp") center center / cover no-repeat;}
 
   header{flex:0 0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
     padding:12px 16px;padding-top:max(12px, env(safe-area-inset-top));
     max-width:620px;width:100%;margin:0 auto;}
+  /* HUD 는 밤하늘 위에 얹히므로 흰 글자 + 푸른 발광이어야 읽힌다.
+     (전에는 어두운 글자색이라 배경을 깔자 그대로 묻혔다) */
   header .hudSide{text-align:left;}
-  header .hudSide .lbl{display:block;font-size:10.5px;color:var(--ink3);font-weight:700;}
-  header .hudSide b{font-size:19px;font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
-  header .hudMid{text-align:center;}
-  header .score{font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.02em;
-    font-variant-numeric:tabular-nums;line-height:1;}
+  header .hudSide .lbl{display:block;font-size:10.5px;font-weight:700;
+    color:#cfe6ff;text-shadow:0 1px 4px rgba(4,20,60,.8);}
+  header .hudSide b{font-size:21px;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+    color:#fff;text-shadow:0 0 10px rgba(120,200,255,.85), 0 2px 5px rgba(4,20,60,.8);}
+  /* 시안처럼 점수 양옆에 눈꽃과 점을 달아 가운데를 잡아준다 */
+  header .hudMid{text-align:center;position:relative;}
+  header .hudMid::before,header .hudMid::after{position:absolute;top:9px;white-space:nowrap;
+    font-size:12px;line-height:1;color:#9dc9f5;
+    text-shadow:0 0 8px rgba(120,200,255,.7);letter-spacing:3px;}
+  header .hudMid::before{content:'❄ ⋯';right:calc(100% + 12px);}
+  header .hudMid::after {content:'⋯ ❄';left:calc(100% + 12px);}
+  header .score{font-size:30px;font-weight:800;letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums;line-height:1;
+    color:#fff;text-shadow:0 0 14px rgba(120,200,255,.9), 0 2px 6px rgba(4,20,60,.85);}
   header .hudFx{display:flex;gap:4px;justify-content:center;margin-top:4px;min-height:17px;}
   header .hudFx i{font-style:normal;font-size:10.5px;font-weight:800;padding:2px 7px;
     border-radius:20px;color:#fff;animation:fxIn .22s cubic-bezier(.2,1.3,.4,1);}
   @keyframes fxIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
-  header .hudBtns{justify-self:end;display:flex;gap:8px;}
-  header #btnPause{width:38px;height:38px;padding:0;border:none;
-    border-radius:12px;background:var(--surface);color:var(--ink2);font-size:11px;
-    letter-spacing:1px;display:flex;align-items:center;justify-content:center;
-    box-shadow:var(--shadow-sm);}
-  header #btnPause:active{transform:scale(.94);background:#f2f5fb;}
-  /* 임시 테스트용: 게임오버 화면 확인용. 점선 테두리로 정식 버튼과 구분해둔다 - 나중에 지울 것 */
-  header #btnDebugDie{width:38px;height:38px;padding:0;
-    border:1.5px dashed rgba(229,72,77,.55);border-radius:12px;
-    background:rgba(229,72,77,.12);color:var(--danger);font-size:16px;
-    display:flex;align-items:center;justify-content:center;}
-  header #btnDebugDie:active{transform:scale(.94);background:rgba(229,72,77,.22);}
+  header .hudBtns{justify-self:end;display:flex;gap:9px;align-items:center;}
+  /* 시안의 얼음 버튼: 유리구슬 같은 몸통 + 위에 얹힌 눈 + 푸른 발광 */
+  header .hudBtns button{width:40px;height:40px;padding:0;position:relative;
+    display:flex;align-items:center;justify-content:center;
+    border:1.5px solid rgba(255,255,255,.85);
+    background:
+      radial-gradient(120% 95% at 32% 22%, rgba(255,255,255,.95) 0%, rgba(214,238,255,.85) 34%,
+                      rgba(150,206,248,.72) 68%, rgba(104,171,231,.72) 100%);
+    box-shadow:0 0 14px rgba(120,200,255,.55), inset 0 2px 6px rgba(255,255,255,.9),
+               inset 0 -5px 10px rgba(40,110,190,.30), 0 4px 10px rgba(4,20,60,.45);
+    color:#12386e;font-size:15px;letter-spacing:1px;
+    transition:transform .08s;}
+  header .hudBtns button::after{content:'';position:absolute;left:14%;right:14%;top:-3px;height:9px;
+    background:#fff;border-radius:50% 50% 44% 44%;
+    box-shadow:0 2px 3px rgba(120,170,220,.45);}
+  header .hudBtns button:active{transform:scale(.94);}
+  header #btnPause{border-radius:12px;font-size:11px;}
+  /* 임시 테스트용: 게임오버 화면 확인용 - 배포 전에 지울 것 */
+  header #btnDebugDie{border-radius:50%;font-size:17px;}
 
   #stage{position:relative;flex:1 1 auto;display:flex;align-items:center;
     justify-content:center;min-height:0;padding:4px 10px;}
-  canvas{touch-action:none;background:var(--field);border-radius:18px;
+  /* 캔버스는 매 프레임 지워지므로 CSS 배경이 그대로 판 바닥이 된다.
+     위가 살짝 푸르고 가운데가 하얀 언 호수면 + 옅은 눈꽃. 박스 모양(둥글기·그림자)은 원래대로. */
+  canvas{touch-action:none;border-radius:18px;
+    background:
+      var(--flake) 13% 17% / 17% auto no-repeat,
+      var(--flake) 87% 41% / 12% auto no-repeat,
+      var(--flake) 24% 73% / 10% auto no-repeat,
+      var(--flake) 74% 87% / 14% auto no-repeat,
+      linear-gradient(180deg, #cfe6fb 0%, #eef7ff 26%, #ffffff 58%, #e4f1fe 100%);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.9), var(--shadow-md);}
 
   footer{flex:0 0 auto;display:flex;gap:10px;padding:12px 16px;
     padding-bottom:max(12px, env(safe-area-inset-bottom));
     max-width:620px;width:100%;margin:0 auto;}
-  footer button{flex:1;padding:14px 0;border:none;border-radius:var(--r);
-    background:var(--surface);color:var(--ink2);font-size:14px;font-weight:700;
-    box-shadow:var(--shadow-sm);transition:transform .08s;}
+  /* 시안에서 오려낸 얼음 버튼(btn-ice-wide.webp)을 9-슬라이스로 늘려 쓴다.
+     가운데는 글자를 지우고 깨끗한 기둥으로 다시 채워둬서 라벨이 바뀌어도 안 깨진다. */
+  /* btn-ice-wide.webp 는 338x136. 위 눈 46 / 아래 40 / 좌우 96 이 원본 그대로 남을 몫이고,
+     테두리 폭은 화면에 얹힐 크기(약 0.41배)로 줄여 잡는다. 이 둘이 어긋나면 그림이 겹쳐 찍힌다. */
+  footer button{flex:1;padding:3px 0;border-style:solid;border-width:19px 39px 16px;
+    border-image:url("img/btn-ice-wide.webp") 46 96 40 96 fill stretch;
+    background:none;color:#12386e;font-size:15px;font-weight:800;
+    text-shadow:0 1px 0 rgba(255,255,255,.75);
+    filter:drop-shadow(0 4px 10px rgba(4,20,60,.45));
+    transition:transform .08s;}
   footer button:active{transform:scale(.97);}
-  footer button.active{background:var(--accent);color:var(--accent-ink);
-    box-shadow:0 4px 14px rgba(59,91,253,.32);}
+  footer button.active{color:#0b2d6b;filter:drop-shadow(0 0 12px rgba(120,200,255,.9));}
 
   /* ---- 공통 시트 ---- */
   .veil{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
@@ -254,6 +300,67 @@
   .guide i{width:14px;height:14px;border-radius:4px;flex:0 0 auto;
     box-shadow:0 1px 3px rgba(21,29,51,.18);}
   .guide b{color:var(--ink);min-width:28px;display:inline-block;font-weight:800;}
+
+  /* ---- 일시정지: 시안의 얼음 액자와 정보 계층을 게임 UI 자산으로 재현 ---- */
+  #pausePanel{padding:14px;background:rgba(2,18,66,.66);backdrop-filter:blur(10px) saturate(1.15);
+    -webkit-backdrop-filter:blur(10px) saturate(1.15);}
+  #pausePanel .pauseCard{position:relative;width:100%;max-width:360px;max-height:calc(100dvh - 28px);
+    overflow-y:auto;padding:24px 18px 16px;border-radius:30px;text-align:center;color:#fff;
+    background-image:var(--snowcap),var(--flake-w),
+      linear-gradient(180deg,rgba(43,137,242,.96),rgba(100,178,248,.92) 60%,rgba(218,241,255,.96));
+    background-repeat:no-repeat;background-position:top center,92% 8%,center;
+    background-size:100% 14px,42px 42px,auto;
+    border:3px solid rgba(235,250,255,.92);
+    box-shadow:0 0 0 3px rgba(72,177,255,.7),0 0 36px rgba(76,187,255,.75),
+      0 28px 70px rgba(0,15,65,.62),inset 0 0 0 7px rgba(196,233,255,.22),
+      inset 0 0 30px rgba(213,244,255,.42);}
+  #pausePanel .pauseCard::-webkit-scrollbar{width:0;}
+  .pauseTitle{margin:3px 0 2px;font-size:37px;font-weight:950;letter-spacing:-.055em;
+    color:#fff;-webkit-text-stroke:1.5px #ccecff;paint-order:stroke fill;
+    text-shadow:0 3px 0 #2572d2,0 6px 12px rgba(0,42,125,.35);}
+  .pauseSub{margin:0 0 15px;font-size:13px;font-weight:800;color:#e7f5ff;
+    text-shadow:0 2px 5px rgba(0,50,130,.38);}
+  .pauseSub::before,.pauseSub::after,.pauseSectionTitle::before,.pauseSectionTitle::after{
+    content:'❄';margin:0 7px;color:#dff4ff;font-size:11px;}
+  .pauseStats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:7px;
+    border-radius:19px;background:rgba(21,104,208,.25);border:1px solid rgba(255,255,255,.35);}
+  .pauseStat{min-width:0;padding:10px 3px 9px;border-radius:15px;color:#1254a6;
+    background:linear-gradient(180deg,#fff,#e8f4ff);border:1px solid rgba(255,255,255,.95);
+    box-shadow:0 4px 9px rgba(0,65,155,.18),inset 0 0 10px rgba(145,205,255,.22);}
+  .pauseStat i{display:block;height:19px;color:#398ee3;}
+  .pauseStat i svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round;}
+  .pauseStat span{display:block;margin:4px 0 1px;font-size:10.5px;font-weight:800;white-space:nowrap;}
+  .pauseStat b{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums;}
+  .pauseSectionTitle{margin:17px 0 9px;font-size:13.5px;font-weight:900;color:#edf8ff;}
+  .pauseQuick{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  #pausePanel .pauseQuick button{margin:0;padding:10px 6px 11px;border:0;border-radius:17px;
+    color:#0d54b2;background-image:var(--flake-i),linear-gradient(180deg,#fff,#eaf5ff);
+    background-repeat:no-repeat;background-position:right 9px bottom 8px,center;
+    background-size:25px 25px,auto;box-shadow:0 5px 12px rgba(0,64,150,.2);
+    font-size:13.5px;font-weight:900;}
+  .pauseQuick img{display:block;width:auto;height:45px;margin:0 auto 3px;
+    filter:drop-shadow(0 4px 5px rgba(0,50,140,.28));}
+  .pauseEffect{display:flex;align-items:center;justify-content:center;min-height:46px;padding:9px 12px;
+    border-radius:16px;color:#4a85ca;background:rgba(239,248,255,.72);
+    border:3px solid rgba(255,255,255,.42);font-size:12.5px;font-weight:850;}
+  .pauseEffect::before{content:'❄';margin-right:10px;font-size:21px;color:#6fb3ee;}
+  #pausePanel .pauseActions{margin-top:14px;}
+  #pausePanel .pauseActions button{width:100%;border:0;font-weight:900;}
+  #pausePanel #btnResume{margin:0;padding:16px 0 14px;font-size:17px;color:#fff;
+    border-style:solid;border-width:0;border-image-source:url('img/btn-primary.webp');
+    border-image-slice:55 95 35 95 fill;border-image-width:19px 32px 12px 32px;
+    background:none;text-shadow:0 2px 4px rgba(0,45,130,.5);box-shadow:none;}
+  .pauseSubActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+  #pausePanel .pauseSubActions button{margin:0;padding:13px 4px;border-radius:14px;color:#1256ae;
+    background-image:var(--flake-i),linear-gradient(180deg,#fff,#e8f4ff);
+    background-repeat:no-repeat;background-position:right 8px center,center;background-size:22px,auto;
+    box-shadow:0 4px 10px rgba(0,65,150,.16);font-size:14px;}
+  .pauseSave{margin:13px 0 0;padding-top:11px;border-top:1px solid rgba(42,126,211,.35);
+    color:#3f83c9;font-size:11.5px;font-weight:800;}
+  @media (max-height:700px){
+    #pausePanel .pauseCard{zoom:.82;max-height:calc(100dvh / .82 - 20px);}
+  }
 
   /* ---- 배너 / 버프 테두리 ---- */
   #buffBanner{position:absolute;left:50%;top:18px;
@@ -418,8 +525,9 @@
   .statRow b{font-size:21px;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
     color:#123a86;}
 
-  .panel{background:var(--surface);border-radius:16px;padding:14px 14px 8px;
-    box-shadow:var(--shadow-sm);margin-bottom:12px;}
+  .panel{background:linear-gradient(180deg,rgba(242,249,255,.97),rgba(214,233,250,.94));
+    border:1.5px solid rgba(255,255,255,.88);border-radius:16px;padding:14px 14px 8px;
+    box-shadow:0 7px 18px rgba(5,35,100,.22),inset 0 1px 0 #fff;margin-bottom:12px;}
   .panelHead{display:flex;align-items:center;justify-content:space-between;
     margin-bottom:6px;}
   .panelHead span{font-size:12.5px;font-weight:800;color:var(--ink2);}
@@ -609,11 +717,12 @@
     100%{transform:none;opacity:1}}
 
   /* 입력·카드를 감싸는 유리판 */
-  .glassCard{background:linear-gradient(180deg,rgba(255,255,255,.46),rgba(222,240,255,.34));
-    border:1.5px solid rgba(255,255,255,.62);
+  .glassCard{background:linear-gradient(180deg,rgba(176,211,250,.76),rgba(118,164,222,.68));
+    border:1.5px solid rgba(231,247,255,.9);
     border-radius:26px;padding:18px 16px 12px;
     backdrop-filter:blur(16px) saturate(1.1);-webkit-backdrop-filter:blur(16px) saturate(1.1);
-    box-shadow:0 20px 50px rgba(6,22,60,.38), inset 0 1px 0 rgba(255,255,255,.6);}
+    box-shadow:0 20px 50px rgba(6,22,60,.38),inset 0 1px 0 rgba(255,255,255,.78),
+      inset 0 0 24px rgba(187,225,255,.28);}
 
   /* 카드 아래 보조 링크 두 개 */
   .cardLinks{display:flex;align-items:center;justify-content:center;gap:14px;
@@ -817,10 +926,76 @@
   .teaser .sc{font-weight:800;font-variant-numeric:tabular-nums;}
   .teaser .lbl{font-size:11.5px;color:var(--ink3);font-weight:700;
     margin-bottom:7px;letter-spacing:.02em;}
+
+  /* 모바일 브라우저의 주소창이 화면 높이를 줄여도 로그인 화면 전체가 한 번에 보이게 한다. */
+  @media (max-width: 600px){
+    body{align-items:stretch;justify-content:stretch;}
+    #frame{width:100vw;height:100dvh;max-width:none;max-height:none;}
+    .screen{padding:max(12px, env(safe-area-inset-top)) 20px
+      max(12px, env(safe-area-inset-bottom));}
+    .title{max-width:min(330px, 100%);}
+    #ambient{display:none;}
+    #titleScreen, #namePanel, #naverNickPanel, #overlay{
+      background-position:center center;background-size:cover;}
+  }
+  @media (max-width: 600px) and (max-height: 900px){
+    #titleScreen .title{zoom:.88;}
+    #lobby .lobbyWrap{zoom:.82;}
+    #lobby .lobbyTop{margin-bottom:13px;}
+    #lobby .title .play{margin-bottom:12px;}
+    #lobby .statRow{margin-bottom:11px;}
+    #lobby .panel{margin-bottom:10px;}
+    .mascot{left:10px;bottom:5px;width:92px;height:92px;}
+  }
+  @media (max-width: 600px) and (max-height: 780px){
+    #titleScreen .title{zoom:.84;}
+    #titleScreen .brand{margin-bottom:10px;}
+    #titleScreen .brand .markImg{width:96px;}
+    #titleScreen .brand .tag{margin-top:3px;}
+    #titleScreen .glassCard{padding-top:14px;}
+    .mascot{left:10px;bottom:4px;width:86px;height:86px;}
+  }
+  @media (max-width: 600px) and (max-height: 680px){
+    #titleScreen .title{zoom:.72;}
+    #lobby .lobbyWrap{zoom:.7;}
+    .mascot{width:74px;height:74px;}
+  }
+
+  /* 설치 전에는 모바일로 접속할 때마다 보여 주는 PWA 설치 안내 */
+  #installPrompt{position:fixed;inset:0;z-index:100;display:none;align-items:flex-end;
+    justify-content:center;padding:18px max(16px, env(safe-area-inset-right))
+    max(18px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    background:rgba(2,14,48,.68);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);}
+  #installPrompt.show{display:flex;animation:veilIn .2s ease-out;}
+  .installCard{position:relative;width:min(100%,390px);padding:22px 20px 18px;
+    border:2px solid rgba(255,255,255,.8);border-radius:24px;text-align:center;
+    color:#123a86;background:linear-gradient(180deg,#fff,#e7f4ff);
+    box-shadow:0 22px 60px rgba(2,14,48,.55),inset 0 0 24px rgba(124,198,255,.26);}
+  .installCard img{width:68px;height:68px;object-fit:contain;margin:-5px auto 5px;display:block;}
+  .installCard h2{margin:0 0 7px;font-size:21px;letter-spacing:-.03em;}
+  .installCard p{margin:0 0 15px;color:#5277aa;font-size:13.5px;font-weight:650;line-height:1.55;}
+  .installCard .installAction{width:100%;border:0;border-radius:14px;padding:14px 12px;
+    color:#fff;background:linear-gradient(180deg,#398cff,#1458da);font-size:16px;font-weight:800;
+    box-shadow:0 7px 18px rgba(20,88,218,.35);}
+  .installCard .installLater{margin-top:10px;padding:8px 14px;border:0;background:none;
+    color:#6f8db7;font-size:13px;font-weight:750;}
+  .installSteps{display:none;margin:-3px 0 14px;padding:11px 12px;border-radius:12px;
+    background:#dceeff;color:#315f9d;font-size:13px;font-weight:750;line-height:1.55;}
+  #installPrompt.ios .installSteps{display:block;}
 </style>
 </head>
 <body>
 <div id="ambient"></div>
+<div id="installPrompt" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+  <div class="installCard">
+    <img src="img/logo-icon.webp" alt="">
+    <h2 id="installTitle">눈덩이 앱 설치</h2>
+    <p>홈 화면에 설치하면 주소창 없이 더 넓고 편하게 플레이할 수 있어요.</p>
+    <div class="installSteps">아래의 공유 버튼 <b>□↑</b>을 누른 뒤<br><b>‘홈 화면에 추가’</b>를 선택해 주세요.</div>
+    <button type="button" class="installAction" id="btnInstall">앱 다운로드</button>
+    <button type="button" class="installLater" id="btnInstallLater">나중에 할게요</button>
+  </div>
+</div>
 <div id="frame">
 <div id="snowfall" aria-hidden="true"></div>
 <div class="mascot" id="mascot"><img src="img/mascot.webp" alt="" width="240" height="240"></div>
@@ -846,29 +1021,34 @@
   </div>
   <footer>
     <button id="btnSpeed">1배속</button>
-    <button id="btnCollect">일괄 회수</button>
+    <button id="btnNextRound">다음 라운드</button>
   </footer>
 </div>
 <div id="pausePanel" class="veil">
-  <div class="sheet">
-    <h2>멈춤</h2>
-    <div class="stats">
-      <div><span>점수</span><b id="pauseScore">0</b></div>
+  <div class="pauseCard">
+    <h2 class="pauseTitle">일시정지</h2>
+    <p class="pauseSub">게임이 잠시 멈췄어요</p>
+    <div class="pauseStats">
+      <div class="pauseStat"><i><svg viewBox="0 0 24 24"><path d="M8 4h8v4c0 3-1.8 5-4 5s-4-2-4-5zM12 13v4M8 21h8M9 17h6M8 6H4v2c0 2 1.4 3.5 3.4 3.5M16 6h4v2c0 2-1.4 3.5-3.4 3.5"/></svg></i><span>점수</span><b id="pauseScore">0</b></div>
+      <div class="pauseStat"><i><svg viewBox="0 0 24 24"><path d="M6 21V3M7 4h10l-2 4 2 4H7"/></svg></i><span>라운드</span><b id="pauseRound">1</b></div>
+      <div class="pauseStat"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M9 8.5c1.3-1 3.2-1.3 4.7-.5"/></svg></i><span>현재 공</span><b id="pauseBalls">4</b></div>
+      <div class="pauseStat"><i><svg viewBox="0 0 24 24"><path d="M5 10a7 7 0 0 1 14 0v4l-2 2v3h-3v-2h-4v2H7v-3l-2-2z"/><circle cx="9" cy="11" r="1"/><circle cx="15" cy="11" r="1"/></svg></i><span>보스 처치</span><b id="pauseBoss">0</b></div>
     </div>
-    <div class="guide">
-      <div><i style="background:#f5b301"></i>숫자 = 남은 타격 수</div>
-      <div><i style="background:#e11d63"></i>👑 <b>보스</b> 체력 3배, 잡으면 공 +4</div>
-      <div><i style="background:#7c22cf"></i>▲ <b>증식</b> 때릴 때마다 주변 숫자 +2</div>
-      <div><i style="background:#f5c518"></i><b>×2</b> 날아가는 공이 2배로</div>
-      <div><i style="background:#22c55e"></i><b>+N</b> 다음 턴에 공 N개 추가</div>
-      <div><i style="background:#ef4444"></i><b>-N</b> 다음 턴 공 N개 감소</div>
-      <div><i style="background:#ff6b35"></i>💥 <b>폭탄</b> 주변 3×3 즉시 파괴</div>
-      <div><i style="background:#8b5cf6"></i>⚡ <b>분열</b> 이번 턴 벽 튕길 때마다 공이 늘어남</div>
-      <div><i style="background:#f59e0b"></i>💰 <b>2배</b> 이번 턴 점수 2배</div>
+    <div class="pauseSectionTitle">빠른 메뉴</div>
+    <div class="pauseQuick">
+      <button id="btnPauseHow"><img src="img/icon-howto.webp" alt="">게임 방법</button>
+      <button id="btnPauseGuide"><img src="img/icon-guide.webp" alt="">블록 도감</button>
     </div>
-    <button id="btnResume">이어하기</button>
-    <button id="btnName" class="ghost">로비로</button>
-    <button id="btnRestart" class="ghost">처음부터</button>
+    <div class="pauseSectionTitle">이번 턴 효과</div>
+    <div class="pauseEffect" id="pauseEffect">적용 중인 효과가 없어요</div>
+    <div class="pauseActions">
+      <button id="btnResume">이어하기</button>
+      <div class="pauseSubActions">
+        <button id="btnName">로비로</button>
+        <button id="btnRestart">처음부터</button>
+      </div>
+    </div>
+    <p class="pauseSave">ⓘ 진행 상황은 자동으로 저장됩니다.</p>
   </div>
 </div>
 <div id="overlay" class="screen">
@@ -983,7 +1163,7 @@
       <label class="keepRow">
         <input type="checkbox" id="keepId">
         <span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19 7.4"/></svg></span>
-        <span class="keepLabel">아이디 저장</span>
+        <span class="keepLabel">로그인 정보 저장</span>
       </label>
       <div class="err" id="authErr"></div>
       <button id="btnGoLogin">로그인</button>
@@ -1057,6 +1237,7 @@
       <div class="field naverField">
         <input id="naverPwMock" type="password" placeholder="비밀번호" autocomplete="off">
       </div>
+      <div class="err" id="naverAuthErr"></div>
       <button id="btnNaverSubmit" class="naverSubmit">로그인</button>
       <button id="btnNaverBack" class="naverLink">뒤로</button>
       <p class="naverNote">준비 중인 화면이에요. 어떤 값을 입력해도 진행돼요.<br>실제 네이버 연동은 이후 보안 검토와 함께 붙일 예정이에요.</p>
@@ -1095,6 +1276,112 @@
 
 <script>
 'use strict';
+
+// ---- 모바일 앱 설치(PWA) ----
+// 닫기는 이번 화면에서만 유효하다. 설치 완료가 확인되기 전에는 다음 방문 때 다시 안내한다.
+(function initInstallPrompt(){
+  // 게임 로직을 단독 실행하는 Node 테스트 환경에는 브라우저 미디어 API가 없다.
+  if (typeof matchMedia !== 'function') return;
+  const prompt = document.getElementById('installPrompt');
+  const installButton = document.getElementById('btnInstall');
+  const laterButton = document.getElementById('btnInstallLater');
+  const standalone = matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const mobile = matchMedia('(pointer: coarse)').matches &&
+    (matchMedia('(max-width: 900px)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+  const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  let deferredInstall = null;
+
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    let updateWaiting = false;
+    let controllerChangeHandled = false;
+    const safeToApplyUpdate = () => {
+      const gameOver = document.getElementById('overlay')?.classList.contains('show');
+      return !document.body.classList.contains('playing') || gameOver;
+    };
+    const applyUpdateWhenSafe = () => {
+      updateWaiting = true;
+      if (!safeToApplyUpdate()) return;
+      updateWaiting = false;
+      location.reload();
+    };
+
+    addEventListener('load', async () => {
+      try {
+        const registration = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
+        await registration.update();
+      } catch(e) {}
+    });
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (controllerChangeHandled) return;
+      controllerChangeHandled = true;
+      applyUpdateWhenSafe();
+    });
+
+    // 이미 열어 둔 설치 앱도 배포 파일이 바뀌면 최대 1분 안에 새로고침한다.
+    let deployedIndexHash = '';
+    const getDeployedIndexHash = async () => {
+      const response = await fetch('./index.html', { cache: 'no-store' });
+      const bytes = new TextEncoder().encode(await response.text());
+      const digest = await crypto.subtle.digest('SHA-256', bytes);
+      return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+    };
+    const checkForAppUpdate = async () => {
+      if (document.visibilityState === 'hidden') return;
+      try {
+        const nextHash = await getDeployedIndexHash();
+        if (deployedIndexHash && nextHash !== deployedIndexHash) applyUpdateWhenSafe();
+        deployedIndexHash = nextHash;
+      } catch(e) {}
+    };
+    checkForAppUpdate();
+    setInterval(checkForAppUpdate, 60 * 1000);
+    // 플레이 중 발견한 업데이트는 게임 오버나 메인 화면으로 돌아온 직후 적용한다.
+    setInterval(() => {
+      if (updateWaiting && safeToApplyUpdate()) applyUpdateWhenSafe();
+    }, 1000);
+  }
+
+  if (standalone) {
+    try { localStorage.setItem('snowball.appInstalled', '1'); } catch(e) {}
+    return;
+  }
+
+  let alreadyInstalled = false;
+  try { alreadyInstalled = localStorage.getItem('snowball.appInstalled') === '1'; } catch(e) {}
+  if (!mobile || alreadyInstalled) return;
+
+  if (ios) {
+    prompt.classList.add('ios');
+    installButton.textContent = '설치 방법 확인';
+  }
+
+  addEventListener('beforeinstallprompt', event => {
+    event.preventDefault();
+    deferredInstall = event;
+    installButton.textContent = '앱 다운로드';
+  });
+
+  addEventListener('appinstalled', () => {
+    try { localStorage.setItem('snowball.appInstalled', '1'); } catch(e) {}
+    deferredInstall = null;
+    prompt.classList.remove('show');
+  });
+
+  installButton.addEventListener('click', async () => {
+    if (!deferredInstall) {
+      prompt.classList.add('ios');
+      installButton.textContent = ios ? '위 안내대로 설치해 주세요' : '브라우저 메뉴에서 설치해 주세요';
+      return;
+    }
+    deferredInstall.prompt();
+    await deferredInstall.userChoice;
+    deferredInstall = null;
+  });
+  laterButton.addEventListener('click', () => prompt.classList.remove('show'));
+
+  // 게임 화면이 먼저 눌리는 일을 막되 첫 페인트는 보여 준 뒤 자연스럽게 띄운다.
+  setTimeout(() => prompt.classList.add('show'), 450);
+})();
 
 const CONFIG = {
   COLS: 9,
@@ -1952,6 +2239,7 @@ const LB = {
   id: '',
   nick: '',
   token: '',
+  expiresAt: 0,
   best: 0,
   pending: 0,   // 오프라인일 때 못 올린 기록
   stats: { best: 0, bestRound: 0, plays: 0 },
@@ -1962,8 +2250,13 @@ function lbLoad(){
     LB.id = localStorage.getItem('snowball.id') || '';
     LB.nick = localStorage.getItem('snowball.nick') || '';
     LB.token = localStorage.getItem('snowball.token') || '';
+    LB.expiresAt = Number(localStorage.getItem('snowball.expiresAt') || 0);
     LB.best = Number(localStorage.getItem('snowball.best') || 0);
     LB.pending = Number(localStorage.getItem('snowball.pending') || 0);
+    if (!LB.expiresAt || LB.expiresAt <= Date.now()) {
+      LB.token = '';
+      LB.expiresAt = 0;
+    }
   } catch(e){}
 }
 function lbSaveLocal(){
@@ -1971,6 +2264,7 @@ function lbSaveLocal(){
     localStorage.setItem('snowball.id', LB.id);
     localStorage.setItem('snowball.nick', LB.nick);
     localStorage.setItem('snowball.token', LB.token);
+    localStorage.setItem('snowball.expiresAt', String(LB.expiresAt || 0));
     localStorage.setItem('snowball.best', String(LB.best));
     localStorage.setItem('snowball.pending', String(LB.pending));
   } catch(e){}
@@ -1978,7 +2272,33 @@ function lbSaveLocal(){
 function cleanField(v, max){
   return String(v||'').replace(/[\s<>"'&\\/]/g,'').trim().slice(0, max);
 }
-function lbSignedIn(){ return !!(LB.id && LB.token); }
+function lbSignedIn(){
+  if (LB.expiresAt <= Date.now()) {
+    LB.token = '';
+    LB.expiresAt = 0;
+    lbSaveLocal();
+    return false;
+  }
+  return !!(LB.id && LB.token);
+}
+
+function enforceSessionExpiry(){
+  if (!LB.token || LB.expiresAt > Date.now()) return;
+  LB.token = '';
+  LB.expiresAt = 0;
+  lbSaveLocal();
+  document.getElementById('lobby').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('pausePanel').classList.remove('show');
+  showTitle();
+  document.getElementById('authErr').textContent = '로그인 후 1시간이 지나 다시 로그인해주세요';
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') enforceSessionExpiry();
+});
+window.addEventListener('pageshow', enforceSessionExpiry);
+if (typeof setInterval === 'function') setInterval(enforceSessionExpiry, 30 * 1000);
 
 // 비밀번호: 8자 이상, 영문/숫자/특수문자를 모두 포함
 const PW_RE = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$/;
@@ -2020,14 +2340,30 @@ async function checkAvailability(kind, value, msgEl){
   }
 }
 
-// 아이디 저장: 켜져 있을 때만 타이틀 아이디 칸을 미리 채운다.
-// LB.id 자체는 지우지 않는다(점수 전송·자동 로그인이 이걸 쓴다).
+// 로그인 정보 저장: 로그인에 성공한 값만 이 기기에 보관한다.
 function keepIdGet(){
   try { return localStorage.getItem('snowball.keepId') !== '0'; } catch(e){ return true; }
 }
-function keepIdSave(){
+function keepIdSave(id, pw){
   const on = document.getElementById('keepId').checked;
-  try { localStorage.setItem('snowball.keepId', on ? '1' : '0'); } catch(e){}
+  try {
+    localStorage.setItem('snowball.keepId', on ? '1' : '0');
+    if (on && id && pw) {
+      localStorage.setItem('snowball.rememberId', id);
+      localStorage.setItem('snowball.rememberPw', pw);
+    } else if (!on) {
+      localStorage.removeItem('snowball.rememberId');
+      localStorage.removeItem('snowball.rememberPw');
+    }
+  } catch(e){}
+}
+function rememberedLogin(){
+  try {
+    return {
+      id: localStorage.getItem('snowball.rememberId') || '',
+      pw: localStorage.getItem('snowball.rememberPw') || '',
+    };
+  } catch(e) { return { id:'', pw:'' }; }
 }
 
 function renderRank(list, note){
@@ -2055,7 +2391,10 @@ async function submitScore(score, round){
     });
     const data = await res.json();
     if (!data.ok) {
-      if (res.status === 401) { LB.token = ''; lbSaveLocal(); renderRank([], '다시 로그인해주세요'); return; }
+      if (res.status === 401) {
+        LB.token = ''; LB.expiresAt = 0; lbSaveLocal();
+        renderRank([], '다시 로그인해주세요'); return;
+      }
       throw new Error(data.error || '실패');
     }
     LB.pending = 0;
@@ -2135,9 +2474,10 @@ function showTitle(){
   setAmbient('bg-lobby');      // 시안(ref1)은 로비와 같은 밝은 풍경이다
   document.getElementById('authErr').textContent = '';
   const keep = keepIdGet();
+  const remembered = rememberedLogin();
   document.getElementById('keepId').checked = keep;
-  document.getElementById('idInput').value = keep ? (LB.id || '') : '';
-  document.getElementById('pwInput').value = '';
+  document.getElementById('idInput').value = keep ? (remembered.id || LB.id || '') : '';
+  document.getElementById('pwInput').value = keep ? remembered.pw : '';
   document.getElementById('titleScreen').classList.add('show');
 }
 
@@ -2318,17 +2658,18 @@ function enterGame(){
   document.getElementById('overlay').classList.remove('show');
   document.body.classList.add('playing');      // 이때 비로소 게임판이 보인다
   setMascot(false);
-  setAmbient('bg-game');
+  setAmbient('bg-play');   // 게임 본편은 밤 배경(시안 기준)
   S.paused = false;
   const saved = loadSavedGame();
   if (saved) resumeGame(saved); else startFreshGame();
 }
 
-function applyAuth(data){
-  keepIdSave();                      // 로그인·가입에 성공한 시점의 체크 상태를 기억
+function applyAuth(data, rememberedPw){
+  keepIdSave(data.id, rememberedPw); // 성공한 로그인 정보만 저장
   LB.id = data.id;
   LB.nick = data.nick || data.id;
   LB.token = data.token;
+  LB.expiresAt = Number(data.expiresAt) || (Date.now() + 60 * 60 * 1000);
   LB.best = Math.max(LB.best, data.best || 0);
   if (data.stats) LB.stats = data.stats;
   lbSaveLocal();
@@ -2346,7 +2687,6 @@ async function doLogin(){
 
   if (!id) { errEl.textContent = '아이디를 입력해주세요'; return; }
   if (!pw) { errEl.textContent = '비밀번호를 입력해주세요'; return; }
-
   btn.disabled = true;
   errEl.textContent = '';
   try {
@@ -2362,7 +2702,7 @@ async function doLogin(){
       location.href = 'admin.html';
       return;
     }
-    applyAuth(data);
+    applyAuth(data, pw);
   } catch (e) {
     errEl.textContent = '서버에 연결할 수 없어요';
   } finally { btn.disabled = false; }
@@ -2417,7 +2757,7 @@ async function doRegister(){
     });
     const data = await res.json();
     if (!data.ok) { errEl.textContent = data.error || '가입에 실패했어요'; return; }
-    applyAuth(data);
+    applyAuth(data, pw);
   } catch (e) {
     errEl.textContent = '서버에 연결할 수 없어요';
   } finally { btn.disabled = false; }
@@ -2427,17 +2767,26 @@ async function doRegister(){
 // 지금은 네이버 화면 흉내만 내고, "로그인"을 누르면 성공한 것으로 치고
 // 새로 발급한 가상 네이버 아이디로 넘어간다. 비밀번호는 사용자가 정하지 않는다.
 let naverPending = null;
+let naverValidationTestPending = true;
 function showNaverLogin(){
   document.getElementById('titleScreen').classList.remove('show');
   document.getElementById('mascot').classList.remove('front');   // 눈덩이가 흰 네이버 화면 위로 뜨지 않게
   document.getElementById('naverIdMock').value = '';
   document.getElementById('naverPwMock').value = '';
+  document.getElementById('naverAuthErr').textContent = '';
   document.getElementById('naverScreen').classList.add('show');
   setTimeout(() => document.getElementById('naverIdMock').focus(), 80);
 }
 
 async function doNaverSubmit(){
   const btn = document.getElementById('btnNaverSubmit');
+  const errEl = document.getElementById('naverAuthErr');
+  if (naverValidationTestPending) {
+    naverValidationTestPending = false;
+    errEl.textContent = '아이디 또는 비밀번호가 달라요';
+    return;
+  }
+  errEl.textContent = '';
   btn.disabled = true;
   btn.textContent = '로그인 중...';
   await new Promise(r => setTimeout(r, 500));   // 실제 연동 전까지의 임시 연출
@@ -2476,7 +2825,9 @@ async function doNaverNickOk(){
   try {
     const res = await fetch(LB.api + '/api/register', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: naverPending.id, nick, gender, provider: 'naver' }),
+      body: JSON.stringify({
+        id: naverPending.id, nick, gender, provider: 'naver', hadFailedLoginTest: true
+      }),
     });
     const data = await res.json();
     if (!data.ok) { errEl.textContent = data.error || '가입에 실패했어요'; return; }
@@ -2579,6 +2930,23 @@ function resizeCanvas(){
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 window.addEventListener('resize', resizeCanvas);
+
+// 눈 결정이 비치는 유리구슬. 빛은 왼쪽 위에서 온다.
+function iceBall(cx, cy, r, dim){
+  ctx.save();
+  ctx.shadowColor = 'rgba(90,180,255,.9)';
+  ctx.shadowBlur = r*1.8;
+  const g = ctx.createRadialGradient(cx-r*0.35, cy-r*0.4, r*0.15, cx, cy, r);
+  g.addColorStop(0, dim ? '#dff0ff' : '#ffffff');
+  g.addColorStop(0.45, dim ? '#8fc6f5' : '#6fc0ff');
+  g.addColorStop(1, dim ? '#3f7fc0' : '#1b6fd0');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+  // 위쪽 하이라이트 한 점
+  ctx.fillStyle = 'rgba(255,255,255,.85)';
+  ctx.beginPath(); ctx.ellipse(cx-r*0.32, cy-r*0.42, r*0.30, r*0.20, -0.5, 0, Math.PI*2); ctx.fill();
+}
 
 function roundRect(ctx,x,y,w,h,r){
   ctx.beginPath();
@@ -2728,14 +3096,8 @@ function render(){
       ctx.globalAlpha = 1;
     }
   }
-  ctx.fillStyle = T.ball;
-  for (const b of S.activeBalls) {
-    ctx.beginPath(); ctx.arc(b.x, b.y, CONFIG.BALL_RADIUS, 0, Math.PI*2); ctx.fill();
-  }
-  ctx.fillStyle = T.returning;
-  for (const r of S.returning) {
-    ctx.beginPath(); ctx.arc(r.x, r.y, CONFIG.BALL_RADIUS*0.8, 0, Math.PI*2); ctx.fill();
-  }
+  for (const b of S.activeBalls) iceBall(b.x, b.y, CONFIG.BALL_RADIUS, false);
+  for (const r of S.returning)   iceBall(r.x, r.y, CONFIG.BALL_RADIUS*0.8, true);
 
   for (const p of S.popups) {
     const t = p.life/p.maxLife;
@@ -2861,10 +3223,8 @@ function renderLauncherStock(){
   if (S.state === 'gameover') return;
 
   // The ball sitting at the launch point IS the launcher marker.
-  ctx.fillStyle = S.state === 'firing' ? T.launcherIdle : T.launcher;
-  ctx.beginPath();
-  ctx.arc(S.launcherX, LAUNCHER_Y, CONFIG.BALL_RADIUS, 0, Math.PI*2);
-  ctx.fill();
+  // 조준 기준점이라 다른 공보다 크고 또렷하게 그린다.
+  iceBall(S.launcherX, LAUNCHER_Y, CONFIG.BALL_RADIUS*1.7, S.state === 'firing');
 
   if (S.state !== 'aiming' || dragging) return;
 
@@ -2923,17 +3283,30 @@ canvas.addEventListener('pointercancel', () => { dragging = false; dragStart=nul
 
 // ---- buttons ----
 const btnSpeed = document.getElementById('btnSpeed');
-const btnCollect = document.getElementById('btnCollect');
+const btnNextRound = document.getElementById('btnNextRound');
 btnSpeed.addEventListener('click', () => {
   S.speedMult = S.speedMult===1 ? 2 : S.speedMult===2 ? 4 : 1;
   btnSpeed.textContent = S.speedMult+'배속';
   btnSpeed.classList.toggle('active', S.speedMult>1);
 });
-btnCollect.addEventListener('click', () => {
+btnNextRound.addEventListener('click', () => {
+  if (S.state === 'aiming') {
+    // 아직 쏘지 않았다면 현재 공을 그대로 보존한 채 이번 라운드를 건너뛴다.
+    S.collectedForNextTurn = S.ballCount;
+    finishTurn();
+    return;
+  }
   if (S.state !== 'firing') return;
-  let iterations = 0;
-  while (S.state === 'firing' && iterations < 20000) { stepPhysics(FIXED_DT); iterations++; }
-  S.shiftAnim = 0;
+
+  // 이미 돌아온 공과 획득 보너스는 collectedForNextTurn에 들어 있다.
+  // 화면에 남은 공과 아직 발사되지 않은 공만 회수해 즉시 다음 라운드로 넘긴다.
+  S.collectedForNextTurn += S.activeBalls.length + S.fireQueueRemaining;
+  S.activeBalls.length = 0;
+  S.fireQueueRemaining = 0;
+  S.returning.length = 0;
+  S.frenzyActive = false;
+  S.scoreMult = 1;
+  finishTurn();
 });
 document.getElementById('btnRetry').addEventListener('click', () => {
   document.getElementById('overlay').classList.remove('show');
@@ -2953,12 +3326,24 @@ function setPaused(on){
   pausePanel.classList.toggle('show', on);
   if (on) {
     document.getElementById('pauseScore').textContent = S.score.toLocaleString();
+    document.getElementById('pauseRound').textContent = S.round.toLocaleString();
+    document.getElementById('pauseBalls').textContent = S.ballCount.toLocaleString();
+    document.getElementById('pauseBoss').textContent = (S.bossKills || 0).toLocaleString();
+    const effects = [];
+    if (S.frenzyActive) effects.push('⚡ 공 분열');
+    if (S.scoreMult > 1) effects.push('💰 점수 2배');
+    document.getElementById('pauseEffect').textContent = effects.length
+      ? effects.join(' · ') : '적용 중인 효과가 없어요';
   }
 }
 document.getElementById('btnPause').addEventListener('click', () => setPaused(true));
 document.getElementById('btnDebugDie').addEventListener('click', () => enterGameOver());   // 임시 테스트 버튼
 document.getElementById('btnResume').addEventListener('click', () => setPaused(false));
 document.getElementById('btnRestart').addEventListener('click', () => { setPaused(false); startFreshGame(); });
+document.getElementById('btnPauseHow').addEventListener('click', () =>
+  renderGuide(HOWTO, '게임 방법', 'img/t-howto.webp'));
+document.getElementById('btnPauseGuide').addEventListener('click', () =>
+  renderGuide(GUIDE, '블록 도감', 'img/t-guide.webp', '게임에 등장하는 블록과 아이템을 확인해 보세요!'));
 
 // ---- main loop ----
 function frame(){
@@ -2998,15 +3383,18 @@ document.getElementById('btnHowT').addEventListener('click', () => renderGuide(H
 document.getElementById('btnGuideBack').addEventListener('click', () => {
   document.getElementById('guideScreen').classList.remove('show');
   document.getElementById('mascot').classList.remove('front');
-  setMascot(true);                  // 도감은 타이틀·로비에서만 열린다
+  setMascot(!document.body.classList.contains('playing'));
 });
 document.getElementById('btnAllRank').addEventListener('click', refreshLobbyRank);
 document.getElementById('btnLobbyOut').addEventListener('click', () => {
-  LB.token = ''; lbSaveLocal();
+  LB.token = ''; LB.expiresAt = 0; lbSaveLocal();
   document.getElementById('lobby').classList.remove('show');
   showTitle();
 });
 document.getElementById('btnGoLogin').addEventListener('click', doLogin);
+document.getElementById('keepId').addEventListener('change', e => {
+  if (!e.target.checked) keepIdSave();
+});
 document.getElementById('btnGoRegister').addEventListener('click', showRegister);
 document.getElementById('btnAuthOk').addEventListener('click', doRegister);
 document.getElementById('btnAuthBack').addEventListener('click', () => {

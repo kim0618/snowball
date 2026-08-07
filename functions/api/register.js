@@ -1,5 +1,6 @@
 import {
-  ok, fail, clean, makeToken, readJson, getUser, putUser, getBoard,
+  ok, fail, clean, makeToken, readJson, getUser, putUser, getBoard, issueUserSession,
+  appendLoginHistory,
   MAX_ID, MAX_NICK, MAX_PW, PW_RE, GENDERS,
 } from '../_shared.js';
 
@@ -29,17 +30,22 @@ export async function onRequestPost({ request, env }) {
     pw = makeToken();
   }
 
-  const token = makeToken();
-  await putUser(env, id, {
-    pw, nick, gender, provider, token,
+  const user = {
+    pw, nick, gender, provider,
     score: 0, round: 0, at: null,
     bestRound: 0, plays: 0,
     joined: new Date().toISOString(),
-  });
+  };
+  const expiresAt = issueUserSession(user);
+  if (provider === 'naver' && body.hadFailedLoginTest) {
+    appendLoginHistory(user, false, 'naver', '비밀번호 오류(테스트)');
+  }
+  appendLoginHistory(user, true, provider, '가입 후 로그인');
+  await putUser(env, id, user);
   await env.SNOWBALL_KV.put(`nick:${nick}`, id);
 
   return ok({
-    id, nick, token, best: 0,
+    id, nick, token: user.token, expiresAt, best: 0,
     stats: { best: 0, bestRound: 0, plays: 0 },
     scores: await getBoard(env),
   });

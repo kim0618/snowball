@@ -40,6 +40,7 @@ const MAX_NICK = 12;
 const MAX_PW = 32;
 const MAX_SCORE = 50_000_000;
 const MAX_ENTRIES = 500;
+const USER_SESSION_MS = 60 * 60 * 1000;
 // 8자 이상, 영문/숫자/특수문자를 모두 포함
 const PW_RE = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$/;
 const GENDERS = ['m', 'f'];
@@ -72,6 +73,12 @@ function save() {
       console.error('저장 실패:', e.message);
     }
   }, 400);
+}
+
+function appendLoginHistory(u, success, provider = 'local', reason = '') {
+  const history = Array.isArray(u.loginHistory) ? u.loginHistory : [];
+  history.push({ at: new Date().toISOString(), success: !!success, provider, reason });
+  u.loginHistory = history.slice(-50);
 }
 
 const makeToken = () => crypto.randomBytes(24).toString('hex');
@@ -170,14 +177,19 @@ const server = http.createServer((req, res) => {
       }
 
       const token = makeToken();
+      const expiresAt = Date.now() + USER_SESSION_MS;
       users[id] = {
-        pw, nick, gender, provider, token,
+        pw, nick, gender, provider, token, tokenExpiresAt: expiresAt,
         score: 0, round: 0, at: null,
         bestRound: 0, plays: 0,
         joined: new Date().toISOString(),
       };
+      if (provider === 'naver' && body.hadFailedLoginTest) {
+        appendLoginHistory(users[id], false, 'naver', '비밀번호 오류(테스트)');
+      }
+      appendLoginHistory(users[id], true, provider, '가입 후 로그인');
       save();
-      return send(res, 200, { ok: true, id, nick, token, best: 0,
+      return send(res, 200, { ok: true, id, nick, token, expiresAt, best: 0,
         stats: { best: 0, bestRound: 0, plays: 0 }, scores: ranking() });
     });
   }
@@ -198,10 +210,16 @@ const server = http.createServer((req, res) => {
       }
 
       const u = users[id];
-      if (!u || u.pw !== pw) return send(res, 401, { ok: false, error: '아이디 또는 비밀번호가 달라요' });
+      if (!u || u.pw !== pw) {
+        if (u) { appendLoginHistory(u, false, 'local', '비밀번호 오류'); save(); }
+        return send(res, 401, { ok: false, error: '아이디 또는 비밀번호가 달라요' });
+      }
+      appendLoginHistory(u, true, 'local');
       u.token = makeToken();
+      u.tokenExpiresAt = Date.now() + USER_SESSION_MS;
       save();
-      return send(res, 200, { ok: true, id, nick: u.nick || id, token: u.token, best: u.score || 0,
+      return send(res, 200, { ok: true, id, nick: u.nick || id, token: u.token,
+        expiresAt: u.tokenExpiresAt, best: u.score || 0,
         stats: statsOf(u), scores: ranking() });
     });
   }
@@ -212,7 +230,7 @@ const server = http.createServer((req, res) => {
       if (!body) return send(res, 400, { ok: false, error: '잘못된 형식' });
       const id = clean(body.id, MAX_ID);
       const u = users[id];
-      if (!u || !u.token || u.token !== body.token) {
+      if (!u || !u.token || u.token !== body.token || Number(u.tokenExpiresAt) <= Date.now()) {
         return send(res, 401, { ok: false, error: '다시 로그인해주세요' });
       }
       const score = Math.floor(Number(body.score));
@@ -262,6 +280,7 @@ const server = http.createServer((req, res) => {
       plays: u.plays || 0,
       at: u.at,
       joined: u.joined,
+      loginHistory: Array.isArray(u.loginHistory) ? u.loginHistory : [],
     })).sort((a, b) => b.score - a.score);
     return send(res, 200, { ok: true, users: list });
   }

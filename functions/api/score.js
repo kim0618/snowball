@@ -1,6 +1,6 @@
 import {
   ok, fail, clean, readJson, statsOf,
-  getUser, putUser, getBoard, putBoard, withEntry, MAX_ID, MAX_SCORE,
+  getUser, putUser, getBoard, putBoard, withEntry, hasValidUserSession, MAX_ID, MAX_SCORE,
 } from '../_shared.js';
 
 export async function onRequestPost({ request, env }) {
@@ -9,7 +9,7 @@ export async function onRequestPost({ request, env }) {
 
   const id = clean(body.id, MAX_ID);
   const u = await getUser(env, id);
-  if (!u || !u.token || u.token !== body.token) {
+  if (!hasValidUserSession(u, body.token)) {
     return fail('다시 로그인해주세요', 401);
   }
 

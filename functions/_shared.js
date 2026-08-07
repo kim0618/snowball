@@ -14,6 +14,7 @@ export const MAX_NICK = 12;
 export const MAX_PW = 32;
 export const MAX_SCORE = 50_000_000;
 export const MAX_ENTRIES = 500;
+export const USER_SESSION_MS = 60 * 60 * 1000;
 export const PW_RE = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$/;
 export const GENDERS = ['m', 'f'];
 
@@ -40,6 +41,22 @@ export function makeToken() {
   const bytes = new Uint8Array(24);
   crypto.getRandomValues(bytes);
   return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+export function issueUserSession(u) {
+  u.token = makeToken();
+  u.tokenExpiresAt = Date.now() + USER_SESSION_MS;
+  return u.tokenExpiresAt;
+}
+
+export function hasValidUserSession(u, token) {
+  return !!(u && u.token && u.token === token && Number(u.tokenExpiresAt) > Date.now());
+}
+
+export function appendLoginHistory(u, success, provider = 'local', reason = '') {
+  const history = Array.isArray(u.loginHistory) ? u.loginHistory : [];
+  history.push({ at: new Date().toISOString(), success: !!success, provider, reason });
+  u.loginHistory = history.slice(-50);
 }
 
 export async function readJson(request) {

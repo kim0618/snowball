@@ -1,5 +1,5 @@
 import {
-  ok, fail, clean, makeToken, readJson, statsOf,
+  ok, fail, clean, readJson, statsOf, issueUserSession, appendLoginHistory,
   getUser, putUser, getBoard, adminCreds, newAdminSession, MAX_ID,
 } from '../_shared.js';
 
@@ -19,13 +19,17 @@ export async function onRequestPost({ request, env }) {
   }
 
   const u = await getUser(env, id);
-  if (!u || u.pw !== pw) return fail('아이디 또는 비밀번호가 달라요', 401);
+  if (!u || u.pw !== pw) {
+    if (u) { appendLoginHistory(u, false, 'local', '비밀번호 오류'); await putUser(env, id, u); }
+    return fail('아이디 또는 비밀번호가 달라요', 401);
+  }
 
-  u.token = makeToken();
+  appendLoginHistory(u, true, 'local');
+  const expiresAt = issueUserSession(u);
   await putUser(env, id, u);
 
   return ok({
-    id, nick: u.nick || id, token: u.token, best: u.score || 0,
+    id, nick: u.nick || id, token: u.token, expiresAt, best: u.score || 0,
     stats: statsOf(u), scores: await getBoard(env),
   });
 }
