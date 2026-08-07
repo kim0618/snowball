@@ -10,7 +10,7 @@ from PIL import Image, ImageFilter, ImageDraw
 import numpy as np
 SRC = sys.argv[1] if len(sys.argv) > 1 else '/mnt/c/Users/jinsung/Downloads'
 D = SRC.rstrip('/') + '/'
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'opbricks', 'img') + '/'
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'public', 'img') + '/'
 
 
 def cut(src, region, out, W, thr=0.55):

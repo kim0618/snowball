@@ -5,7 +5,7 @@ const vm = require('vm');
 const path = require('path');
 
 const BASE = process.env.BASE || 'http://localhost:8787';
-const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
 const body = html.match(/<script>([\s\S]*)<\/script>/)[1];
 
 // index.html 의 id 들을 그대로 가진 가짜 DOM
@@ -35,6 +35,7 @@ function mkNode(id) {
     fire(ev, arg) { (this._handlers[ev] || []).forEach(f => f(arg || {})); },
     setPointerCapture: noop, focus: noop,
     getContext: () => ctxStub,
+    querySelector: () => mkNode('tmp'), querySelectorAll: () => [],
     getBoundingClientRect: () => ({ left: 0, top: 0, width: 360, height: 630 }),
     append: noop, appendChild: noop, remove: noop,
     clientWidth: 360, clientHeight: 700, width: 360, height: 630,

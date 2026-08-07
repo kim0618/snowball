@@ -25,7 +25,7 @@ const crypto = require('crypto');
 
 const PORT = Number(process.env.PORT || 8790);
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
-const STATIC_DIR = process.env.STATIC_DIR || path.join(__dirname, '..');
+const STATIC_DIR = process.env.STATIC_DIR || path.join(__dirname, '..', 'public');
 const MIME = {
   '.html':'text/html; charset=utf-8', '.js':'text/javascript; charset=utf-8',
   '.css':'text/css; charset=utf-8', '.json':'application/json; charset=utf-8',

@@ -2,7 +2,7 @@
 const fs = require('fs'), vm = require('vm'), path = require('path');
 
 function load(extraExports = '') {
-  const htmlPath = path.join(__dirname, '..', 'index.html');
+  const htmlPath = path.join(__dirname, '..', 'public', 'index.html');
   const html = fs.readFileSync(htmlPath, 'utf8');
   const body = html.match(/<script>([\s\S]*)<\/script>/)[1];
   const script = body + `;globalThis.__x = { ${extraExports} };`;
@@ -23,6 +23,7 @@ function load(extraExports = '') {
     classList: { add: noop, remove: noop, toggle: noop, contains: () => false },
     addEventListener: noop, setPointerCapture: noop, appendChild: noop, append: noop,
     getContext: () => ctxStub,
+    querySelector: () => el(), querySelectorAll: () => [],
     getBoundingClientRect: () => ({ left: 0, top: 0, width: 360, height: 600 })
   });
   const sandbox = {

@@ -1,0 +1,8 @@
+name = "snow-block"
+compatibility_date = "2026-08-07"
+pages_build_output_dir = "public"
+
+# 계정·점수·순위표를 저장하는 KV (2026-08-07 생성)
+[[kv_namespaces]]
+binding = "SNOWBALL_KV"
+id = "a14cd1ec43e94fa392e948e89e9f049d"

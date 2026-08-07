@@ -1,10 +1,12 @@
-# 서버 계정/점수 데이터 (평문 비밀번호·토큰 포함 - 절대 커밋 금지)
-opbricks/server/data.json
-opbricks/server/*.log
+# 로컬 개발서버 계정/점수 데이터 (평문 비밀번호·토큰 포함 - 절대 커밋 금지)
+server/data.json
+server/*.log
+
+# Cloudflare
+.wrangler/
+node_modules/
 
 # 로컬 캡처·임시 산출물
 shots/
 *.tmp
-
-node_modules/
 .DS_Store

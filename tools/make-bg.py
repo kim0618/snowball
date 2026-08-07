@@ -12,7 +12,7 @@ from PIL import Image, ImageFilter, ImageEnhance
 BLUR = float(sys.argv[1]) if len(sys.argv) > 1 else 14.0
 DIM  = 0.86                      # 바깥칸 밝기
 TILES = 5                        # index.html 의 AMBIENT_TILES 와 같아야 한다
-IMG = os.path.join(os.path.dirname(__file__), '..', 'opbricks', 'img')
+IMG = os.path.join(os.path.dirname(__file__), '..', 'public', 'img')
 
 for name in ('bg-auth', 'bg-lobby', 'bg-game'):
     src = Image.open(os.path.join(IMG, name + '.webp')).convert('RGB')
