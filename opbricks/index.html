@@ -1,0 +1,3064 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#eef1f8">
+<title>눈덩이 Snowball</title>
+<meta name="description" content="쏠수록 불어나는 블록 파괴 게임 - 친구들과 순위를 겨뤄보세요">
+<!-- 카카오톡 등으로 링크를 공유했을 때 뜨는 미리보기 카드. 상대경로로 둬도 크롤러가
+     이 페이지 주소를 기준으로 알아서 풀어준다 - 도메인을 하드코딩할 필요 없다. -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="눈덩이 - 쏠수록 불어나는 블록 파괴 게임">
+<meta property="og:description" content="친구들과 순위를 겨뤄보세요">
+<meta property="og:image" content="img/og-share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="눈덩이 - 쏠수록 불어나는 블록 파괴 게임">
+<meta name="twitter:description" content="친구들과 순위를 겨뤄보세요">
+<meta name="twitter:image" content="img/og-share.jpg">
+<style>
+  :root{
+    color-scheme:dark;
+    --sky1:#0d1f4d;      /* 밤하늘 */
+    --sky2:#1b4fa8;
+    --sky3:#5aa8f0;
+    --sky4:#bfe3ff;      /* 눈밭 */
+    --surface:rgba(255,255,255,.80);
+    --glass:rgba(255,255,255,.16);
+    --field:#eef6ff;
+    --ink:#0f2a5c;
+    --ink2:#3c62a0;
+    --ink3:#7d9dc9;
+    --onSky:#eaf4ff;
+    --line:rgba(255,255,255,.42);
+    --accent:#2f7ff0;
+    --accent-ink:#ffffff;
+    --danger:#e5484d;
+    --shadow-sm:0 1px 2px rgba(21,29,51,.06), 0 2px 8px rgba(21,29,51,.05);
+    --shadow-md:0 4px 14px rgba(21,29,51,.09), 0 12px 34px rgba(21,29,51,.08);
+    --shadow-lg:0 10px 30px rgba(21,29,51,.13), 0 30px 70px rgba(21,29,51,.13);
+    --r:14px;
+    /* 버튼 위에 얹히는 눈덩이와 옅은 눈꽃 무늬(흰색·파란색) */
+    --snowcap:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 26' preserveAspectRatio='none'%3E%3Cg fill='%23ffffff'%3E%3Crect width='240' height='7'/%3E%3Cellipse cx='22' cy='8' rx='32' ry='12'/%3E%3Cellipse cx='218' cy='8' rx='30' ry='12'/%3E%3Cellipse cx='88' cy='6' rx='26' ry='7'/%3E%3Cellipse cx='150' cy='7' rx='24' ry='8'/%3E%3Cellipse cx='62' cy='15' rx='7' ry='11'/%3E%3Cellipse cx='191' cy='14' rx='6' ry='10'/%3E%3C/g%3E%3C/svg%3E");
+    --flake-w:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-opacity='.5' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M12 2v20M3.5 6.5l17 11M20.5 6.5l-17 11M12 6.4 9.4 3.8M12 6.4l2.6-2.6M12 17.6 9.4 20.2M12 17.6l2.6 2.6M7.5 9.2 3.9 8.3M7.5 14.8 3.9 15.7M16.5 9.2l3.6-.9M16.5 14.8l3.6.9'/%3E%3C/svg%3E");
+    --flake-b:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9d6ef' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M12 2v20M3.5 6.5l17 11M20.5 6.5l-17 11M12 6.4 9.4 3.8M12 6.4l2.6-2.6M12 17.6 9.4 20.2M12 17.6l2.6 2.6M7.5 9.2 3.9 8.3M7.5 14.8 3.9 15.7M16.5 9.2l3.6-.9M16.5 14.8l3.6.9'/%3E%3C/svg%3E");
+    --flake-i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c7e0f6' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M12 2v20M3.5 6.5l17 11M20.5 6.5l-17 11M12 6.4 9.4 3.8M12 6.4l2.6-2.6M12 17.6 9.4 20.2M12 17.6l2.6 2.6M7.5 9.2 3.9 8.3M7.5 14.8 3.9 15.7M16.5 9.2l3.6-.9M16.5 14.8l3.6.9'/%3E%3C/svg%3E");
+    /* 액자 모서리에 쌓여 옆으로 흘러내리는 눈덩이(왼쪽용, 오른쪽은 좌우 뒤집어 쓴다).
+       위는 두툼하게 뭉치고 아래로 갈수록 가늘어지며 물방울로 끝난다. */
+    --snow-drape:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 120'%3E%3Cg fill='%23ffffff'%3E%3Cellipse cx='20' cy='13' rx='28' ry='14'/%3E%3Cellipse cx='42' cy='9' rx='15' ry='7'/%3E%3Cellipse cx='12' cy='42' rx='12' ry='22'/%3E%3Cellipse cx='13' cy='70' rx='8.5' ry='16'/%3E%3Cellipse cx='13.5' cy='92' rx='5.5' ry='11'/%3E%3Cellipse cx='14' cy='106' rx='3' ry='6.5'/%3E%3C/g%3E%3C/svg%3E");
+    /* 판 안쪽 모서리에 비치는 얼음 결정 단면(깎인 면들) */
+    --ice-facet:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 90'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.5' stroke-width='1.6'%3E%3Cpath d='M8 30 30 8 52 22 34 52z' fill='%23ffffff' fill-opacity='.16'/%3E%3Cpath d='M30 8 52 22 62 6' fill='%23ffffff' fill-opacity='.1'/%3E%3Cpath d='M8 30 34 52 18 68z' fill='%23ffffff' fill-opacity='.12'/%3E%3Cpath d='M52 22 34 52 66 46z' fill='%23ffffff' fill-opacity='.09'/%3E%3C/g%3E%3C/svg%3E");
+    /* 스탯 상자 위에 걸터앉는 하늘색 왕관 */
+    --crown-ice:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 26'%3E%3Cpath d='M3 23 1 6l10 7 9-11 9 11 10-7-2 17z' fill='%23a9d6f7' stroke='%23ffffff' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
+  html,body{margin:0;height:100%;overflow:hidden;color:var(--onSky);
+    font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Malgun Gothic',sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  /* 바깥 여백: 지금 화면과 같은 그림을 흐리게 깔아 틀 밖으로 자연스럽게 이어지게 한다 */
+  body{display:flex;align-items:center;justify-content:center;background:#0a1836;}
+  /* 가로로 3배 넓게 만든 배경 한 장. 가운데가 게임 영역과 정확히 겹치고
+     좌우는 거울상을 흐리게 이어붙여서 이음매가 없다. */
+  #ambient{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-repeat:no-repeat;background-position:center center;
+    transition:background-image .3s ease;}
+  #ambient.bg-auth {background-color:#01123f;}
+  #ambient.bg-lobby{background-color:#0a2f8e;}
+  #ambient.bg-game {background-color:#7bb9fc;}
+  /* 흐린 판을 위에 겹치되, 가운데는 마스크로 뚫어 또렷하게 남긴다 */
+
+  /* 기기 틀: 세로 9:19.5 를 유지하고 화면에 맞춰 통째로 축소된다.
+     height 를 먼저 정하고 aspect-ratio 로 width 를 끌어내야
+     flex 안에서 눌리지 않는다. */
+  #frame{position:relative;z-index:1;flex:0 0 auto;
+    height:100dvh;
+    width:calc(100dvh * 9 / 19.5);
+    max-width:100vw;
+    max-height:calc(100vw * 19.5 / 9);
+    overflow:visible;background:none;}
+
+
+  /* 화면 전체를 쓴다. 캔버스는 남는 공간에 맞춰 알아서 커진다.
+     기본은 숨김: 스크립트가 돌기 전 한 프레임 동안 게임판이 먼저 그려지면
+     새로고침할 때마다 로비 뒤로 게임이 번쩍인다. 실제로 들어갈 때만 켠다. */
+  #app{display:flex;flex-direction:column;height:100%;
+    width:100%;position:absolute;inset:0;
+    opacity:0;pointer-events:none;transition:opacity .2s ease;}
+  body.playing #app{opacity:1;pointer-events:auto;}
+
+  header{flex:0 0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+    padding:12px 16px;padding-top:max(12px, env(safe-area-inset-top));
+    max-width:620px;width:100%;margin:0 auto;}
+  header .hudSide{text-align:left;}
+  header .hudSide .lbl{display:block;font-size:10.5px;color:var(--ink3);font-weight:700;}
+  header .hudSide b{font-size:19px;font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+  header .hudMid{text-align:center;}
+  header .score{font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums;line-height:1;}
+  header .hudFx{display:flex;gap:4px;justify-content:center;margin-top:4px;min-height:17px;}
+  header .hudFx i{font-style:normal;font-size:10.5px;font-weight:800;padding:2px 7px;
+    border-radius:20px;color:#fff;animation:fxIn .22s cubic-bezier(.2,1.3,.4,1);}
+  @keyframes fxIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
+  header .hudBtns{justify-self:end;display:flex;gap:8px;}
+  header #btnPause{width:38px;height:38px;padding:0;border:none;
+    border-radius:12px;background:var(--surface);color:var(--ink2);font-size:11px;
+    letter-spacing:1px;display:flex;align-items:center;justify-content:center;
+    box-shadow:var(--shadow-sm);}
+  header #btnPause:active{transform:scale(.94);background:#f2f5fb;}
+  /* 임시 테스트용: 게임오버 화면 확인용. 점선 테두리로 정식 버튼과 구분해둔다 - 나중에 지울 것 */
+  header #btnDebugDie{width:38px;height:38px;padding:0;
+    border:1.5px dashed rgba(229,72,77,.55);border-radius:12px;
+    background:rgba(229,72,77,.12);color:var(--danger);font-size:16px;
+    display:flex;align-items:center;justify-content:center;}
+  header #btnDebugDie:active{transform:scale(.94);background:rgba(229,72,77,.22);}
+
+  #stage{position:relative;flex:1 1 auto;display:flex;align-items:center;
+    justify-content:center;min-height:0;padding:4px 10px;}
+  canvas{touch-action:none;background:var(--field);border-radius:18px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9), var(--shadow-md);}
+
+  footer{flex:0 0 auto;display:flex;gap:10px;padding:12px 16px;
+    padding-bottom:max(12px, env(safe-area-inset-bottom));
+    max-width:620px;width:100%;margin:0 auto;}
+  footer button{flex:1;padding:14px 0;border:none;border-radius:var(--r);
+    background:var(--surface);color:var(--ink2);font-size:14px;font-weight:700;
+    box-shadow:var(--shadow-sm);transition:transform .08s;}
+  footer button:active{transform:scale(.97);}
+  footer button.active{background:var(--accent);color:var(--accent-ink);
+    box-shadow:0 4px 14px rgba(59,91,253,.32);}
+
+  /* ---- 공통 시트 ---- */
+  .veil{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    padding:20px;z-index:10;background:rgba(228,233,244,.72);backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);}
+  .veil.show{display:flex;animation:veilIn .18s ease-out;}
+  /* 가입창은 타이틀 위에 떠야 한다. 아래로 깔리면 눌러도 화면에 안 보인다. */
+  #namePanel{z-index:30;}
+  #naverNickPanel{z-index:31;}
+  #pausePanel{z-index:30;}
+  #overlay{z-index:25;}
+  @keyframes veilIn{from{opacity:0}to{opacity:1}}
+  .sheet{width:100%;max-width:340px;background:var(--surface);border-radius:22px;
+    padding:24px 20px;box-shadow:var(--shadow-lg), 0 0 0 1px var(--line);text-align:center;
+    animation:sheetIn .22s cubic-bezier(.2,1.1,.3,1);}
+  @keyframes sheetIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+  .sheet h2{margin:0 0 6px;font-size:20px;font-weight:800;letter-spacing:-.02em;}
+  .sheet .hint{margin:0 0 16px;font-size:13px;color:var(--ink2);line-height:1.65;}
+  .sheet .field{position:relative;margin-bottom:10px;}
+  .sheet .field svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);
+    width:17px;height:17px;stroke:var(--ink3);fill:none;stroke-width:1.9;
+    stroke-linecap:round;stroke-linejoin:round;pointer-events:none;transition:stroke .15s;}
+  .sheet input{width:100%;padding:15px 15px 15px 43px;border-radius:13px;
+    border:1.5px solid transparent;background:#f5f7fc;color:var(--ink);
+    font-size:15.5px;font-weight:600;outline:none;transition:border-color .16s, background .16s, box-shadow .16s;}
+  .sheet input:focus{border-color:var(--accent);background:#fff;
+    box-shadow:0 0 0 4px rgba(59,91,253,.12);}
+  .sheet input::placeholder{color:var(--ink3);font-weight:500;}
+  .sheet .field:focus-within svg{stroke:var(--accent);}
+  .sheet button{width:100%;margin-top:8px;padding:14px 0;border:none;border-radius:13px;
+    background:var(--accent);color:var(--accent-ink);font-size:15px;font-weight:700;
+    box-shadow:0 4px 14px rgba(59,91,253,.3);transition:transform .08s;}
+  .sheet button:active{transform:scale(.98);}
+  .sheet button.ghost{background:#f1f4fa;color:var(--ink2);box-shadow:none;}
+  .sheet button.link{background:none;color:var(--ink3);font-size:13px;font-weight:600;
+    padding:9px 0;margin-top:2px;box-shadow:none;}
+  .shareBtn, .homeBtn{display:flex;align-items:center;justify-content:center;gap:8px;}
+  .shareBtn svg, .homeBtn svg{width:18px;height:18px;flex:0 0 auto;
+    stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  .err{min-height:18px;font-size:12.5px;color:var(--danger);margin:2px 0 4px;font-weight:600;}
+
+  /* ---- 게임오버 ---- */
+  /* 점수: 위는 밝고 아래로 갈수록 진해지는 파랑 + 흰 외곽선 + 얼음빛 후광.
+     background-clip:text 로 그라데이션을 채우고, paint-order 로 외곽선을 글자
+     뒤에 먼저 깔아야 획이 안 잠식된다. */
+  #overlay .final{font-size:47px;font-weight:900;letter-spacing:-.02em;line-height:1.15;
+    font-variant-numeric:tabular-nums;
+    background:linear-gradient(180deg,#3d8ff5 0%,#1550d0 42%,#0a3196 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    /* 테두리는 획 양쪽을 파고들어 실제로는 2배로 먹힌다. 3px 로 뒀더니 파란 심지가
+       거의 안 남아 뿌옇게 보였다 - 얇게 두르고 빛번짐으로 또렷함을 만든다. */
+    -webkit-text-stroke:1.5px #fff;paint-order:stroke fill;
+    filter:drop-shadow(0 0 7px rgba(255,255,255,.95))
+           drop-shadow(0 3px 8px rgba(10,50,140,.4));}
+  #overlay .best{font-size:12.5px;color:#3c62a0;margin-top:4px;min-height:18px;font-weight:700;}
+  .goTag{display:inline-block;font-size:12.5px;font-weight:800;padding:6px 15px;
+    border-radius:20px;background:rgba(255,255,255,.9);color:var(--ink2);margin-bottom:8px;
+    box-shadow:0 2px 6px rgba(6,22,60,.16), inset 0 1px 0 rgba(255,255,255,.9);}
+  .goTag.record{background:linear-gradient(180deg,#ffd85c,#f0a92c);color:#4a3000;
+    box-shadow:0 4px 14px rgba(240,169,44,.5), inset 0 1px 0 rgba(255,255,255,.7);}
+  /* 스탯 상자: 서리 낀 유리판 + 위 테두리에 걸터앉은 하늘색 왕관 + 눈꽃 한 송이 */
+  .goStats{display:flex;gap:9px;margin:20px 0 0;}
+  .goStats div{position:relative;flex:1;border-radius:15px;padding:13px 4px 9px;
+    background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(232,245,255,.72));
+    border:1.5px solid rgba(255,255,255,.95);
+    box-shadow:0 0 0 1.5px rgba(150,205,250,.5), 0 3px 8px rgba(20,60,140,.12),
+      inset 0 0 14px rgba(180,220,255,.35);}
+  /* 왕관은 상자 위 테두리에 반쯤 걸치고, 눈꽃은 오른쪽 위 구석에 */
+  .goStats div::before{content:'';position:absolute;left:50%;top:-9px;
+    width:22px;height:15px;transform:translateX(-50%);
+    background:var(--crown-ice) center/contain no-repeat;
+    filter:drop-shadow(0 2px 2px rgba(20,60,140,.2));}
+  .goStats div::after{content:'';position:absolute;right:5px;top:6px;
+    width:17px;height:17px;opacity:.5;
+    background:var(--flake-b) center/contain no-repeat;}
+  .goStats span{display:block;font-size:11px;color:#5b83b8;font-weight:800;margin-bottom:2px;}
+  .goStats b{font-size:19px;font-variant-numeric:tabular-nums;color:#123a86;letter-spacing:-.02em;}
+  .goFeed{margin-top:12px;font-size:12.5px;color:var(--ink2);font-weight:600;
+    line-height:1.6;min-height:20px;}
+  .goFeed .hi{color:#1b4fd6;font-weight:900;}
+
+  /* 순위 목록을 감싸는 얼음판 - 위엔 눈꽃 구분선(rankNote), 안엔 명단 */
+  .rankNote{display:flex;align-items:center;justify-content:center;gap:8px;
+    font-size:12.5px;color:#1c4a8c;margin:18px 0 8px;min-height:16px;font-weight:800;}
+  .rankNote:not(:empty)::before, .rankNote:not(:empty)::after{content:'';width:13px;height:13px;
+    background:var(--flake-b) center/contain no-repeat;opacity:.65;}
+  .goRankBox{border-radius:19px;padding:7px;
+    background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(226,242,255,.55));
+    border:1.5px solid rgba(255,255,255,.9);
+    box-shadow:0 0 0 1.5px rgba(150,205,250,.4), inset 0 1px 0 rgba(255,255,255,.8),
+      inset 0 0 22px rgba(150,205,250,.22);}
+  .rank{list-style:none;margin:0;padding:0;text-align:left;
+    max-height:214px;overflow-y:auto;}
+  .rank li{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:13px;
+    font-size:14.5px;color:#3c62a0;font-weight:700;}
+  .rank li + li{border-top:1px solid rgba(160,205,250,.35);}
+  /* 내 줄은 시안처럼 하늘색 링 + 빛으로 확실히 띄운다 */
+  .rank li.me{position:relative;border-top-color:transparent;
+    background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(214,238,255,.9));
+    color:#123a86;font-weight:900;
+    box-shadow:0 0 0 2px rgba(120,200,255,.9), 0 0 16px rgba(110,195,255,.65),
+      inset 0 1px 0 rgba(255,255,255,.95);}
+  .rank li.me + li{border-top-color:transparent;}
+  .rank .no{width:22px;color:var(--ink3);font-variant-numeric:tabular-nums;font-weight:800;
+    text-align:center;flex:0 0 auto;}
+  /* 1~3위 그림 메달은 img 라, CSS 로 그리는 동그라미는 span 에만 걸어야 한다
+     (예전엔 .no 전체에 걸려 메달 그림이 22px 동그라미로 눌려 있었다) */
+  .rank li:nth-child(-n+3) span.no{color:#fff;width:22px;height:22px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:12px;
+    box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6), 0 2px 5px rgba(10,40,110,.3);}
+  .rank li:nth-child(1) span.no{background:linear-gradient(180deg,#ffd979,#e8a33d);}
+  .rank li:nth-child(2) span.no{background:linear-gradient(180deg,#dfe6ef,#98a3b8);}
+  .rank li:nth-child(3) span.no{background:linear-gradient(180deg,#e5ab7d,#c08457);}
+  .rank .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#2b5590;}
+  .rank .sc{font-variant-numeric:tabular-nums;font-weight:900;color:#1354c4;}
+
+  /* ---- 멈춤 설명 ---- */
+  .stats{display:flex;gap:8px;margin-bottom:16px;}
+  .stats div{flex:1;background:#f5f7fc;border-radius:12px;padding:10px 4px;}
+  .stats span{display:block;font-size:11px;color:var(--ink3);margin-bottom:3px;font-weight:600;}
+  .stats b{font-size:19px;font-variant-numeric:tabular-nums;}
+  .guide{font-size:12.5px;color:var(--ink2);line-height:1.55;margin-bottom:16px;text-align:left;}
+  .guide div{display:flex;align-items:center;gap:9px;padding:5px 0;}
+  .guide i{width:14px;height:14px;border-radius:4px;flex:0 0 auto;
+    box-shadow:0 1px 3px rgba(21,29,51,.18);}
+  .guide b{color:var(--ink);min-width:28px;display:inline-block;font-weight:800;}
+
+  /* ---- 배너 / 버프 테두리 ---- */
+  #buffBanner{position:absolute;left:50%;top:18px;
+    transform:translate(-50%,-10px) scale(.8);
+    background:var(--surface);color:var(--ink);
+    padding:10px 20px;border-radius:22px;font-size:15px;font-weight:800;
+    opacity:0;pointer-events:none;z-index:5;white-space:nowrap;
+    box-shadow:var(--shadow-md), 0 0 0 1px var(--line);}
+  #buffBanner.show{animation:buffPop .95s cubic-bezier(.2,1.4,.4,1) forwards;}
+  @keyframes buffPop{
+    0%   {opacity:0; transform:translate(-50%,-10px) scale(.7);}
+    18%  {opacity:1; transform:translate(-50%,0) scale(1.14);}
+    32%  {transform:translate(-50%,0) scale(1);}
+    78%  {opacity:1; transform:translate(-50%,0) scale(1);}
+    100% {opacity:0; transform:translate(-50%,-6px) scale(.96);}
+  }
+  #buffEdge{position:absolute;inset:4px 10px;pointer-events:none;z-index:4;opacity:0;
+    transition:opacity .25s;border-radius:18px;}
+  #buffEdge.on{opacity:1;}
+
+  /* ---- 타이틀 화면 ---- */
+  /* 전체 화면. display 를 껐다 켜면 두 화면 사이에 빈 프레임이 생겨
+     뒤의 게임이 한 번 비친다. 항상 깔아두고 투명도로만 넘긴다. */
+  /* overflow-y 만 auto 로 두면 가로축이 자동으로 auto 가 돼서, 안쪽 장식이
+     조금만 삐져나가도 가로 스크롤바가 생긴다. 가로는 못 박아둔다. */
+  .screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    padding:24px;overflow-x:hidden;overflow-y:auto;z-index:20;
+    opacity:0;visibility:hidden;pointer-events:none;
+    transition:opacity .24s ease, visibility .24s;
+    background:none;}
+  .screen.show{opacity:1;visibility:visible;pointer-events:auto;}
+  /* 가입은 타이틀 위에 겹쳐 페이드인된다. 아래 타이틀이 그대로 깔려 있어
+     전환 중에도 배경이 뚫리지 않는다. */
+  #titleScreen{z-index:20;}
+  #lobby{z-index:22;}
+  #guideScreen{z-index:34;}
+  /* 위에 겹치는 화면은 자기 배경을 깔아야 한다. 안 깔면 아래 타이틀 글자가
+     그대로 비쳐서 두 화면이 겹쳐 보인다. */
+  /* 가입 화면은 시안(ref2)처럼 카드 없이 풍경 위에 바로 올린다.
+     같은 그림을 깔면 아래 타이틀이 완전히 가려져 겹쳐 보이지 않는다. */
+  #namePanel{background:url('img/bg-lobby.webp') center/cover no-repeat;}
+  #namePanel .glassCard{background:none;border:none;box-shadow:none;padding:0;
+    backdrop-filter:none;-webkit-backdrop-filter:none;}
+  #namePanel .field{margin-bottom:13px;}
+  #naverNickPanel{background:url('img/bg-lobby.webp') center/cover no-repeat;}
+  #naverNickPanel .glassCard{background:none;border:none;box-shadow:none;padding:0;
+    backdrop-filter:none;-webkit-backdrop-filter:none;}
+  /* 게임오버도 같은 풍경 위에 뜬다. .guidePanel(이미지를 박아넣는 방식)을 재사용했더니
+     사진 톤이 그대로 눌러붙어 카드처럼 보이고 뒤 배경과 겉돌았다 - 대신 진짜 유리처럼
+     뒤 배경을 그대로 흐리고 밝혀서 비치게 한다(backdrop-filter), 얼음 느낌이 훨씬 산다. */
+  #overlay{background:url('img/bg-lobby.webp') center/cover no-repeat;}
+  /* .title 기본 폭(330px)에 갇히면 판이 좁고 답답해진다 - 시안처럼 화면을 넉넉히 쓴다 */
+  #overlay .title{max-width:352px;}
+  #overlay .brand{margin-bottom:12px;}
+  #overlay .brand .markImg{width:74px;}
+  #overlay .brand .wordImg{width:56%;}
+  .goPanelWrap{position:relative;width:100%;max-width:352px;}
+  /* 얼음 액자: 시안의 핵심은 "얇은 흰 선"이 아니라 두툼한 반투명 얼음 띠다.
+     바깥 틀(goFrame)이 그 띠를 만들고, 안쪽 판(goPanel)이 내용을 담는다. */
+  .goFrame{position:relative;border-radius:38px;padding:12px;
+    background:
+      linear-gradient(180deg,rgba(236,250,255,.85) 0%,rgba(168,216,252,.6) 45%,
+                              rgba(214,240,255,.8) 100%);
+    box-shadow:
+      0 0 0 2px rgba(160,220,255,.8),            /* 바깥 얼음 선 */
+      0 0 40px rgba(110,195,255,.6),             /* 번지는 빛 */
+      0 26px 60px rgba(6,22,60,.55),
+      inset 0 2px 0 rgba(255,255,255,.95),       /* 위쪽 하이라이트 */
+      inset 0 -2px 0 rgba(255,255,255,.55);}
+  .goPanel{position:relative;overflow:hidden;width:100%;
+    text-align:center;border-radius:27px;padding:22px 13px 16px;
+    /* 판 안쪽: 아주 밝은 서리빛. 배경 사진을 옅게 깔아 반짝임만 얻는다
+       (판 자기 크기 기준이라 화면 크기가 달라져도 톤이 안 변한다). */
+    background-image:
+      linear-gradient(180deg,rgba(255,255,255,.82) 0%,rgba(226,242,255,.78) 50%,
+                              rgba(203,231,255,.8) 100%),
+      url('img/bg-lobby.webp');
+    background-repeat:no-repeat;
+    background-position:center, center bottom;
+    background-size:auto, cover;
+    box-shadow:
+      inset 0 0 0 2px rgba(255,255,255,.9),      /* 안쪽 흰 테 */
+      inset 0 0 30px rgba(150,210,255,.4);}
+  /* 점수 뒤로 터지는 빛살 무늬 */
+  .goBurst{position:absolute;left:50%;top:130px;width:400px;height:400px;
+    transform:translate(-50%,-50%);pointer-events:none;z-index:0;
+    background:repeating-conic-gradient(from 0deg,
+      rgba(255,255,255,.6) 0deg 3deg, transparent 3deg 11deg);
+    -webkit-mask-image:radial-gradient(circle, #000 42%, transparent 76%);
+    mask-image:radial-gradient(circle, #000 42%, transparent 76%);
+    opacity:.75;}
+  /* 판 위쪽 모서리에 비치는 얼음 결정 단면 */
+  .goFacets{position:absolute;inset:0;pointer-events:none;z-index:0;}
+  .goFacets i{position:absolute;top:-4px;width:72px;height:72px;
+    background:var(--ice-facet) center/contain no-repeat;opacity:.22;}
+  .goFacets .l{left:-6px;}
+  .goFacets .r{right:-6px;transform:scaleX(-1);}
+  /* 장식은 맨 뒤, 실제 내용물은 그 위로 */
+  .goPanel > *{position:relative;z-index:1;}
+  .goPanel > .gFlakes, .goPanel > .goBurst, .goPanel > .goFacets{z-index:0;}
+  /* 액자 모서리에 쌓여 옆으로 흘러내리는 눈 - goPanel 의 overflow 에 안 잘리도록
+     제일 바깥 래퍼에 얹어 액자 위로 튀어나오게 한다. */
+  .goSnow{position:absolute;inset:0;pointer-events:none;z-index:5;
+    filter:drop-shadow(0 5px 7px rgba(20,60,140,.26));}
+  /* 시안의 눈은 위 전체를 덮는 '띠'가 아니라 양 모서리에 뭉쳐 옆으로 흘러내리는
+     '더미'다. 띠로 깔았더니 판 위에 흰 막대를 얹은 꼴이 됐다. */
+  .goSnow i{position:absolute;top:-10px;width:52px;height:112px;
+    background:var(--snow-drape) top center/contain no-repeat;}
+  .goSnow .l{left:1px;}
+  .goSnow .r{right:1px;transform:scaleX(-1);}
+  #naverNickPanel .field{margin-bottom:13px;}
+  #namePanel .tag{margin-bottom:22px;}
+  /* 도감은 얼음판이 밝아야 하니 뒤를 덜 어둡게 깐다 */
+  #guideScreen{background:rgba(12,42,104,.42);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+
+  /* ---- 로비 ---- */
+  .lobbyWrap,.guideWrap{max-width:400px;}
+  .lobbyTop{display:flex;align-items:center;justify-content:space-between;
+    gap:12px;margin-bottom:18px;text-align:left;}
+  .lobbyTop .me{min-width:0;flex:1 1 auto;}
+  .lobbyTop .me .hi{display:block;font-size:12px;color:#bcdcff;font-weight:800;
+    white-space:nowrap;text-shadow:0 2px 5px rgba(5,20,55,.55);}
+  .lobbyTop .me b{display:block;font-size:26px;font-weight:900;letter-spacing:-.03em;
+    color:#fff;-webkit-text-stroke:3.5px #1749a8;paint-order:stroke fill;
+    text-shadow:0 2px 0 #1749a8, 0 4px 0 #0e2f6d, 0 7px 12px rgba(5,20,55,.5);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .lobbyTop .gTitle{font-size:19px;font-weight:800;letter-spacing:-.02em;}
+  .title .iconBtn{width:52px;height:50px;min-width:52px;padding:0;margin:0;
+    border:none;border-image:none;border-radius:0;flex:0 0 auto;
+    background:url('img/btn-logout.webp') center/contain no-repeat;
+    box-shadow:none;filter:drop-shadow(0 5px 10px rgba(4,16,48,.45));
+    display:flex;align-items:center;justify-content:center;}
+  .title .iconBtn::before{display:none;}
+  .title .iconBtn svg{display:none;}
+  .title .iconBtn:active{transform:translateY(2px) scale(.96);}
+
+  .title .play{width:100%;padding:20px 0 18px;border-radius:0;background:none;
+    border-style:solid;border-width:0;
+    border-image-source:url('img/btn-play.webp');
+    border-image-slice:58 70 46 70 fill;
+    border-image-width:26px 32px 21px 32px;
+    border-image-repeat:stretch;
+    color:#fff;margin:0 0 16px;box-shadow:none;
+    filter:drop-shadow(0 10px 18px rgba(8,30,90,.45));
+    transition:transform .1s, filter .2s;}
+  .title .play::before{left:6%;right:6%;top:-11px;height:20px;}
+  .playIcon{display:block;width:78px;height:auto;margin:0 auto 6px;
+    filter:drop-shadow(0 6px 12px rgba(4,16,48,.4));}
+  .play .big{display:block;font-size:27px;font-weight:900;letter-spacing:-.03em;
+    text-shadow:0 3px 0 #0f3f96, 0 6px 12px rgba(5,25,70,.5);}
+  .play .sub{display:block;font-size:12.5px;margin-top:6px;font-weight:700;
+    color:#cfe6ff;text-shadow:0 2px 4px rgba(5,25,70,.5);}
+  .title .play:active{transform:translateY(4px) scale(.995);filter:brightness(.95);}
+
+  .statRow{display:flex;gap:9px;margin-bottom:14px;}
+  .statRow div{flex:1;border-radius:16px;padding:13px 6px;
+    background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(233,244,255,.88));
+    box-shadow:0 5px 0 rgba(150,190,235,.65), 0 10px 20px rgba(10,40,110,.24),
+               inset 0 2px 0 rgba(255,255,255,.9);}
+  .statRow span{display:block;font-size:11px;color:#5b86bd;font-weight:800;margin-bottom:4px;}
+  .statRow b{font-size:21px;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+    color:#123a86;}
+
+  .panel{background:var(--surface);border-radius:16px;padding:14px 14px 8px;
+    box-shadow:var(--shadow-sm);margin-bottom:12px;}
+  .panelHead{display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:6px;}
+  .panelHead span{font-size:12.5px;font-weight:800;color:var(--ink2);}
+  .title .more{width:auto;margin:0;padding:2px 0;border:none;border-radius:0;
+    background:none;border-image:none;color:#2f7ff0;font-size:12.5px;font-weight:800;
+    box-shadow:none;flex:0 0 auto;text-shadow:none;}
+  .title .more::before{display:none;}
+  .title .more:active{transform:none;box-shadow:none;opacity:.7;}
+  .panel .rank{margin:0;max-height:none;}
+  .panel .rank li{padding:7px 8px;}
+  .rank .no.medal{width:28px;height:auto;flex:0 0 auto;
+    filter:drop-shadow(0 2px 4px rgba(10,40,110,.28));}
+  /* 3위 밖이면 내 순위를 한 줄 띄워 따로 보여준다 */
+  .rank li.apart{margin-top:8px;border-top:1.5px dashed rgba(120,170,225,.5);padding-top:10px;}
+  .emptyRank{padding:14px 8px;font-size:12.5px;color:var(--ink3);text-align:center;}
+
+  .twoBtn{display:flex;gap:9px;}
+  .title .twoBtn button{flex:1;width:auto;margin:0;padding:12px 0;font-size:14px;
+    display:flex;flex-direction:column;align-items:center;gap:5px;}
+  /* 두 아이콘 그림의 원본 비율이 서로 달라(도감=세로형, 방법=가로형) width 고정이면
+     하나는 크고 하나는 작아 보여 글자 줄이 서로 어긋난다. height 를 고정해 같은 자리를 차지하게 한다. */
+  .title .twoBtn button img{height:40px;width:auto;max-width:56px;
+    filter:drop-shadow(0 4px 7px rgba(10,40,110,.3));}
+
+  /* ---- 도감·게임 방법 ---- */
+  /* 얼음판 한 장 위에 제목 + 섹션(탭 + 카드 묶음)이 얹힌다 */
+  .guideWrap{width:100%;max-width:360px;}
+  /* 얼음 액자: 안쪽에 눈밭 그림을 옅게 깔고, 테두리를 얼음빛으로 두른다 */
+  .guidePanel{position:relative;overflow:hidden;
+    border-radius:30px;padding:18px 13px 15px;
+    /* 위는 밤하늘, 아래는 눈밭인 그림을 깔아 흰 카드가 도드라지게 한다 */
+    background-image:var(--snowcap),
+      linear-gradient(180deg,rgba(46,116,206,.34) 0%,rgba(150,205,250,.26) 52%,
+                              rgba(236,248,255,.34) 100%),
+      url('img/bg-lobby.webp');
+    background-repeat:no-repeat;
+    background-position:top center, center, center bottom;
+    background-size:100% 15px, auto, cover;
+    border:3px solid rgba(255,255,255,.78);
+    box-shadow:
+      0 0 0 3px rgba(120,200,255,.55),           /* 얼음 테 */
+      0 0 46px rgba(96,186,255,.6),              /* 바깥으로 번지는 빛 */
+      0 26px 60px rgba(6,22,60,.5),
+      inset 0 0 0 8px rgba(196,232,255,.26),     /* 안쪽 얼음 띠 */
+      inset 0 0 0 9px rgba(255,255,255,.34),
+      inset 0 0 36px rgba(150,215,255,.6),
+      inset 0 2px 0 rgba(255,255,255,.9);}
+
+  /* 판 안에 떠 있는 눈꽃 장식 */
+  .gFlakes{position:absolute;inset:0;pointer-events:none;z-index:0;}
+  .gFlakes i{position:absolute;background:var(--flake-w) center/contain no-repeat;
+    animation:flakeTwinkle 4.6s ease-in-out infinite;}
+  .gFlakes i:nth-child(1){left:5%;  top:7%;   width:20px;height:20px;opacity:.55;}
+  .gFlakes i:nth-child(2){right:8%; top:16%;  width:14px;height:14px;opacity:.42;animation-delay:-1.4s;}
+  .gFlakes i:nth-child(3){left:8%;  bottom:9%;width:16px;height:16px;opacity:.38;animation-delay:-2.6s;}
+  .gFlakes i:nth-child(4){right:6%; bottom:16%;width:22px;height:22px;opacity:.30;animation-delay:-3.6s;}
+  .gFlakes i:nth-child(5){left:46%; top:4%;   width:12px;height:12px;opacity:.45;animation-delay:-2.0s;}
+  @keyframes flakeTwinkle{
+    0%,100%{transform:translateY(0) rotate(0deg);opacity:.5}
+    50%    {transform:translateY(-6px) rotate(90deg);opacity:.85}}
+  .guideHead, .guideBody{position:relative;z-index:1;}
+  .guideHead{position:relative;display:flex;align-items:center;justify-content:center;
+    min-height:58px;margin:0 0 10px;padding-right:52px;}   /* 닫기 버튼 자리 비우기 */
+  /* 제목은 시안에서 오려낸 그림을 그대로 쓴다(CSS 글자로는 이 질감이 안 난다) */
+  .gTitleImg{display:block;height:58px;width:auto;max-width:66%;
+    filter:drop-shadow(0 6px 14px rgba(4,16,48,.5));}
+  /* 닫기 버튼도 시안에서 오려낸 얼음 큐브 그림 */
+  .guideHead .iconBtn{position:absolute;right:0;top:0;width:52px;height:54px;
+    border-radius:0;background:url('img/btn-close.webp') center/contain no-repeat;
+    box-shadow:none;filter:drop-shadow(0 5px 11px rgba(4,16,48,.55));}
+  .guideHead .iconBtn svg{display:none;}
+  .guideHead .iconBtn:active{transform:translateY(2px) scale(.96);box-shadow:none;}
+  .guideBody{text-align:left;max-height:calc(100dvh - 210px);overflow-y:auto;
+    padding:0 2px 2px;
+    /* 아래로 더 있다는 걸 알 수 있게 끝을 살짝 흐린다 */
+    -webkit-mask-image:linear-gradient(180deg,#000 93%,transparent);
+    mask-image:linear-gradient(180deg,#000 93%,transparent);}
+
+  /* 섹션 이름표: 카드 묶음 위에 걸터앉은 탭 */
+  /* 이름표: 오른쪽 끝을 비스듬히 자르고 위에 눈을 얹는다 */
+  .gSec{display:inline-flex;align-items:center;gap:6px;
+    margin:0;padding:8px 30px 7px 13px;border-radius:14px 14px 0 0;
+    font-size:13px;font-weight:800;color:#fff;
+    background-image:var(--snowcap), linear-gradient(180deg,#5aa7ff,#1f68dd);
+    background-repeat:no-repeat;background-position:top center, center;
+    background-size:100% 7px, auto;
+    clip-path:polygon(0 0, calc(100% - 16px) 0, 100% 100%, 0 100%);
+    text-shadow:0 1px 3px rgba(6,22,60,.5);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.5);}
+  .gSec b{width:12px;height:12px;flex:0 0 auto;overflow:hidden;text-indent:-99px;
+    background:var(--flake-w) center/contain no-repeat;}
+  .gGroup{background:rgba(255,255,255,.42);border:1.5px solid rgba(255,255,255,.55);
+    border-radius:0 18px 18px 18px;padding:7px;margin-bottom:12px;}
+  .gGroup:last-child{margin-bottom:4px;}
+
+  .gItem{position:relative;display:flex;gap:12px;align-items:center;
+    background-image:var(--flake-i), linear-gradient(180deg,#ffffff,#eef6ff);
+    background-repeat:no-repeat;background-position:right 10px center, center;
+    background-size:26px 26px, auto;
+    border-radius:18px;padding:9px 38px 9px 9px;margin-bottom:7px;
+    box-shadow:0 4px 0 rgba(158,196,235,.55), 0 9px 20px rgba(10,40,110,.22),
+               inset 0 1px 0 #fff;}
+  .gItem:last-child{margin-bottom:0;}
+  .gChip{width:48px;height:48px;border-radius:15px;flex:0 0 auto;display:flex;
+    align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:19px;
+    letter-spacing:-.03em;overflow:hidden;
+    background-repeat:no-repeat;background-position:top center, center;
+    background-size:100% 7px, auto;
+    text-shadow:0 2px 3px rgba(8,32,90,.4);}
+  .gChip.sm{font-size:14px;}
+
+  /* ---- 블록 도감: 액자 없이 화면 전체를 쓰는 변형(시안 ref4) ---- */
+  #guideScreen.full{background-image:linear-gradient(180deg,rgba(6,22,60,.34),rgba(6,22,60,.18)),
+    url('img/bg-lobby.webp');background-size:cover;background-position:center;}
+  #guideScreen.full .guideWrap{max-width:none;}
+  #guideScreen.full .guidePanel{background:none;border:none;box-shadow:none;padding:2px 0 0;
+    backdrop-filter:none;-webkit-backdrop-filter:none;}
+  #guideScreen.full .guideHead{padding-right:0;min-height:64px;}
+  #guideScreen.full .gTitleImg{height:64px;max-width:74%;}
+  #guideScreen.full .guideHead .iconBtn{top:6px;}
+  #guideScreen.full .gSub{display:block;}
+  /* 시안처럼 스크롤 막대를 얼음결로 보이게 하고, 끝 흐림은 끈다 */
+  #guideScreen.full .guideBody{max-height:calc(100dvh - 232px);padding-right:13px;
+    -webkit-mask-image:none;mask-image:none;}
+  #guideScreen.full .gGroup{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.30);}
+  .guideBody::-webkit-scrollbar{width:10px;}
+  .guideBody::-webkit-scrollbar-track{background:rgba(255,255,255,.20);border-radius:10px;}
+  .guideBody::-webkit-scrollbar-thumb{border-radius:10px;border:2px solid transparent;
+    background:linear-gradient(180deg,#f2f9ff,#a9d6ff);background-clip:padding-box;}
+
+  .regTitle{height:62px;max-width:78%;margin:2px auto 10px;}
+  .gSub{display:none;margin:-4px 0 12px;font-size:12.5px;font-weight:800;color:#dcefff;
+    text-shadow:0 2px 6px rgba(4,16,48,.75);}
+  .gChip.art{width:54px;height:54px;border-radius:0;box-shadow:none;
+    background:center/contain no-repeat;
+    color:#fff;font-size:15px;font-weight:900;letter-spacing:-.05em;
+    text-shadow:0 2px 3px rgba(8,32,90,.5);}
+  .gTxt b{display:block;font-size:14.5px;font-weight:800;color:#123a86;margin-bottom:3px;}
+  .gTxt p{margin:0;font-size:12.5px;color:#5b7fae;line-height:1.5;font-weight:600;}
+  .gTxt em{display:block;margin-top:4px;font-style:normal;font-size:11.5px;
+    color:#2f7ff0;font-weight:800;}
+  .gTxt em::before{content:'✧ ';color:#7cc6ff;}
+  .title{width:100%;max-width:330px;text-align:center;
+    transform:translateY(8px);opacity:.6;
+    transition:transform .3s cubic-bezier(.2,1,.3,1), opacity .26s ease;}
+  .screen.show .title{transform:none;opacity:1;}
+  /* 앱 아이콘형 마크: 비탈을 굴러 내려오며 커지는 눈덩이 */
+  .mark{margin:0 auto 18px;width:82px;height:82px;
+    border-radius:24px;overflow:hidden;
+    box-shadow:0 10px 26px rgba(50,71,232,.34), 0 2px 6px rgba(21,29,51,.12);
+    animation:markIn .5s cubic-bezier(.2,1.2,.35,1);}
+  .mark svg{display:block;width:100%;height:100%;}
+  @keyframes markIn{
+    0%{transform:scale(.86) translateY(6px);opacity:0}
+    100%{transform:none;opacity:1}}
+  /* 두꺼운 3D 글자: 흰 면 + 파란 외곽선 + 아래로 쌓은 그림자 */
+  .title h1{margin:0;font-size:40px;font-weight:900;letter-spacing:-.03em;color:#fff;
+    -webkit-text-stroke:5px #1749a8;paint-order:stroke fill;
+    text-shadow:
+      0 3px 0 #1749a8, 0 5px 0 #123a86, 0 7px 0 #0e2f6d,
+      0 10px 18px rgba(5,20,55,.55);}
+  .title .tag{margin:12px 0 26px;font-size:14px;color:#d7ecff;font-weight:700;
+    text-shadow:0 2px 6px rgba(5,20,55,.6);}
+
+  /* ---- 브랜드(그림 로고) ----
+     아이콘·글자 그림에는 파란 네온이 이미 들어 있다. 그림자를 겹치면 탁해지므로
+     그림 자체의 빛만 쓰고 CSS 그림자는 최소로 둔다. */
+  /* 로고 뒤에 깔리는 은은한 오로라 빛. 어두운 밤하늘 위에 그림이 얹힌 느낌을
+     지우고 배경과 이어 붙인다. */
+  #titleScreen::before{content:'';position:absolute;left:0;right:0;top:6%;
+    height:44%;pointer-events:none;
+    background:radial-gradient(closest-side,
+      rgba(126,196,255,.26), rgba(96,160,240,.11) 52%, rgba(96,160,240,0) 76%);}
+  .brand{position:relative;margin-bottom:20px;}
+  .markImg{display:block;margin:0 auto 10px;width:88px;height:auto;
+    filter:drop-shadow(0 8px 18px rgba(4,16,48,.45));}
+  .brand .markImg{display:block;margin:0 auto;width:118px;height:auto;
+    filter:drop-shadow(0 10px 20px rgba(4,16,48,.45));
+    animation:markIn .55s cubic-bezier(.2,1.2,.35,1);}
+  .brand .wordImg{display:block;margin:4px auto 2px;width:72%;height:auto;
+    filter:drop-shadow(0 6px 16px rgba(4,16,48,.4));
+    animation:wordIn .6s .06s backwards cubic-bezier(.2,1.2,.35,1);}
+  .brand .tag{margin:7px 0 0;font-size:13.5px;color:#dceeff;font-weight:800;
+    letter-spacing:-.02em;text-shadow:0 2px 8px rgba(4,16,48,.75);}
+  @keyframes wordIn{
+    0%{transform:scale(.92);opacity:0}
+    100%{transform:none;opacity:1}}
+
+  /* 입력·카드를 감싸는 유리판 */
+  .glassCard{background:linear-gradient(180deg,rgba(255,255,255,.46),rgba(222,240,255,.34));
+    border:1.5px solid rgba(255,255,255,.62);
+    border-radius:26px;padding:18px 16px 12px;
+    backdrop-filter:blur(16px) saturate(1.1);-webkit-backdrop-filter:blur(16px) saturate(1.1);
+    box-shadow:0 20px 50px rgba(6,22,60,.38), inset 0 1px 0 rgba(255,255,255,.6);}
+
+  /* 카드 아래 보조 링크 두 개 */
+  .cardLinks{display:flex;align-items:center;justify-content:center;gap:14px;
+    margin-top:14px;padding-top:4px;}
+  .title .cardLinks button{width:auto;margin:0;padding:8px 6px;background:none;
+    border-image:none;box-shadow:none;color:#1749a8;font-size:13px;font-weight:800;
+    display:flex;align-items:center;gap:6px;text-shadow:none;}
+  .title .cardLinks button::before{display:none;}
+  .title .cardLinks button:active{transform:none;box-shadow:none;opacity:.65;}
+  .cardLinks button svg{width:16px;height:16px;stroke:#4d8ad2;fill:none;stroke-width:1.9;
+    stroke-linecap:round;stroke-linejoin:round;}
+  .cardLinks .sep{width:1.5px;height:15px;background:rgba(90,150,215,.42);border-radius:2px;}
+
+  /* 화면 전체에 천천히 내리는 눈. 배경 그림과 이어지도록 흐리고 느리게. */
+  #snowfall{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:19;}
+  body.playing #snowfall{opacity:0;}
+  #snowfall i{position:absolute;top:-8%;
+    background:var(--flake-w) center/contain no-repeat;
+    filter:drop-shadow(0 0 6px rgba(180,225,255,.85));
+    animation:snowDrop linear infinite;}
+  @keyframes snowDrop{
+    0%  {transform:translate3d(0,-10vh,0) rotate(0deg);opacity:0}
+    12% {opacity:var(--o)}
+    88% {opacity:var(--o)}
+    100%{transform:translate3d(var(--dx),110vh,0) rotate(320deg);opacity:0}}
+
+  .title .field{position:relative;margin-bottom:12px;}
+  .title .field svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);
+    width:17px;height:17px;stroke:var(--ink3);fill:none;stroke-width:1.9;
+    stroke-linecap:round;stroke-linejoin:round;pointer-events:none;transition:stroke .15s;}
+  .title input{width:100%;padding:15px 16px 15px 44px;border-radius:15px;
+    border:2px solid transparent;background-color:#ffffff;color:var(--ink);
+    font-size:15.5px;font-weight:700;outline:none;
+    box-shadow:inset 0 2px 5px rgba(20,50,110,.10), 0 2px 6px rgba(6,22,60,.18);
+    transition:border-color .16s, box-shadow .16s, background .16s;}
+  /* 입력칸 오른쪽에 옅은 눈꽃 무늬 */
+  .title input{background-image:var(--flake-i), linear-gradient(180deg,#ffffff,#f1f8ff);
+    background-repeat:no-repeat;background-position:right 15px center, center;
+    background-size:22px 22px, auto;}
+  .title input::placeholder{color:#93b3d8;font-weight:600;}
+  .title input:focus{border-color:#7cc6ff;background:#fff;
+    box-shadow:0 0 0 4px rgba(124,198,255,.45), 0 0 18px rgba(124,198,255,.55);}
+  .title .field svg{stroke:#4d84c8;}
+  .title .field svg.solid{fill:#4d8ad2;stroke:none;}
+  .title .field svg.solid .bar{fill:none;stroke:#4d8ad2;stroke-width:2.2;}
+  .title .field:focus-within svg.solid{fill:var(--accent);}
+  .title .field:focus-within svg.solid .bar{stroke:var(--accent);}
+  .title .field:focus-within svg{stroke:var(--accent);}
+  .title .err{margin:2px 0 6px;}
+
+  /* 아이디 / 닉네임 중복 확인 결과, 포커스아웃되면 자동으로 채워진다 */
+  .title .checkMsg{min-height:15px;font-size:11.5px;font-weight:700;
+    margin:-7px 4px 9px;text-align:left;transition:color .12s;}
+  .title .checkMsg.pending{color:var(--ink3);}
+  .title .checkMsg.ok{color:#1f9d55;}
+  .title .checkMsg.bad{color:var(--danger);}
+  .title .fieldHint{margin:-6px 4px 12px;font-size:11.5px;font-weight:700;
+    color:#eaf4ff;text-shadow:0 1px 4px rgba(4,16,48,.55);line-height:1.4;text-align:left;}
+
+  /* 성별 선택 토글 두 칸. .title button 의 눈덩이 버튼 이미지를 지우고 새로 그린다.
+     고른 쪽은 살짝 떠오르며(translateY) 파란 빛이 번지고, 안의 아이콘도 흰색으로 톡 튄다. */
+  .title .genderRow{display:flex;gap:8px;margin:2px 4px 14px;}
+  .title .genderBtn{flex:1;width:auto;margin:0;padding:12px 0;border-radius:14px;
+    display:flex;align-items:center;justify-content:center;gap:7px;
+    border:2px solid rgba(120,170,225,.38);border-image:none;
+    background:#ffffff;color:var(--ink2);font-size:14px;font-weight:700;letter-spacing:0;
+    text-shadow:none;box-shadow:inset 0 2px 5px rgba(20,50,110,.10), 0 2px 6px rgba(6,22,60,.16);
+    transition:border-color .16s, background .18s, color .16s, box-shadow .2s,
+      transform .2s cubic-bezier(.3,1.5,.4,1);}
+  .title .genderBtn svg{width:17px;height:17px;flex:0 0 auto;
+    stroke:#8fabd6;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+    transition:stroke .16s, transform .26s cubic-bezier(.3,1.6,.4,1);}
+  .title .genderBtn::before{display:none;}
+  .title .genderBtn:active{transform:scale(.96);}
+  /* CSS 그라데이션으로 손수 칠하니 쨍하기만 하고 밋밋했다 - "가입하고 시작"이 쓰는
+     진짜 눈덩이 버튼 그림을 그대로 재사용한다. 여자는 같은 그림에 색조만 돌린다. */
+  .title .genderBtn.active{border-style:solid;border-width:0;border-color:transparent;
+    border-image-source:url('img/btn-primary.webp');
+    border-image-slice:55 95 35 95 fill;
+    border-image-width:19px 32px 12px 32px;
+    border-image-repeat:stretch;
+    background:none;color:#fff;padding:14px 0 11px;
+    transform:translateY(-1px);box-shadow:none;
+    text-shadow:0 2px 4px rgba(8,32,90,.55);}
+  .title .genderBtn.active svg{stroke:#fff;transform:scale(1.12);}
+  .title .genderBtn.active[data-gender="f"]{filter:hue-rotate(95deg) saturate(.4) brightness(1.15);}
+
+  /* 네이버 로그인 버튼: 카드 안 다른 버튼과 같은 자리를 쓰지만 브랜드색은 지킨다 */
+  .title button.naverBtn{border-image:none;background:#03c75a;color:#fff;text-shadow:none;
+    display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 0;
+    box-shadow:0 6px 16px rgba(3,199,90,.35);}
+  .title button.naverBtn:active{transform:translateY(2px) scale(.99);filter:brightness(.95);}
+  .naverMark{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;
+    border-radius:5px;background:#fff;color:#03c75a;font-size:12.5px;font-weight:900;
+    font-family:Arial,sans-serif;flex:0 0 auto;}
+
+  /* ---- 네이버 로그인 화면(기본 골격만, 실제 연동은 추후) ---- */
+  #naverScreen{z-index:32;background:#f5f6f7;}
+  .naverWrap{width:100%;max-width:320px;}
+  .naverCard{width:100%;background:#fff;border-radius:16px;padding:32px 22px 22px;
+    box-shadow:0 10px 30px rgba(0,0,0,.1);text-align:center;
+    animation:sheetIn .22s cubic-bezier(.2,1.1,.3,1);}
+  .naverLogoBox{width:56px;height:56px;margin:0 auto 14px;border-radius:14px;
+    background:#03c75a;display:flex;align-items:center;justify-content:center;}
+  .naverLogoBox span{color:#fff;font-size:30px;font-weight:900;font-family:Arial,sans-serif;}
+  .naverTitle{margin:0 0 4px;font-size:17px;font-weight:800;color:#191919;}
+  .naverTag{margin:0 0 20px;font-size:12.5px;color:#8a8a8a;font-weight:600;line-height:1.5;}
+  .naverField{margin-bottom:10px;}
+  .naverField input{width:100%;padding:14px;border-radius:6px;
+    border:1.5px solid #dcdfe3;background:#fff;color:#191919;
+    font-size:14.5px;font-weight:600;outline:none;transition:border-color .15s;}
+  .naverField input:focus{border-color:#03c75a;}
+  .naverField input::placeholder{color:#a7abb0;font-weight:500;}
+  .naverSubmit{width:100%;margin-top:6px;padding:14px 0;border:none;border-radius:6px;
+    background:#03c75a;color:#fff;font-size:15px;font-weight:800;box-shadow:none;}
+  .naverSubmit:active{transform:scale(.98);background:#02b350;}
+  .naverSubmit:disabled{opacity:.6;}
+  .naverLink{width:100%;margin-top:10px;padding:9px 0;border:none;background:none;
+    color:#8a8a8a;font-size:12.5px;font-weight:700;}
+  .naverNote{margin:16px 0 0;font-size:11px;color:#b0b3b8;font-weight:600;line-height:1.5;}
+
+  /* 아이디 저장 체크. 진짜 체크박스는 숨기고 옆 네모를 그린다
+     (label 로 감싸서 글자를 눌러도 켜지고 꺼진다)
+     은은한 유리 알약 안에 담아서 카드 위에 붕 뜬 부품이 아니라 하나의 작은 칩처럼 보이게 한다. */
+  /* .title 가 text-align:center 라, inline-flex 로 두면 알약이 카드 한가운데로 떠버린다.
+     display:flex(block-level) + width:fit-content 로 내용만큼만 차지하고 왼쪽에 붙인다. */
+  .keepRow{display:flex;width:fit-content;align-items:center;gap:8px;margin:4px 0 4px;
+    padding:6px 14px 6px 7px;border-radius:999px;
+    background:linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,.14));
+    border:1px solid rgba(255,255,255,.4);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35);
+    font-size:12.5px;font-weight:800;letter-spacing:-.01em;color:#123a86;cursor:pointer;
+    transition:background .16s, border-color .16s, transform .1s;}
+  .keepRow:active{transform:scale(.97);}
+  .title .keepRow input{position:absolute;width:1px;height:1px;padding:0;margin:0;
+    opacity:0;pointer-events:none;}
+  .keepRow .box{flex:0 0 auto;width:21px;height:21px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    background:#fff;border:1.5px solid rgba(120,170,225,.55);
+    box-shadow:inset 0 2px 4px rgba(20,50,110,.10);
+    transition:background .16s, box-shadow .22s, border-color .16s, transform .2s cubic-bezier(.3,1.5,.4,1);}
+  .keepRow .box svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:3.4;
+    stroke-linecap:round;stroke-linejoin:round;
+    opacity:0;transform:scale(.5) rotate(-16deg);
+    transition:opacity .14s, transform .22s cubic-bezier(.3,1.6,.4,1);}
+  .keepRow input:checked + .box{background:linear-gradient(160deg,#7cc6ff,#2f7ff0);
+    border-color:#2f7ff0;transform:scale(1.06);
+    box-shadow:0 2px 0 #124aa8, 0 0 0 4px rgba(124,198,255,.32), inset 0 1px 0 rgba(255,255,255,.55);}
+  .keepRow input:checked + .box svg{opacity:1;transform:none;}
+  .keepRow input:checked ~ .keepLabel{color:#fff;text-shadow:0 1px 3px rgba(6,22,60,.35);}
+  .keepRow:has(input:checked){background:linear-gradient(180deg,rgba(90,167,255,.42),rgba(47,127,240,.30));
+    border-color:rgba(124,198,255,.6);}
+  .keepRow input:focus-visible + .box{outline:2px solid #7cc6ff;outline-offset:2px;}
+  /* 광택 파란 버튼 + 위에 눈 쌓임 */
+  /* 버튼은 시안에서 오려낸 그림을 9분할로 늘려 쓴다(모서리·눈은 그대로, 가운데만 늘어난다) */
+  .title button{position:relative;width:100%;margin-top:10px;padding:16px 0 13px;
+    color:#fff;font-size:15px;font-weight:800;letter-spacing:-.01em;background:none;
+    border-style:solid;border-width:0;
+    border-image-source:url('img/btn-primary.webp');
+    border-image-slice:55 95 35 95 fill;
+    border-image-width:19px 32px 12px 32px;
+    border-image-repeat:stretch;
+    box-shadow:none;
+    text-shadow:0 2px 4px rgba(8,32,90,.55);
+    transition:transform .08s, filter .14s;}
+  /* 위쪽에 얹힌 눈: 울퉁불퉁한 덩어리 + 흘러내린 물방울 두 개.
+     버튼이 overflow:hidden 이라 둥근 모서리에 맞춰 잘린다. */
+  .title button::before{display:none;}
+  .title button:active{transform:translateY(3px) scale(.99);filter:brightness(.94);}
+
+  .title button.ghost{padding:14px 0;
+    border-image-source:url('img/btn-ghost.webp');
+    border-image-slice:40 60 40 60 fill;
+    border-image-width:18px 26px 18px 26px;
+    color:#1749a8;text-shadow:none;box-shadow:none;}
+
+  .title button.link{background:none;border-image:none;color:#17509c;
+    font-size:13.5px;font-weight:800;
+    padding:16px 0 4px;box-shadow:none;text-shadow:0 1px 0 rgba(255,255,255,.5);}
+  .title button.link::before{display:none;}
+  .title button.link:active{transform:none;color:#fff;box-shadow:none;}
+
+  /* 눈덩이 마스코트 */
+  .mascot{position:absolute;left:16px;bottom:8px;width:112px;height:112px;
+    pointer-events:none;z-index:21;opacity:0;transition:opacity .3s;
+    animation:mascotBob 3.4s ease-in-out infinite;}
+  .screen.show ~ .mascot, .mascot.show{opacity:1;}
+  .mascot.front{z-index:36;}        /* 도감 얼음판 앞으로 */
+  .mascot img{width:100%;height:100%;display:block;
+    filter:drop-shadow(0 8px 14px rgba(6,22,60,.45));}
+  @keyframes mascotBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .teaser{margin-bottom:20px;min-height:0;}
+  .teaser .row{display:flex;align-items:center;gap:9px;padding:8px 13px;
+    background:var(--surface);border-radius:11px;margin-bottom:5px;font-size:13px;
+    box-shadow:var(--shadow-sm);text-align:left;}
+  .teaser .no{width:16px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .teaser .row:nth-child(1) .no{color:#e8a33d;}
+  .teaser .row:nth-child(2) .no{color:#98a3b8;}
+  .teaser .row:nth-child(3) .no{color:#c08457;}
+  .teaser .nm{flex:1;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .teaser .sc{font-weight:800;font-variant-numeric:tabular-nums;}
+  .teaser .lbl{font-size:11.5px;color:var(--ink3);font-weight:700;
+    margin-bottom:7px;letter-spacing:.02em;}
+</style>
+</head>
+<body>
+<div id="ambient"></div>
+<div id="frame">
+<div id="snowfall" aria-hidden="true"></div>
+<div class="mascot" id="mascot"><img src="img/mascot.webp" alt="" width="240" height="240"></div>
+<div id="app">
+  <header>
+    <div class="hudSide">
+      <span class="lbl">라운드</span>
+      <b id="hudRound">1</b>
+    </div>
+    <div class="hudMid">
+      <div class="score" id="hudScore">0</div>
+      <div class="hudFx" id="hudFx"></div>
+    </div>
+    <div class="hudBtns">
+      <button id="btnDebugDie" aria-label="죽기(테스트용)" title="테스트용: 즉시 게임오버">💀</button>
+      <button id="btnPause" aria-label="멈춤">❚❚</button>
+    </div>
+  </header>
+  <div id="stage">
+    <canvas id="game"></canvas>
+    <div id="buffEdge"></div>
+    <div id="buffBanner"></div>
+  </div>
+  <footer>
+    <button id="btnSpeed">1배속</button>
+    <button id="btnCollect">일괄 회수</button>
+  </footer>
+</div>
+<div id="pausePanel" class="veil">
+  <div class="sheet">
+    <h2>멈춤</h2>
+    <div class="stats">
+      <div><span>점수</span><b id="pauseScore">0</b></div>
+    </div>
+    <div class="guide">
+      <div><i style="background:#f5b301"></i>숫자 = 남은 타격 수</div>
+      <div><i style="background:#e11d63"></i>👑 <b>보스</b> 체력 3배, 잡으면 공 +4</div>
+      <div><i style="background:#7c22cf"></i>▲ <b>증식</b> 때릴 때마다 주변 숫자 +2</div>
+      <div><i style="background:#f5c518"></i><b>×2</b> 날아가는 공이 2배로</div>
+      <div><i style="background:#22c55e"></i><b>+N</b> 다음 턴에 공 N개 추가</div>
+      <div><i style="background:#ef4444"></i><b>-N</b> 다음 턴 공 N개 감소</div>
+      <div><i style="background:#ff6b35"></i>💥 <b>폭탄</b> 주변 3×3 즉시 파괴</div>
+      <div><i style="background:#8b5cf6"></i>⚡ <b>분열</b> 이번 턴 벽 튕길 때마다 공이 늘어남</div>
+      <div><i style="background:#f59e0b"></i>💰 <b>2배</b> 이번 턴 점수 2배</div>
+    </div>
+    <button id="btnResume">이어하기</button>
+    <button id="btnName" class="ghost">로비로</button>
+    <button id="btnRestart" class="ghost">처음부터</button>
+  </div>
+</div>
+<div id="overlay" class="screen">
+  <div class="title">
+    <div class="brand">
+      <img class="markImg" src="img/logo-icon.webp" alt="" width="420" height="380">
+      <img class="wordImg" src="img/logo-word.webp" alt="눈덩이" width="760" height="438">
+    </div>
+    <div class="goPanelWrap">
+      <div class="goFrame">
+        <div class="goPanel">
+          <span class="goBurst" aria-hidden="true"></span>
+          <span class="goFacets" aria-hidden="true"><i class="l"></i><i class="r"></i></span>
+          <span class="gFlakes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+          <div class="goTag" id="goTag">게임 오버</div>
+          <div class="final"><span id="finalScore">0</span></div>
+          <div class="best" id="finalBest"></div>
+          <div class="goStats">
+            <div><span>라운드</span><b id="goRound">0</b></div>
+            <div><span>최고 공</span><b id="goBalls">0</b></div>
+            <div><span>보스</span><b id="goBoss">0</b></div>
+          </div>
+          <div class="goFeed" id="goFeed"></div>
+          <div class="rankNote" id="rankNote"></div>
+          <div class="goRankBox"><ol class="rank" id="rankList"></ol></div>
+          <button id="btnRetry">다시 도전</button>
+          <button id="btnShare" class="ghost shareBtn">
+            <svg viewBox="0 0 24 24"><path d="M12 3v12M12 3l4 4M12 3L8 7M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+            결과 공유하기
+          </button>
+          <button id="btnToLobby" class="ghost homeBtn">
+            <svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg>
+            로비로
+          </button>
+        </div>
+      </div>
+      <span class="goSnow" aria-hidden="true"><i class="l"></i><i class="r"></i></span>
+    </div>
+  </div>
+</div>
+<div id="lobby" class="screen">
+  <div class="title lobbyWrap">
+    <div class="lobbyTop">
+      <div class="me">
+        <span class="hi">반가워요</span>
+        <b id="lobbyNick">-</b>
+      </div>
+      <button id="btnLobbyOut" class="iconBtn" aria-label="로그아웃">
+        <svg viewBox="0 0 24 24"><path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H15"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h9"/></svg>
+      </button>
+    </div>
+
+    <button id="btnPlay" class="play">
+      <img class="playIcon" src="img/logo-icon.webp" alt="" width="420" height="380">
+      <span class="big" id="playBig">게임 시작</span>
+      <span class="sub" id="playSub">기록에 도전하기</span>
+    </button>
+
+    <div class="statRow">
+      <div><span>최고 점수</span><b id="stBest">0</b></div>
+      <div><span>최고 라운드</span><b id="stRound">0</b></div>
+      <div><span>내 순위</span><b id="stRank">-</b></div>
+    </div>
+
+    <div class="panel">
+      <div class="panelHead">
+        <span>친구 랭킹</span>
+        <button id="btnAllRank" class="more">전체 보기</button>
+      </div>
+      <ol class="rank" id="lobbyRank"></ol>
+    </div>
+
+    <div class="twoBtn">
+      <button id="btnGuide" class="ghost"><img src="img/icon-guide.webp" alt="">블록 도감</button>
+      <button id="btnHow" class="ghost"><img src="img/icon-howto.webp" alt="">게임 방법</button>
+    </div>
+  </div>
+</div>
+
+<div id="guideScreen" class="screen">
+  <div class="title guideWrap">
+    <div class="guidePanel">
+      <span class="gFlakes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      <div class="guideHead">
+        <img class="gTitleImg" id="guideTitle" src="img/t-guide.webp" alt="블록 도감">
+        <button id="btnGuideBack" class="iconBtn" aria-label="닫기">
+          <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <p class="gSub" id="guideSub"></p>
+      <div id="guideBody" class="guideBody"></div>
+    </div>
+  </div>
+</div>
+<div id="titleScreen" class="screen">
+  <div class="title">
+    <div class="brand">
+      <img class="markImg" src="img/logo-icon.webp" alt="" width="420" height="380">
+      <img class="wordImg" src="img/logo-word.webp" alt="눈덩이" width="760" height="438">
+      <p class="tag">쏠수록 불어나는 블록 파괴 게임</p>
+    </div>
+
+    <div class="glassCard">
+      <div class="field">
+        <svg class="solid" viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.9"/><path d="M4.4 20.2c.9-4.2 3.8-6.4 7.6-6.4s6.7 2.2 7.6 6.4z"/></svg>
+        <input id="idInput" maxlength="16" placeholder="아이디" autocomplete="username">
+      </div>
+      <div class="field">
+        <svg class="solid" viewBox="0 0 24 24"><path class="bar" d="M8.2 10.6V7.8a3.8 3.8 0 0 1 7.6 0v2.8"/><rect x="4.6" y="10.4" width="14.8" height="9.8" rx="2.8"/></svg>
+        <input id="pwInput" type="password" maxlength="32" placeholder="비밀번호" autocomplete="current-password">
+      </div>
+      <label class="keepRow">
+        <input type="checkbox" id="keepId">
+        <span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19 7.4"/></svg></span>
+        <span class="keepLabel">아이디 저장</span>
+      </label>
+      <div class="err" id="authErr"></div>
+      <button id="btnGoLogin">로그인</button>
+      <button id="btnGoRegister" class="ghost">회원가입</button>
+      <button id="btnNaverLogin" class="naverBtn"><span class="naverMark">N</span>네이버로 로그인</button>
+      <div class="cardLinks">
+        <button id="btnHowT">
+          <svg viewBox="0 0 24 24"><path d="M3.5 5.2h6.2a2.3 2.3 0 0 1 2.3 2.3v11.3a1.8 1.8 0 0 0-1.8-1.8H3.5z"/><path d="M20.5 5.2h-6.2a2.3 2.3 0 0 0-2.3 2.3v11.3a1.8 1.8 0 0 1 1.8-1.8h6.7z"/></svg>
+          게임 방법
+        </button>
+        <span class="sep"></span>
+        <button id="btnGuideT">
+          <svg viewBox="0 0 24 24"><path d="M12 3.2 20.2 7.6v8.8L12 20.8 3.8 16.4V7.6z"/><path d="M3.8 7.6 12 12l8.2-4.4M12 12v8.8"/></svg>
+          블록 도감
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="namePanel" class="screen">
+  <div class="title">
+    <img class="markImg" src="img/logo-icon.webp" alt="" width="420" height="380">
+    <img class="gTitleImg regTitle" src="img/t-register.webp" alt="회원가입">
+    <p class="tag">친구들과 순위를 겨뤄보세요</p>
+
+    <div class="glassCard">
+      <div class="field">
+        <svg class="solid" viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.9"/><path d="M4.4 20.2c.9-4.2 3.8-6.4 7.6-6.4s6.7 2.2 7.6 6.4z"/></svg>
+        <input id="regId" maxlength="16" placeholder="아이디" autocomplete="username">
+      </div>
+      <div class="checkMsg" id="regIdMsg"></div>
+      <div class="field">
+        <svg class="solid" viewBox="0 0 24 24"><path class="bar" d="M8.2 10.6V7.8a3.8 3.8 0 0 1 7.6 0v2.8"/><rect x="4.6" y="10.4" width="14.8" height="9.8" rx="2.8"/></svg>
+        <input id="regPw" type="password" maxlength="32" placeholder="비밀번호" autocomplete="new-password">
+      </div>
+      <p class="fieldHint">8자 이상, 영문·숫자·특수문자를 모두 포함해주세요</p>
+      <div class="field">
+        <svg class="solid" viewBox="0 0 24 24"><path class="bar" d="M8.2 10.6V7.8a3.8 3.8 0 0 1 7.6 0v2.8"/><rect x="4.6" y="10.4" width="14.8" height="9.8" rx="2.8"/></svg>
+        <input id="regPwConfirm" type="password" maxlength="32" placeholder="비밀번호 확인" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <svg viewBox="0 0 24 24"><path d="M5 19.5v-1.2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v1.2"/><circle cx="12" cy="8" r="3.4"/><path d="M18.5 5.5l1.4 1.4 2.6-2.6"/></svg>
+        <input id="regNick" maxlength="12" placeholder="닉네임" autocomplete="off">
+      </div>
+      <div class="checkMsg" id="regNickMsg"></div>
+      <div class="genderRow" id="genderRow">
+        <button type="button" class="genderBtn" data-gender="m">
+          <svg viewBox="0 0 24 24"><circle cx="10" cy="14" r="6"/><path d="M14.2 9.8 20 4M15 4h5v5"/></svg>
+          남자
+        </button>
+        <button type="button" class="genderBtn" data-gender="f">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M12 15v6M9 19h6"/></svg>
+          여자
+        </button>
+      </div>
+      <div class="err" id="regErr"></div>
+      <button id="btnAuthOk">가입하고 시작</button>
+      <button id="btnAuthBack" class="link">뒤로</button>
+    </div>
+  </div>
+</div>
+<div id="naverScreen" class="screen">
+  <div class="naverWrap">
+    <div class="naverCard">
+      <div class="naverLogoBox"><span>N</span></div>
+      <p class="naverTitle">네이버 로그인</p>
+      <p class="naverTag">눈덩이 서비스에서<br>네이버 아이디로 로그인해요</p>
+      <div class="field naverField">
+        <input id="naverIdMock" placeholder="아이디" autocomplete="off">
+      </div>
+      <div class="field naverField">
+        <input id="naverPwMock" type="password" placeholder="비밀번호" autocomplete="off">
+      </div>
+      <button id="btnNaverSubmit" class="naverSubmit">로그인</button>
+      <button id="btnNaverBack" class="naverLink">뒤로</button>
+      <p class="naverNote">준비 중인 화면이에요. 어떤 값을 입력해도 진행돼요.<br>실제 네이버 연동은 이후 보안 검토와 함께 붙일 예정이에요.</p>
+    </div>
+  </div>
+</div>
+<div id="naverNickPanel" class="screen">
+  <div class="title">
+    <img class="markImg" src="img/logo-icon.webp" alt="" width="420" height="380">
+    <img class="gTitleImg regTitle" src="img/t-register.webp" alt="회원가입">
+    <p class="tag">네이버 계정으로 가입을 마무리해요</p>
+
+    <div class="glassCard">
+      <div class="field">
+        <svg viewBox="0 0 24 24"><path d="M5 19.5v-1.2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v1.2"/><circle cx="12" cy="8" r="3.4"/><path d="M18.5 5.5l1.4 1.4 2.6-2.6"/></svg>
+        <input id="naverNick" maxlength="12" placeholder="닉네임" autocomplete="off">
+      </div>
+      <div class="checkMsg" id="naverNickMsg"></div>
+      <div class="genderRow" id="naverGenderRow">
+        <button type="button" class="genderBtn" data-gender="m">
+          <svg viewBox="0 0 24 24"><circle cx="10" cy="14" r="6"/><path d="M14.2 9.8 20 4M15 4h5v5"/></svg>
+          남자
+        </button>
+        <button type="button" class="genderBtn" data-gender="f">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M12 15v6M9 19h6"/></svg>
+          여자
+        </button>
+      </div>
+      <div class="err" id="naverNickErr"></div>
+      <button id="btnNaverNickOk">가입 완료</button>
+      <button id="btnNaverNickBack" class="link">뒤로</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+'use strict';
+
+const CONFIG = {
+  COLS: 9,
+  CELL: 40,
+  // 9x14 grid + launch zone = 360x630 canvas -> 0.571 aspect (phone is 0.5625).
+  // Grid runs all the way down to the launcher: the death line sits at the very
+  // bottom of the playfield, not floating above a band of dead space.
+  GRID_ROWS: 14,
+  LAUNCH_ZONE_H: 70,
+  START_BALLS: 4,
+  BALL_RADIUS: 6,
+  BALL_SPEED: 480,
+  FIRE_INTERVAL: 0.035,
+  FIRE_TOTAL_TARGET: 1.8,
+  MIN_DRAG: 18,
+  MAX_ANGLE_FROM_VERTICAL: 80 * Math.PI/180,
+  // 성능 한계일 뿐, 플레이어의 공 자원(S.ballCount)에는 상한이 없다.
+  // 브릭 체력이 공 개수에 비례해 오르므로(brickBaseHp), 자원 자체를 잘라내면
+  // 라운드가 오를수록 절대 못 이기게 된다 - 예전엔 이 값(150)으로 둘 다 막고 있었다.
+  ACTIVE_BALL_CAP: 512,
+  PRESSURE_AT_14: 0.72,
+  PRESSURE_BASE: 0.72,
+  MIN_ROWS: 12,
+  MAX_ROWS: 22,
+  PRESSURE_GROWTH: 0.010,
+  ROUND_FLOOR_SLOPE: 1.2,
+  OVERFLOW_BONUS: 5,
+  BALL_MAX_LIFETIME: 20,
+  ROW_DENSITY_START: 0.30,
+  ROW_DENSITY_BASE: 0.52,
+  ROW_DENSITY_PER_ROUND: 0.013,
+  ROW_DENSITY_MAX: 0.82,
+  DENSITY_RAMP_ROUNDS: 7,
+  GUARANTEED_GAIN_ROUNDS: 12,
+  OP_CHANCE: 0.26,
+  SUB_CHANCE_BASE: 0.15,
+  SUB_CHANCE_PER_ROUND: 0.010,
+  SUB_CHANCE_MAX: 0.34,
+  ITEM_CHANCE: 0.045,
+  BOMB_RADIUS: 1,
+  BOSS_CHANCE: 0.055,
+  BOSS_FROM_ROUND: 4,
+  BOSS_HP_MULT: 3.2,
+  BOSS_REWARD_BALLS: 4,
+  CURSE_CHANCE: 0.07,
+  CURSE_FROM_ROUND: 6,
+  CURSE_HP_MULT: 0.6,
+  CURSE_SPREAD: 2,
+  FRENZY_BOUNCE_CHANCE: 0.08,
+  X2_SHARE: 0.08,
+  GOLD_MULT: 2,
+  SHIFT_DURATION: 0.28,
+  PREVIEW_BOUNCES: 2,
+  SHAKE_MAX: 9,
+  HITSTOP_MAX: 0.18,
+  TRAIL_LEN: 5,
+  // Seconds without hitting a brick before a ball starts arcing down to land.
+  IDLE_GRAVITY_AFTER: 2.6,
+  IDLE_GRAVITY_RAMP: 0.7,
+  IDLE_GRAVITY: 1000,
+  TURN_HARD_CAP: 22,
+  RETURN_SPEED: 900,
+  COMBO_STEP: 2,
+  AIM_LATCH_MS: 90,
+};
+
+// 판 크기는 화면 비율에 맞춰 정해진다. 고정 비율로 두면 폰에서 위아래에 빈 띠가 생긴다.
+// 칸은 항상 정사각형이고, 세로로 몇 줄이 들어가는지를 화면이 결정한다.
+let WIDTH, GRID_H, HEIGHT, DANGER_Y, LAUNCHER_Y, LAND_Y;
+
+function layoutBoard(viewW, viewH){
+  // 캔버스 비율(WIDTH/HEIGHT)이 화면 비율과 같아지는 줄 수를 역산한다.
+  //   COLS*CELL / (rows*CELL + LZ) = viewW / viewH
+  const need = (CONFIG.COLS * CONFIG.CELL * viewH / Math.max(1, viewW) - CONFIG.LAUNCH_ZONE_H)
+               / CONFIG.CELL;
+  const rows = clamp(Math.round(need), CONFIG.MIN_ROWS, CONFIG.MAX_ROWS);
+  CONFIG.GRID_ROWS = rows;
+  WIDTH      = CONFIG.COLS * CONFIG.CELL;
+  GRID_H     = rows * CONFIG.CELL;
+  HEIGHT     = GRID_H + CONFIG.LAUNCH_ZONE_H;
+  DANGER_Y   = GRID_H;
+  LAUNCHER_Y = HEIGHT - 14;
+  LAND_Y     = HEIGHT - 8;
+  // 줄이 많아지면 죽기까지의 여유도 길어지므로 압력을 그만큼 올려
+  // 기기가 달라도 한 판 길이가 비슷하게 유지되도록 한다.
+  CONFIG.PRESSURE_BASE = CONFIG.PRESSURE_AT_14 * (rows / 14);
+}
+layoutBoard(360, 630);
+const FIXED_DT = 1/60;
+
+const PATTERN = {
+  brickBreak: 10,
+  opX2: [15,30,15],
+  opAdd: 15,
+  opSub: [10,10,10],
+  itemBomb: [20,20,20,20],
+  itemFrenzy: [10,50,10,50,10],
+  itemGold: 25,
+  gameOver: [40,30,40],
+};
+
+function vibrate(p){ if (navigator.vibrate) { try { navigator.vibrate(p); } catch(e){} } }
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function normalize(v){ const l = Math.hypot(v.x, v.y) || 1; return {x:v.x/l, y:v.y/l}; }
+function rotate2D(vx,vy,angle){
+  const c = Math.cos(angle), s = Math.sin(angle);
+  return { vx: vx*c - vy*s, vy: vx*s + vy*c };
+}
+
+function createRng(seed){
+  return {
+    state: seed >>> 0,
+    next(){
+      let t = this.state += 0x6D2B79F5;
+      t = Math.imul(t ^ t>>>15, t|1);
+      t ^= t + Math.imul(t ^ t>>>7, t|61);
+      return ((t ^ t>>>14) >>> 0) / 4294967296;
+    }
+  };
+}
+
+// Endless pacing: brick HP tracks the player's CURRENT firepower, so the run
+// stays tense however fast the ball count grows, and a bad streak is always
+// recoverable. Anchoring to peak balls instead would leave a player who lost
+// balls facing bricks sized for their best moment - an unrecoverable spiral.
+// The round-based floor keeps pressure climbing even if the player never grows.
+function brickBaseHp(round, power){
+  const pressure = CONFIG.PRESSURE_BASE + round * CONFIG.PRESSURE_GROWTH;
+  const fromPower = power * pressure;
+  const fromRound = 1 + round * CONFIG.ROUND_FLOOR_SLOPE;
+  return Math.max(1, Math.round(Math.max(fromPower, fromRound)));
+}
+
+function generateHpBrick(rng, round, power, variant){
+  const base = brickBaseHp(round, power);
+  const variance = Math.floor(rng.next() * (1 + base*0.25));
+  let hp = base + variance;
+  // Boss and curse reuse the plain HP brick's damage and destruction path; only
+  // their size of health, their look and their side effect differ.
+  if (variant === 'boss')  hp = Math.round(hp * CONFIG.BOSS_HP_MULT);
+  if (variant === 'curse') hp = Math.max(1, Math.round(hp * CONFIG.CURSE_HP_MULT));
+  return { type:'hp', hp, maxHp:hp, boss: variant==='boss', curse: variant==='curse' };
+}
+function generateOpBrick(rng, round){
+  const subChance = clamp(CONFIG.SUB_CHANCE_BASE + round*CONFIG.SUB_CHANCE_PER_ROUND, CONFIG.SUB_CHANCE_BASE, CONFIG.SUB_CHANCE_MAX);
+  const r = rng.next();
+  if (r < subChance) {
+    const val = 2 + Math.floor(rng.next()*3)*2;
+    return { type:'op', op:'sub', val };
+  } else if (r < subChance + CONFIG.X2_SHARE) {
+    return { type:'op', op:'x2' };
+  } else {
+    const val = 1 + Math.floor(rng.next()*3) + Math.floor(round/12);
+    return { type:'op', op:'add', val };
+  }
+}
+function generateItemBrick(rng){
+  const r = rng.next();
+  if (r < 0.38) return { type:'item', kind:'bomb' };
+  if (r < 0.68) return { type:'item', kind:'frenzy' };
+  return { type:'item', kind:'gold' };
+}
+function generateRow(rng, round, power){
+  const row = new Array(CONFIG.COLS).fill(null);
+  const ramp = Math.min(1, round / CONFIG.DENSITY_RAMP_ROUNDS);
+  const density = clamp(
+    CONFIG.ROW_DENSITY_START + (CONFIG.ROW_DENSITY_BASE - CONFIG.ROW_DENSITY_START)*ramp + round*CONFIG.ROW_DENSITY_PER_ROUND,
+    CONFIG.ROW_DENSITY_START, CONFIG.ROW_DENSITY_MAX);
+
+  let hasGain = false;
+  for (let c=0;c<CONFIG.COLS;c++){
+    if (rng.next() < density) {
+      const roll = rng.next();
+      if (roll < CONFIG.ITEM_CHANCE) row[c] = generateItemBrick(rng);
+      else if (roll < CONFIG.ITEM_CHANCE + CONFIG.OP_CHANCE) row[c] = generateOpBrick(rng, round);
+      else {
+        const v = rng.next();
+        let variant = null;
+        if (round >= CONFIG.BOSS_FROM_ROUND && v < CONFIG.BOSS_CHANCE) variant = 'boss';
+        else if (round >= CONFIG.CURSE_FROM_ROUND && v < CONFIG.BOSS_CHANCE + CONFIG.CURSE_CHANCE) variant = 'curse';
+        row[c] = generateHpBrick(rng, round, power, variant);
+      }
+      const b = row[c];
+      if (b.type==='item' || (b.type==='op' && b.op!=='sub')) hasGain = true;
+    }
+  }
+
+  if (!hasGain && round <= CONFIG.GUARANTEED_GAIN_ROUNDS) {
+    const c = Math.floor(rng.next()*CONFIG.COLS);
+    row[c] = { type:'op', op:'add', val: 2 + Math.floor(rng.next()*2) };
+  }
+  return row;
+}
+function opColor(op){
+  return op==='x2' ? '#ffd54a' : op==='add' ? '#4ade80' : '#f87171';
+}
+function itemVisual(kind){
+  if (kind==='bomb')   return { color:'#ff6b35', soft:'#fff1e8', icon:'💥' };
+  if (kind==='frenzy') return { color:'#8b5cf6', soft:'#f3edff', icon:'⚡' };
+  return                      { color:'#f59e0b', soft:'#fff7e6', icon:'💰' };
+}
+// 캔버스에 그리는 모든 색은 여기 한 곳에서. 흩어져 있으면 테마를 못 바꾼다.
+const T = {
+  field:      '#eef1f7',
+  gridLine:   'rgba(28,42,80,0.055)',
+  ball:       '#2b3a63',
+  ballCore:   '#4c6ef5',
+  trail:      '#8aa8e8',
+  hitSpark:   '#5b8def',
+  brickText:  '#ffffff',
+  brickShade: 'rgba(15,23,42,0.30)',
+  gloss:      'rgba(255,255,255,0.42)',
+  aim:        'rgba(59,91,253,0.75)',
+  aimDot:     'rgba(59,91,253,0.45)',
+  aimTarget:  'rgba(30,41,80,0.45)',
+  launcher:   '#3b5bfd',
+  launcherIdle:'rgba(59,91,253,0.30)',
+  returning:  '#9aa8c8',
+  stockText:  '#1e2740',
+  hint:       'rgba(40,55,95,0.35)',
+  danger:     '250,110,110',
+  boss:       ['#ff9ec1','#e11d63'],
+  curse:      ['#e0b7ff','#7c22cf'],
+  bossEdge:   '#f6b93b',
+  curseEdge:  '#c964f5',
+  itemBg:     '#ffffff',
+};
+
+const HP_TIERS = [
+  { max: 2,   base:'#38bdf8', light:'#7dd3fc' },
+  { max: 5,   base:'#4ade80', light:'#86efac' },
+  { max: 9,   base:'#facc15', light:'#fde047' },
+  { max: 15,  base:'#fb923c', light:'#fdba74' },
+  { max: 25,  base:'#f87171', light:'#fca5a5' },
+  { max: 1e9, base:'#c084fc', light:'#d8b4fe' },
+];
+function hpTier(hp){
+  for (const t of HP_TIERS) if (hp <= t.max) return t;
+  return HP_TIERS[HP_TIERS.length-1];
+}
+
+const S = {
+  round: 1, score: 0, ballCount: 1, maxBalls: 1,
+  grid: [], activeBalls: [], particles: [],
+  state: 'aiming',
+  launcherX: WIDTH/2,
+  aimDir: {x:0, y:-1},
+  fireQueueRemaining: 0, fireTimer: 0, ballCountAtTurnStart: 1,
+  collectedForNextTurn: 0, pendingPenalty: 0, landedThisTurn: false,
+  speedMult: 1,
+  seed: 0,
+  rng: createRng(Date.now() >>> 0),
+  hintDismissed: false,
+  frenzyActive: false,
+  scoreMult: 1,
+  shiftAnim: 0,
+  shake: 0,
+  popups: [],
+  returning: [],
+  waves: [], flash: null, hitstop: 0,
+  turnTime: 0,
+  turnWallTime: 0,
+  paused: false,
+  combo: 0,
+  bossKills: 0,
+};
+
+// Passing a seed makes the whole run reproducible, which is what lets a daily
+// challenge give everyone the same board and lets a server replay a submitted
+// run to check the score. All gameplay randomness goes through S.rng; Math.random
+// is only used for particles and screen shake, which never affect the outcome.
+// 라운드·공 개수·그리드 같은 '판의 내용'은 그대로 두고, 공중에 떠 있던 것들만
+// 지운다. startFreshGame(새 판)과 resumeGame(이어하기) 둘 다 이걸로 마무리한다.
+function resetTransientState(){
+  S.activeBalls = []; S.particles = []; S.popups = []; S.returning = [];
+  S.shake = 0; S.shiftAnim = 0;
+  S.waves = []; S.flash = null; S.hitstop = 0;
+  S.launcherX = WIDTH/2;
+  S.collectedForNextTurn = 0; S.pendingPenalty = 0; S.landedThisTurn = false;
+  S.fireQueueRemaining = 0;
+  S.frenzyActive = false; S.scoreMult = 1;
+  S.state = 'aiming';
+  updateHud();
+  document.getElementById('overlay').classList.remove('show');
+}
+
+function startFreshGame(seed){
+  S.seed = (seed === undefined) ? ((Date.now() ^ (Math.random()*1e9)) >>> 0) : (seed >>> 0);
+  S.rng = createRng(S.seed);
+  S.round = 1; S.score = 0;
+  S.ballCount = CONFIG.START_BALLS; S.maxBalls = CONFIG.START_BALLS;
+  S.grid = Array.from({length: CONFIG.GRID_ROWS}, () => new Array(CONFIG.COLS).fill(null));
+  S.grid[0] = generateRow(S.rng, 1, CONFIG.START_BALLS);
+  S.bossKills = 0;
+  resetTransientState();
+  clearSavedGame();          // 새로 시작하면 이전 저장은 의미가 없다
+}
+
+// ---- 이어하기: 끝이 없는 게임이라 중간에 꺼도 되돌아왔을 때 그대로 이어져야 한다 ----
+const SAVE_VERSION = 1;
+function saveKey(){ return 'opbricks.save.' + (LB.id || 'guest'); }
+
+function saveGame(){
+  if (!lbSignedIn() || S.state !== 'aiming') return;   // 턴 경계에서만 저장한다
+  try {
+    localStorage.setItem(saveKey(), JSON.stringify({
+      v: SAVE_VERSION, seed: S.seed, rngState: S.rng.state,
+      round: S.round, score: S.score, ballCount: S.ballCount, maxBalls: S.maxBalls,
+      bossKills: S.bossKills, grid: S.grid,
+    }));
+  } catch(e){}
+}
+function loadSavedGame(){
+  if (!lbSignedIn()) return null;
+  try {
+    const data = JSON.parse(localStorage.getItem(saveKey()));
+    if (!data || data.v !== SAVE_VERSION) return null;
+    if (!Array.isArray(data.grid) || data.grid.length !== CONFIG.GRID_ROWS) return null;
+    return data;
+  } catch(e){ return null; }
+}
+function clearSavedGame(){
+  if (!lbSignedIn()) return;
+  try { localStorage.removeItem(saveKey()); } catch(e){}
+}
+function resumeGame(data){
+  S.seed = data.seed;
+  S.rng = createRng(0); S.rng.state = data.rngState >>> 0;
+  S.round = data.round; S.score = data.score;
+  S.ballCount = data.ballCount; S.maxBalls = data.maxBalls;
+  S.grid = data.grid;
+  S.bossKills = data.bossKills || 0;
+  resetTransientState();
+}
+// 창이 닫히는 시점에 안전망으로 한 번 더 저장한다. saveGame()은 'aiming'
+// 상태가 아니면 스스로 아무것도 안 하므로, 공이 날아가는 중이었다면 굳이
+// 여기서 대신 끝내주지 않는다 - 그 턴은 아직 이어하기 시점이 아닐 뿐,
+// 마지막으로 완료한 턴은 이미 턴 경계마다 저장돼 있다.
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveGame(); });
+window.addEventListener('pagehide', saveGame);
+
+function addScore(n){ S.score += Math.round(n * S.scoreMult); updateHud(); }
+
+function showBuffBanner(text){
+  const el = document.getElementById('buffBanner');
+  el.textContent = text;
+  el.classList.remove('show');
+  void el.offsetWidth;              // 리플로우 강제: 같은 배너가 연달아 떠도 다시 재생됨
+  el.classList.add('show');
+  clearTimeout(S._buffTimer);
+  S._buffTimer = setTimeout(() => el.classList.remove('show'), 950);
+}
+
+// 분열·2배가 켜져 있는 동안 화면 가장자리에 은은한 색을 깐다
+function updateBuffEdge(){
+  const el = document.getElementById('buffEdge');
+  const on = S.frenzyActive || S.scoreMult > 1;
+  const color = S.frenzyActive ? '167,139,250' : '251,191,36';
+  el.style.boxShadow = on ? `inset 0 0 42px rgba(${color},0.42)` : 'none';
+  el.classList.toggle('on', !!on);
+}
+
+function updateHud(){
+  const scoreEl = document.getElementById('hudScore');
+  scoreEl.textContent = S.score.toLocaleString();
+  scoreEl.style.color = S.scoreMult > 1 ? '#e8a33d' : '';
+  document.getElementById('hudRound').textContent = S.round;
+
+  // 지금 켜져 있는 효과를 배지로. 배너는 1초면 사라지지만 효과는 턴 내내 간다.
+  const fx = document.getElementById('hudFx');
+  const want = [];
+  if (S.frenzyActive) want.push(['분열', '#8b5cf6']);
+  if (S.scoreMult > 1) want.push(['점수 2배', '#f59e0b']);
+  const key = want.map(w => w[0]).join(',');
+  if (fx.dataset.key !== key) {
+    fx.dataset.key = key;
+    fx.innerHTML = '';
+    for (const [t, c] of want) {
+      const i = document.createElement('i');
+      i.textContent = t; i.style.background = c;
+      fx.appendChild(i);
+    }
+  }
+}
+
+function spawnBreakParticle(x, y, color){
+  for (let i=0;i<7;i++){
+    const a = Math.random()*Math.PI*2;
+    const sp = 60 + Math.random()*140;
+    S.particles.push({ x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, life: 0.5, maxLife: 0.5, color, size: 2+Math.random()*2 });
+  }
+}
+function spawnHitParticle(x, y, color){
+  S.particles.push({ x, y, vx:(Math.random()-0.5)*40, vy:(Math.random()-0.5)*40, life:0.2, maxLife:0.2, color, size:2 });
+}
+function addShake(amount){ S.shake = Math.min(CONFIG.SHAKE_MAX, S.shake + amount); }
+
+// ---- 아이템 연출 ----
+// 화면흔들림보다 히트스톱이 충격감을 만든다. 잠깐 멈췄다 풀리면 훨씬 세게 느껴진다.
+function addHitstop(sec){
+  S.hitstop = Math.min(CONFIG.HITSTOP_MAX, S.hitstop + sec);
+}
+function addShockwave(x, y, color, maxR, width){
+  S.waves.push({ x, y, r: 6, maxR, color, width: width || 4, life: 1 });
+}
+function addFlash(color, strength){
+  S.flash = { color, life: strength, max: strength };
+}
+function burstRing(x, y, color, count, speed){
+  for (let i=0;i<count;i++){
+    const a = (i/count)*Math.PI*2 + Math.random()*0.3;
+    const sp = speed * (0.7 + Math.random()*0.6);
+    S.particles.push({
+      x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp,
+      life: 0.75, maxLife: 0.75, color, size: 2 + Math.random()*3,
+    });
+  }
+}
+function itemFanfare(x, y, kind){
+  const vis = itemVisual(kind);
+  addShockwave(x, y, vis.color, kind === 'bomb' ? 190 : 150, kind === 'bomb' ? 6 : 4);
+  addShockwave(x, y, '#ffffff', 90, 2);
+  burstRing(x, y, vis.color, kind === 'bomb' ? 26 : 20, kind === 'bomb' ? 300 : 230);
+  addFlash(vis.color, kind === 'bomb' ? 0.42 : 0.30);
+  addHitstop(kind === 'bomb' ? 0.13 : 0.09);
+  addShake(kind === 'bomb' ? 6.5 : 4.5);
+  spawnPopup(x, y - 22, vis.icon, vis.color);
+}
+function spawnPopup(x, y, text, color){
+  if (S.popups.length > 24) return;
+  S.popups.push({ x, y, text, color, life:0.7, maxLife:0.7 });
+}
+function updateParticles(dt){
+  for (let i=S.particles.length-1;i>=0;i--){
+    const p = S.particles[i];
+    p.x += p.vx*dt; p.y += p.vy*dt; p.vx *= 0.92; p.vy *= 0.92;
+    p.life -= dt;
+    if (p.life <= 0) S.particles.splice(i,1);
+  }
+  for (let i=S.popups.length-1;i>=0;i--){
+    const p = S.popups[i];
+    p.y -= 42*dt;
+    p.life -= dt;
+    if (p.life <= 0) S.popups.splice(i,1);
+  }
+  for (let i=S.waves.length-1;i>=0;i--){
+    const w = S.waves[i];
+    w.r += (w.maxR - w.r) * 0.16 + 2;
+    w.life -= dt * 1.9;
+    if (w.life <= 0 || w.r >= w.maxR) S.waves.splice(i,1);
+  }
+  if (S.flash) {
+    S.flash.life -= dt * 2.6;
+    if (S.flash.life <= 0) S.flash = null;
+  }
+  S.shake *= 0.86;
+  if (S.shake < 0.2) S.shake = 0;
+}
+
+// Shared by real physics AND the aim preview so the guide line can never lie.
+// Axis-aligned resolution: a corner clip reflects off the nearer FACE instead of
+// firing the ball straight back the way it came.
+function physicsSubsteps(){
+  // Step must stay under the ball radius, else a ball can leap from outside a
+  // brick to buried inside it between checks.
+  return Math.max(1, Math.ceil((CONFIG.BALL_SPEED*FIXED_DT) / (CONFIG.BALL_RADIUS*0.7)));
+}
+
+function brickHitInfo(x, y, vx, vy, x0, y0){
+  const R = CONFIG.BALL_RADIUS;
+  const x1 = x0+CONFIG.CELL, y1 = y0+CONFIG.CELL;
+  const insideX = x > x0 && x < x1;
+  const insideY = y > y0 && y < y1;
+
+  if (insideX && insideY) {
+    // Center is buried in the brick: eject through the NEAREST face (minimum
+    // translation vector). A fixed push direction here just shoves the ball
+    // deeper into the field and it burrows along the seams.
+    const dL = x-x0, dR = x1-x, dT = y-y0, dB = y1-y;
+    const m = Math.min(dL, dR, dT, dB);
+    if (m === dL) return { nx:-1, ny:0, push:m+R, vx:-Math.abs(vx), vy };
+    if (m === dR) return { nx: 1, ny:0, push:m+R, vx: Math.abs(vx), vy };
+    if (m === dT) return { nx:0, ny:-1, push:m+R, vx, vy:-Math.abs(vy) };
+    return          { nx:0, ny: 1, push:m+R, vx, vy: Math.abs(vy) };
+  }
+
+  const cx = clamp(x, x0, x1), cy = clamp(y, y0, y1);
+  const dx = x-cx, dy = y-cy;
+  const distSq = dx*dx + dy*dy;
+  if (distSq >= R*R) return null;
+
+  let axis;
+  if (insideX) axis = 'y';
+  else if (insideY) axis = 'x';
+  else axis = (R - Math.abs(dx)) < (R - Math.abs(dy)) ? 'x' : 'y';
+
+  const dist = Math.sqrt(distSq) || 0.001;
+  const push = R - dist;
+  const nx = dx/dist, ny = dy/dist;
+
+  let nvx = vx, nvy = vy;
+  if (axis === 'x') nvx = (x < x0+CONFIG.CELL/2) ? -Math.abs(vx) : Math.abs(vx);
+  else              nvy = (y < y0+CONFIG.CELL/2) ? -Math.abs(vy) : Math.abs(vy);
+
+  return { nx, ny, push, vx:nvx, vy:nvy };
+}
+
+function cloneBallJitter(src){
+  const jitter = (S.rng.next()-0.5) * 0.5;
+  const r = rotate2D(src.vx, src.vy, jitter);
+  // Inherit age/lastHit: a clone born at age 0 that can itself spawn clones
+  // makes a frenzy turn immortal and the round never resolves.
+  return { x: src.x, y: src.y, vx: r.vx, vy: r.vy,
+           age: src.age, lastHit: src.lastHit || 0, dmgLock: src.dmgLock };
+}
+
+function applyOperator(brick, selfIndex, removeSet, spawnList){
+  if (brick.op === 'x2') {
+    const alive = [];
+    for (let i=0;i<S.activeBalls.length;i++) if (!removeSet.has(i)) alive.push(S.activeBalls[i]);
+    const currentTotal = (S.activeBalls.length - removeSet.size) + spawnList.length + S.fireQueueRemaining;
+    let room = CONFIG.ACTIVE_BALL_CAP - currentTotal;
+    for (const srcBall of alive) {
+      if (room > 0) { spawnList.push(cloneBallJitter(srcBall)); room--; }
+      else addScore(CONFIG.OVERFLOW_BONUS);
+    }
+    vibrate(PATTERN.opX2);
+  } else if (brick.op === 'add') {
+    S.collectedForNextTurn += brick.val;
+    vibrate(PATTERN.opAdd);
+  } else if (brick.op === 'sub') {
+    // Mirror of '+N': the penalty lands on the NEXT volley and balls already in
+    // flight always finish their run. Yanking live balls out of the air cuts
+    // shots short and reads as the game breaking.
+    S.pendingPenalty += brick.val;
+    vibrate(PATTERN.opSub);
+  }
+}
+
+function applyItem(kind, rr, cc){
+  if (kind === 'bomb') {
+    for (let dr=-CONFIG.BOMB_RADIUS; dr<=CONFIG.BOMB_RADIUS; dr++){
+      for (let dc=-CONFIG.BOMB_RADIUS; dc<=CONFIG.BOMB_RADIUS; dc++){
+        const r2 = rr+dr, c2 = cc+dc;
+        if (r2<0 || r2>=CONFIG.GRID_ROWS || c2<0 || c2>=CONFIG.COLS) continue;
+        const t = S.grid[r2][c2];
+        if (t && t.type === 'hp') {
+          S.grid[r2][c2] = null;
+          addScore(t.maxHp*10);
+          spawnBreakParticle(c2*CONFIG.CELL+CONFIG.CELL/2, r2*CONFIG.CELL+CONFIG.CELL/2, '#ff6b35');
+        }
+      }
+    }
+    vibrate(PATTERN.itemBomb);
+    showBuffBanner('💥 주변 파괴!');
+  } else if (kind === 'frenzy') {
+    S.frenzyActive = true;
+    vibrate(PATTERN.itemFrenzy);
+    showBuffBanner('⚡ 공 분열 시작!');
+  } else if (kind === 'gold') {
+    S.scoreMult = CONFIG.GOLD_MULT;
+    vibrate(PATTERN.itemGold);
+    showBuffBanner('💰 점수 2배!');
+  }
+}
+
+function tryFrenzyClone(b, spawnList){
+  if (!S.frenzyActive) return;
+  if (S.activeBalls.length + spawnList.length + S.fireQueueRemaining >= CONFIG.ACTIVE_BALL_CAP) return;
+  if (S.rng.next() < CONFIG.FRENZY_BOUNCE_CHANCE) spawnList.push(cloneBallJitter(b));
+}
+
+function substep(subDt){
+  const removeSet = new Set();
+  const spawnList = [];
+  for (let i=0;i<S.activeBalls.length;i++){
+    if (removeSet.has(i)) continue;
+    const b = S.activeBalls[i];
+    b.age += subDt;
+    b.trailTick = (b.trailTick||0) + 1;
+    if (b.trailTick % 3 === 0) {
+      if (!b.trail) b.trail = [];
+      b.trail.push({x:b.x, y:b.y});
+      if (b.trail.length > CONFIG.TRAIL_LEN) b.trail.shift();
+    }
+    b.x += b.vx*subDt;
+    b.y += b.vy*subDt;
+
+    // A wall bounce resets the idle timer too: a ball zigzagging toward the
+    // bricks via shallow-angle wall bounces is still doing work, not stalled.
+    // Only silence (no collision of any kind) for IDLE_GRAVITY_AFTER should
+    // trigger the downward bend - otherwise a flat shot gets bent into the
+    // floor mid-bounce, before it ever reaches a brick.
+    if (b.x - CONFIG.BALL_RADIUS < 0) { b.x = CONFIG.BALL_RADIUS; b.vx = Math.abs(b.vx); b.lastHit = 0; tryFrenzyClone(b, spawnList); }
+    else if (b.x + CONFIG.BALL_RADIUS > WIDTH) { b.x = WIDTH-CONFIG.BALL_RADIUS; b.vx = -Math.abs(b.vx); b.lastHit = 0; tryFrenzyClone(b, spawnList); }
+    if (b.y - CONFIG.BALL_RADIUS < 0) { b.y = CONFIG.BALL_RADIUS; b.vy = Math.abs(b.vy); b.lastHit = 0; tryFrenzyClone(b, spawnList); }
+
+    if (b.y < DANGER_Y + CONFIG.CELL) {
+      const col = Math.floor(b.x / CONFIG.CELL);
+      const row = Math.floor(b.y / CONFIG.CELL);
+      // Resolve against the DEEPEST overlap, not the first one scanned. On a seam
+      // the ball touches two bricks; pushing out of the shallower one drives it
+      // into its neighbour, and it burrows between the bricks.
+      let deepest = null;
+      for (let rr=row-1; rr<=row+1; rr++){
+        if (rr<0 || rr>=CONFIG.GRID_ROWS) continue;
+        for (let cc=col-1; cc<=col+1; cc++){
+          if (cc<0 || cc>=CONFIG.COLS) continue;
+          const brick = S.grid[rr][cc];
+          if (!brick) continue;
+          const x0=cc*CONFIG.CELL, y0=rr*CONFIG.CELL;
+          const h = brickHitInfo(b.x, b.y, b.vx, b.vy, x0, y0);
+          if (h && (!deepest || h.push > deepest.hit.push)) {
+            deepest = { hit:h, brick, rr, cc, x0, y0 };
+          }
+        }
+      }
+      {
+        if (deepest) {
+          const { hit, brick, rr, cc, x0, y0 } = deepest;
+            b.x += hit.nx*hit.push;
+            b.y += hit.ny*hit.push;
+            b.lastHit = 0;
+            if (brick.type === 'hp') {
+              b.vx = hit.vx; b.vy = hit.vy;
+              if (b.dmgLock) { /* 이번 프레임 몫은 이미 썼다: 튕기기만 한다 */ } else {
+              b.dmgLock = true;
+              brick.hp--;
+              brick.flash = 1;
+              const hitColor = brick.boss ? T.boss[1] : brick.curse ? T.curse[1] : T.hitSpark;
+              spawnHitParticle(b.x, b.y, hitColor);
+              // Curse brick: every hit it survives pumps its neighbours. Killing it
+              // fast, or leaving it alone, are both real choices.
+              if (brick.curse && brick.hp > 0) {
+                for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++){
+                  if (!dr && !dc) continue;
+                  const t = S.grid[rr+dr] && S.grid[rr+dr][cc+dc];
+                  if (t && t.type === 'hp') {
+                    t.hp += CONFIG.CURSE_SPREAD;
+                    t.maxHp = Math.max(t.maxHp, t.hp);
+                  }
+                }
+              }
+              if (brick.hp <= 0) {
+                S.grid[rr][cc] = null;
+                S.combo++;
+                const gain = brick.maxHp*10 + (S.combo-1)*CONFIG.COMBO_STEP;
+                addScore(gain);
+                spawnBreakParticle(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, hitColor);
+                spawnPopup(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, '+'+Math.round(gain*S.scoreMult), hitColor);
+                if (brick.boss) {
+                  S.bossKills = (S.bossKills || 0) + 1;
+                  S.collectedForNextTurn += CONFIG.BOSS_REWARD_BALLS;
+                  spawnPopup(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2-16, '공 +'+CONFIG.BOSS_REWARD_BALLS, '#4ade80');
+                  addShockwave(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, '#ff5a8a', 210, 7);
+                  addShockwave(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, '#ffd54a', 120, 3);
+                  burstRing(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, '#ff5a8a', 30, 320);
+                  addFlash('#ff5a8a', 0.45);
+                  addHitstop(0.15);
+                  addShake(8);
+                  showBuffBanner('👑 보스 격파! 공 +'+CONFIG.BOSS_REWARD_BALLS);
+                }
+                // Ration shake to cascades, not every break (Holedown principle).
+                if (S.combo >= 4) addShake(1.2 + Math.min(3, S.combo*0.12));
+                vibrate(PATTERN.brickBreak);
+              }
+              }
+            } else if (brick.type === 'op') {
+              S.grid[rr][cc] = null;
+              spawnBreakParticle(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, opColor(brick.op));
+              const opLabel = brick.op==='x2' ? '×2' : brick.op==='add' ? '+'+brick.val : '-'+brick.val;
+              spawnPopup(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, opLabel, opColor(brick.op));
+              if (brick.op === 'x2') {
+                addShockwave(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, '#ffd54a', 170, 5);
+                burstRing(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, '#ffd54a', 18, 250);
+                addFlash('#ffd54a', 0.28);
+                addHitstop(0.10);
+                addShake(5.5);
+              } else addShake(2);
+              applyOperator(brick, i, removeSet, spawnList);
+            } else if (brick.type === 'item') {
+              S.grid[rr][cc] = null;
+              const cxp = x0+CONFIG.CELL/2, cyp = y0+CONFIG.CELL/2;
+              spawnBreakParticle(cxp, cyp, itemVisual(brick.kind).color);
+              itemFanfare(cxp, cyp, brick.kind);
+              applyItem(brick.kind, rr, cc);
+            }
+        }
+      }
+    }
+
+    if (removeSet.has(i)) continue;
+
+    if (b.y + CONFIG.BALL_RADIUS >= LAND_Y) {
+      removeSet.add(i);
+      S.collectedForNextTurn++;
+      if (!S.landedThisTurn) {
+        S.landedThisTurn = true;
+        S.launcherX = clamp(b.x, 20, WIDTH-20);
+      } else {
+        S.returning.push({ x: clamp(b.x, 0, WIDTH), y: LAND_Y });
+      }
+      continue;
+    }
+    b.lastHit = (b.lastHit || 0) + subDt;
+    if (b.age > CONFIG.BALL_MAX_LIFETIME) {
+      // Same rule as every other removal: a ball leaving play must be visible
+      // flying home, never deleted where it stands.
+      removeSet.add(i);
+      S.collectedForNextTurn++;
+      S.returning.push({ x: clamp(b.x, 0, WIDTH), y: b.y });
+      continue;
+    }
+
+    // A ball that stops being productive is bent downward until it lands, rather
+    // than being deleted where it flies. Deleting it mid-air is what makes shots
+    // look like they get cut off half way. Hitting a brick resets the timer, so
+    // this never touches a ball that is still doing work.
+    const idle = b.lastHit - CONFIG.IDLE_GRAVITY_AFTER;
+    if (idle > 0) {
+      b.vy += CONFIG.IDLE_GRAVITY * Math.min(1, idle / CONFIG.IDLE_GRAVITY_RAMP) * subDt;
+    }
+    // Renormalize so speed never drifts.
+    const sp = Math.hypot(b.vx, b.vy) || 1;
+    b.vx = b.vx/sp*CONFIG.BALL_SPEED;
+    b.vy = b.vy/sp*CONFIG.BALL_SPEED;
+  }
+  if (removeSet.size) S.activeBalls = S.activeBalls.filter((_,i)=>!removeSet.has(i));
+  if (spawnList.length) S.activeBalls.push(...spawnList);
+}
+
+function spawnBall(){
+  // Every ball leaves from the same muzzle. Spreading them sideways makes them
+  // travel as several parallel streams instead of one line.
+  S.activeBalls.push({
+    x: S.launcherX, y: LAUNCHER_Y,
+    vx: S.aimDir.x * CONFIG.BALL_SPEED,
+    vy: S.aimDir.y * CONFIG.BALL_SPEED,
+    age: 0
+  });
+}
+
+function handleFireQueue(dt){
+  if (S.fireQueueRemaining <= 0) return;
+  S.fireTimer += dt;
+  // One ball per interval, but tighten the interval as the volley grows so the
+  // whole salvo still clears in about FIRE_TOTAL_TARGET seconds. At a flat
+  // interval, a few hundred balls would spend a quarter minute just launching.
+  const interval = Math.min(CONFIG.FIRE_INTERVAL,
+    CONFIG.FIRE_TOTAL_TARGET / Math.max(1, S.ballCountAtTurnStart));
+  while (S.fireTimer >= interval && S.fireQueueRemaining > 0) {
+    // 화력(공 개수)엔 상한이 없지만, 동시에 화면에 떠 있는 공은 여기서 막는다.
+    // 자리가 없으면 큐는 그대로 두고 기다렸다가 공이 착지하는 대로 이어 쏜다 -
+    // 대기시간을 그대로 쌓아두면 자리가 나는 순간 한꺼번에 몰아 쏘게 된다.
+    if (S.activeBalls.length >= CONFIG.ACTIVE_BALL_CAP) { S.fireTimer = Math.min(S.fireTimer, interval); break; }
+    S.fireTimer -= interval;
+    spawnBall();
+    S.fireQueueRemaining--;
+  }
+}
+
+function shiftRowsAndSpawnNewRow(){
+  for (let r=CONFIG.GRID_ROWS-1; r>0; r--) S.grid[r] = S.grid[r-1];
+  S.grid[0] = generateRow(S.rng, S.round, S.ballCount);
+}
+function checkGameOver(){
+  return S.grid[CONFIG.GRID_ROWS-1].some(c => c !== null);
+}
+
+function finishTurn(){
+  // 공 개수는 더 이상 여기서 잘리지 않는다: 이게 곧 다음 라운드 브릭 체력을 정하는
+  // 화력이라, 여기서 캡을 걸면 라운드가 오를수록 이길 수 없는 판이 된다(엔드리스 설계).
+  // 동시에 날아다니는 공 수는 ACTIVE_BALL_CAP 이 따로 막아 성능을 지킨다.
+  S.ballCount = Math.max(1, S.collectedForNextTurn - S.pendingPenalty);
+  S.maxBalls = Math.max(S.maxBalls, S.ballCount);
+  S.collectedForNextTurn = 0;
+  S.pendingPenalty = 0;
+  S.landedThisTurn = false;
+  S.round++;
+  shiftRowsAndSpawnNewRow();
+  S.shiftAnim = 1;
+  S.state = 'shifting';
+  updateHud();
+}
+
+function updateShift(dt){
+  S.shiftAnim -= dt / CONFIG.SHIFT_DURATION;
+  if (S.shiftAnim <= 0) {
+    S.shiftAnim = 0;
+    if (checkGameOver()) { enterGameOver(); return; }
+    S.state = 'aiming';
+    saveGame();               // 매 턴 경계마다 자동 저장 - 이게 '이어하기'의 체크포인트다
+  }
+}
+
+function enterGameOver(){
+  S.state = 'gameover';
+  clearSavedGame();           // 이 판은 끝났다 - 다음 '게임 시작'은 새 판이어야 한다
+  vibrate(PATTERN.gameOver);
+
+  // 얼음판이 화면 아래쪽까지 꽉 채우므로, 마스코트가 판 뒤에 묻히지 않게 앞으로 올린다
+  document.getElementById('mascot').classList.add('front');
+  setMascot(true);
+
+  const isRecord = S.score > LB.best;
+  const gap = LB.best - S.score;
+
+  const tag = document.getElementById('goTag');
+  tag.textContent = isRecord ? '🎉 최고 기록 갱신!' : '게임 오버';
+  tag.classList.toggle('record', isRecord);
+
+  document.getElementById('finalScore').textContent = S.score.toLocaleString();
+  document.getElementById('goRound').textContent = S.round;
+  document.getElementById('goBalls').textContent = S.maxBalls;
+  document.getElementById('goBoss').textContent = S.bossKills || 0;
+
+  // 다시 하고 싶어지는 한 줄
+  const feed = document.getElementById('goFeed');
+  if (isRecord)          feed.innerHTML = `이전 기록보다 <span class="hi">${(S.score-LB.best).toLocaleString()}점</span> 더 냈어요`;
+  else if (gap <= 2000)  feed.innerHTML = `최고 기록까지 <span class="hi">${gap.toLocaleString()}점</span> 남았어요`;
+  else if (S.bossKills)  feed.innerHTML = `보스를 <span class="hi">${S.bossKills}번</span> 잡았어요`;
+  else                   feed.innerHTML = `공을 <span class="hi">${S.maxBalls}개</span>까지 모았어요`;
+
+  document.getElementById('overlay').classList.add('show');
+  submitScore(S.score, S.round);
+}
+
+// 결과 공유: 폰 기본 공유 시트가 있으면 그걸 띄우고, 없는 환경(주로 PC 브라우저)이면
+// 클립보드 복사로 대신한다. 사용자가 공유 창을 그냥 닫은 경우(취소)는 에러로 취급하지 않는다.
+// 복사 완료 안내는 버튼 자기 자신의 글자를 잠깐 바꿔서 보여준다 - 전역 토스트(showBuffBanner)는
+// 이 모달보다 z-index 가 낮아 게임오버 창 뒤에 가려 안 보인다.
+async function doShareResult(){
+  const text = `눈덩이에서 ${S.score.toLocaleString()}점 냈어요! 라운드 ${S.round} · 최고 공 ${S.maxBalls}개\n너도 도전해볼래?`;
+  const url = location.origin + location.pathname;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: '눈덩이 - 쏠수록 불어나는 블록 파괴 게임', text, url });
+    } else if (navigator.clipboard) {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      const btn = document.getElementById('btnShare');
+      const original = btn.innerHTML;
+      btn.innerHTML = '복사됐어요! 친구에게 붙여넣기 해보세요';
+      setTimeout(() => { btn.innerHTML = original; }, 1800);
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;   // 공유 시트를 취소만 한 경우
+  }
+}
+
+// ---- 랭킹 ----
+// 개인 최고기록만 서버에 올린다. 서버가 없거나 오프라인이어도 게임은 그대로 굴러가고,
+// 내 최고기록은 항상 기기에 남는다.
+const LB = {
+  api: (window.SNOWBALL_API !== undefined) ? window.SNOWBALL_API : '',
+  id: '',
+  nick: '',
+  token: '',
+  best: 0,
+  pending: 0,   // 오프라인일 때 못 올린 기록
+  stats: { best: 0, bestRound: 0, plays: 0 },
+};
+
+function lbLoad(){
+  try {
+    LB.id = localStorage.getItem('snowball.id') || '';
+    LB.nick = localStorage.getItem('snowball.nick') || '';
+    LB.token = localStorage.getItem('snowball.token') || '';
+    LB.best = Number(localStorage.getItem('snowball.best') || 0);
+    LB.pending = Number(localStorage.getItem('snowball.pending') || 0);
+  } catch(e){}
+}
+function lbSaveLocal(){
+  try {
+    localStorage.setItem('snowball.id', LB.id);
+    localStorage.setItem('snowball.nick', LB.nick);
+    localStorage.setItem('snowball.token', LB.token);
+    localStorage.setItem('snowball.best', String(LB.best));
+    localStorage.setItem('snowball.pending', String(LB.pending));
+  } catch(e){}
+}
+function cleanField(v, max){
+  return String(v||'').replace(/[\s<>"'&\\/]/g,'').trim().slice(0, max);
+}
+function lbSignedIn(){ return !!(LB.id && LB.token); }
+
+// 비밀번호: 8자 이상, 영문/숫자/특수문자를 모두 포함
+const PW_RE = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$/;
+
+// 성별 토글: 버튼 하나를 누르면 같은 줄의 다른 버튼은 꺼진다
+function initGenderRow(rowId){
+  document.getElementById(rowId).querySelectorAll('.genderBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.parentElement.querySelectorAll('.genderBtn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+}
+function getGender(rowId){
+  const sel = document.getElementById(rowId).querySelector('.genderBtn.active');
+  return sel ? sel.dataset.gender : '';
+}
+function resetGenderRow(rowId){
+  document.getElementById(rowId).querySelectorAll('.genderBtn').forEach(b => b.classList.remove('active'));
+}
+
+// 아이디 / 닉네임 중복 확인: 포커스아웃되면 자동으로 서버에 물어본다.
+// 반환값은 true(사용 가능)/false(중복)/null(확인 안 됨, 서버 오류 등) - null 이면 제출을 막지 않는다.
+async function checkAvailability(kind, value, msgEl){
+  if (!value) { msgEl.textContent = ''; msgEl.className = 'checkMsg'; return null; }
+  msgEl.textContent = '확인 중...'; msgEl.className = 'checkMsg pending';
+  try {
+    const res = await fetch(`${LB.api}/api/check-${kind}?${kind}=${encodeURIComponent(value)}`);
+    const data = await res.json();
+    if (!data.ok) throw 0;
+    msgEl.textContent = data.available
+      ? '사용할 수 있어요'
+      : (kind === 'id' ? '이미 있는 아이디예요' : '이미 있는 닉네임이에요');
+    msgEl.className = 'checkMsg ' + (data.available ? 'ok' : 'bad');
+    return data.available;
+  } catch (e) {
+    msgEl.textContent = ''; msgEl.className = 'checkMsg';
+    return null;
+  }
+}
+
+// 아이디 저장: 켜져 있을 때만 타이틀 아이디 칸을 미리 채운다.
+// LB.id 자체는 지우지 않는다(점수 전송·자동 로그인이 이걸 쓴다).
+function keepIdGet(){
+  try { return localStorage.getItem('snowball.keepId') !== '0'; } catch(e){ return true; }
+}
+function keepIdSave(){
+  const on = document.getElementById('keepId').checked;
+  try { localStorage.setItem('snowball.keepId', on ? '1' : '0'); } catch(e){}
+}
+
+function renderRank(list, note){
+  const ol = document.getElementById('rankList');
+  ol.innerHTML = '';
+  // 로비와 같은 줄 생성기를 쓴다 - 1~3위 그림 메달까지 그대로 따라온다
+  // (예전엔 여기서만 따로 만들면서 숫자 동그라미로 떨어졌다)
+  (list || []).slice(0, 20).forEach((r, i) => ol.appendChild(rankRow(r, i)));
+  document.getElementById('rankNote').textContent = note || '';
+}
+
+async function submitScore(score, round){
+  if (score > LB.best) { LB.best = score; lbSaveLocal(); }
+  document.getElementById('finalBest').textContent = '내 최고 ' + LB.best.toLocaleString();
+
+  if (!lbSignedIn()) { renderRank([], ''); return; }
+
+  // 오프라인이었던 판의 기록도 다음 접속 때 같이 올라간다.
+  const toSend = Math.max(score, LB.pending, LB.best);
+  try {
+    const res = await fetch(LB.api + '/api/score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: LB.id, token: LB.token, score: toSend, round }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      if (res.status === 401) { LB.token = ''; lbSaveLocal(); renderRank([], '다시 로그인해주세요'); return; }
+      throw new Error(data.error || '실패');
+    }
+    LB.pending = 0;
+    LB.best = Math.max(LB.best, data.best);
+    if (data.stats) LB.stats = data.stats;
+    lbSaveLocal();
+    renderRank(data.scores, data.rank ? `내 순위 ${data.rank}위` : '');
+  } catch (e) {
+    LB.pending = Math.max(LB.pending, LB.best); lbSaveLocal();
+    renderRank([], '오프라인 - 다음 접속 때 기록이 올라가요');
+  }
+}
+
+async function refreshRank(){
+  if (!lbSignedIn() && !LB.api && !location.protocol.startsWith('http')) return;
+  try {
+    const res = await fetch(LB.api + '/api/scores');
+    const data = await res.json();
+    if (data.ok) renderRank(data.scores, '');
+  } catch(e){}
+}
+
+
+function setMascot(on){
+  document.getElementById('mascot').classList.toggle('show', !!on);
+}
+
+// 틀 바깥 여백을 지금 화면과 같은 그림으로 채운다
+function setAmbient(name){
+  const el = document.getElementById('ambient');
+  el.className = name;                       // 그림이 모자란 바깥쪽 메움색
+  el.style.backgroundImage = `url(img/${name}-wide.webp)`;
+  syncAmbient();
+}
+
+// 넓은 배경(원본을 좌우로 5칸 이어붙임)의 '가운데 1/5'이
+// 게임 틀과 정확히 겹치도록 축척을 맞춘다
+const AMBIENT_TILES = 5;
+function syncAmbient(){
+  const fw = document.getElementById('frame').getBoundingClientRect().width;
+  const el = document.getElementById('ambient');
+  el.style.backgroundSize = (fw * AMBIENT_TILES) + 'px auto';
+  el.style.backgroundPosition = 'center center';
+}
+window.addEventListener('resize', syncAmbient);
+
+// 배경 그림 위에 내리는 눈. 값은 고정표를 써서 새로고침해도 같은 그림이 나온다
+// (게임 로직의 시드 RNG 와 섞이지 않게 Math.random 은 쓰지 않는다).
+(function initSnow(){
+  const box = document.getElementById('snowfall');
+  //        x%,  크기px, 초, 지연s, 흐름px, 진하기
+  const F = [[ 6, 20, 17, 0.0, 26, .60], [17, 13, 22, 3.2, -18, .45],
+             [28, 26, 15, 1.1, 34, .65], [39, 15, 25, 5.0, -24, .38],
+             [50, 18, 19, 2.4, 20, .55], [61, 28, 14, 6.1, -30, .62],
+             [72, 13, 23, 0.7, 22, .42], [83, 22, 18, 4.3, -26, .56],
+             [93, 16, 21, 2.0, 18, .48], [11, 30, 26, 7.4, -34, .34],
+             [45, 11, 28, 8.6, 16, .30], [67, 17, 24, 9.8, -20, .38]];
+  box.innerHTML = '';
+  for (const [x, s, dur, delay, dx, o] of F){
+    const i = document.createElement('i');
+    i.style.left = x + '%';
+    i.style.width = s + 'px';
+    i.style.height = s + 'px';
+    i.style.setProperty('--dx', dx + 'px');
+    i.style.setProperty('--o', o);
+    i.style.animationDuration = dur + 's';
+    i.style.animationDelay = '-' + delay + 's';
+    box.appendChild(i);
+  }
+})();
+
+function showTitle(){
+  document.getElementById('mascot').classList.remove('front');
+  S.paused = true;                       // 타이틀 뒤에서 게임이 굴러가지 않게
+  document.body.classList.remove('playing');
+  setMascot(true);
+  setAmbient('bg-lobby');      // 시안(ref1)은 로비와 같은 밝은 풍경이다
+  document.getElementById('authErr').textContent = '';
+  const keep = keepIdGet();
+  document.getElementById('keepId').checked = keep;
+  document.getElementById('idInput').value = keep ? (LB.id || '') : '';
+  document.getElementById('pwInput').value = '';
+  document.getElementById('titleScreen').classList.add('show');
+}
+
+// ---- 블록 도감 ----
+const GUIDE = [
+  ['기본', [
+    ['#5b8def', '7',  '숫자 블록', '적힌 숫자만큼 맞아야 깨져요.', '숫자가 클수록 색이 진해져요', 'num'],
+    ['#e11d63', '👑', '보스',      '체력이 3배인 대형 블록. 잡으면 공 4개를 줘요.', '4라운드부터 등장', 'boss'],
+    ['#7c22cf', '▲',  '증식',      '때릴 때마다 주변 8칸의 숫자가 2씩 올라가요.', '한 번에 깨거나, 아예 건드리지 마세요', 'grow'],
+  ]],
+  ['공 개수', [
+    ['#f5c518', '×2', '두 배',     '날아가는 공이 그 자리에서 2배로 늘어나요.', '공이 많을 때 맞히면 이득이 커요', 'x2'],
+    ['#22c55e', '+N', '추가',      '다음 턴에 공 N개를 더 발사해요.', '이번 턴이 아니라 다음 턴', 'plus'],
+    ['#ef4444', '−N', '감소',      '다음 턴 발사량이 N개 줄어요.', '날아가는 공은 그대로 끝까지 가요', 'minus'],
+  ]],
+  ['아이템', [
+    ['#ff6b35', '💥', '폭탄',      '닿는 순간 주변 3×3을 즉시 부숴요.', '막힌 구간을 뚫을 때', 'bomb'],
+    ['#8b5cf6', '분열', '분열',   '이번 턴 동안 공이 벽에 튕길 때마다 늘어나요.', '오래 살아남을수록 많이 불어나요', 'blank-purple'],
+    ['#f59e0b', '점수', '점수 2배', '이번 턴에 얻는 점수가 2배가 돼요.', '많이 깰 수 있는 턴에', 'blank-gold'],
+  ]],
+];
+
+const HOWTO = [
+  ['기본 규칙', [
+    ['#5b8def', '1', '조준하고 쏘기', '쏘고 싶은 방향으로 드래그하면 점선으로 궤적이 미리 보여요.', '', 'n1'],
+    ['#5b8def', '2', '블록 내려옴',   '한 턴이 끝날 때마다 블록이 한 줄씩 내려와요.', '', 'n2'],
+    ['#ef4444', '3', '바닥에 닿으면 끝', '블록이 맨 아래에 닿으면 게임이 끝나요.', '', 'n3'],
+  ]],
+  ['핵심', [
+    ['#22c55e', '공', '공이 곧 자원', '공 4개로 시작해서 계속 불려나가요. 공이 많을수록 한 턴에 많이 부숴요.', '', 'ball'],
+    ['#e11d63', 'HP', '같이 강해져요', '공이 늘면 블록 체력도 같이 올라가요. 그래서 끝없이 쉬워지지 않아요.', '', 'hp'],
+    ['#f59e0b', '순서', '순서가 실력', '−30을 먼저 맞고 ×2를 맞으면 손해예요. 순서를 뒤집으면 대박이고요.', '', 'order'],
+  ]],
+];
+
+// 뱃지 색 하나로 위(밝게)·아래(원색)·굽(어둡게) 세 톤을 만들어 입체로 세운다
+function shade(hex, amt){
+  const n = parseInt(hex.slice(1), 16);
+  const c = [n >> 16 & 255, n >> 8 & 255, n & 255].map(v =>
+    Math.round(amt > 0 ? v + (255 - v) * amt : v * (1 + amt)));
+  return '#' + c.map(v => Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0')).join('');
+}
+
+function renderGuide(data, title, art, sub){
+  const t = document.getElementById('guideTitle');
+  t.src = art; t.alt = title;
+  // 도감은 액자 없이 화면 전체를 쓰고 부제가 붙는다(시안 ref4)
+  document.getElementById('guideScreen').classList.toggle('full', !!sub);
+  document.getElementById('guideSub').textContent = sub || '';
+  const box = document.getElementById('guideBody');
+  box.innerHTML = '';
+  for (const [sec, items] of data){
+    const tab = document.createElement('div'); tab.className = 'gSec';
+    const flake = document.createElement('b'); flake.textContent = '❄';
+    tab.append(flake, document.createTextNode(sec));
+    const grp = document.createElement('div'); grp.className = 'gGroup';
+    for (const [color, icon, name, desc, tip, art] of items){
+      const row = document.createElement('div'); row.className = 'gItem';
+      let chip;
+      if (art){                                  // 시안에서 오려낸 얼음 블록 그림
+        chip = document.createElement('span');
+        chip.className = 'gChip art';
+        chip.style.backgroundImage = `url(img/badge-${art}.webp)`;
+        chip.style.filter = `drop-shadow(0 4px 5px rgba(10,40,110,.4))`
+                          + ` drop-shadow(0 0 9px ${color}80)`;
+        // 시안에 없던 블록은 글자를 지운 빈 큐브에 이름을 얹어 같은 결로 맞춘다
+        if (art.startsWith('blank')) chip.textContent = icon;
+      } else {                                   // 그림이 없는 항목은 CSS 로 비슷하게 세운다
+        chip = document.createElement('div');
+        chip.className = 'gChip' + (icon.length > 1 ? ' sm' : '');
+        chip.style.backgroundImage =
+          `var(--snowcap), linear-gradient(180deg, ${shade(color, .3)}, ${color})`;
+        chip.style.boxShadow = `0 4px 0 ${shade(color, -.34)}, 0 7px 13px rgba(10,40,110,.3),`
+                             + ` 0 0 16px ${shade(color, .1)}70,`
+                             + ' inset 0 1px 0 rgba(255,255,255,.5)';
+        chip.textContent = icon;
+      }
+      const txt = document.createElement('div'); txt.className = 'gTxt';
+      const b = document.createElement('b'); b.textContent = name;
+      const p = document.createElement('p'); p.textContent = desc;
+      txt.append(b, p);
+      if (tip){ const em = document.createElement('em'); em.textContent = tip; txt.appendChild(em); }
+      row.append(chip, txt);
+      grp.appendChild(row);
+    }
+    box.append(tab, grp);
+  }
+  const screen = document.getElementById('guideScreen');
+  screen.classList.add('show');
+  // 판 아래에 자리가 남을 때만 눈덩이를 앞으로 올려 세운다.
+  // 자리가 없으면 카드 위에 겹쳐서 지저분해진다.
+  requestAnimationFrame(() => {
+    // 판은 화면 가운데에 서므로 아래 여백 = (틀 높이 − 판 높이) / 2.
+    // 등장 애니메이션 중에도 흔들리지 않게 좌표 대신 높이로 잰다.
+    const panelH = screen.querySelector('.guidePanel').offsetHeight;
+    const frameH = document.getElementById('frame').offsetHeight;
+    // 도감(전체화면)은 시안에도 눈덩이가 없다
+    const room = !screen.classList.contains('full') && (frameH - panelH) / 2 > 40;
+    document.getElementById('mascot').classList.toggle('front', room);
+    setMascot(room);
+  });
+}
+
+// ---- 로비 ----
+function showLobby(){
+  document.getElementById('mascot').classList.remove('front');
+  S.paused = true;
+  document.body.classList.remove('playing');
+  setMascot(true);
+  setAmbient('bg-lobby');
+  document.getElementById('lobbyNick').textContent = LB.nick || LB.id || '-';
+  document.getElementById('stBest').textContent = (LB.stats.best || 0).toLocaleString();
+  document.getElementById('stRound').textContent = LB.stats.bestRound || 0;
+  // 이어할 판이 있으면 '게임 시작' 대신 '이어하기'로 - 끝이 없는 게임이라
+  // 닫았다 다시 들어와도 라운드가 그대로 이어져야 한다.
+  const saved = loadSavedGame();
+  document.getElementById('playBig').textContent = saved ? '이어하기' : '게임 시작';
+  document.getElementById('playSub').textContent = saved
+    ? `${saved.round}라운드 · 공 ${saved.ballCount.toLocaleString()}개부터`
+    : (LB.stats.plays ? `${LB.stats.plays}번째 도전` : '첫 판을 시작해보세요');
+  document.getElementById('titleScreen').classList.remove('show');
+  document.getElementById('namePanel').classList.remove('show');
+  document.getElementById('naverScreen').classList.remove('show');
+  document.getElementById('naverNickPanel').classList.remove('show');
+  document.getElementById('lobby').classList.add('show');
+  refreshLobbyRank();
+}
+
+async function refreshLobbyRank(){
+  const ol = document.getElementById('lobbyRank');
+  try {
+    const res = await fetch(LB.api + '/api/scores');
+    const data = await res.json();
+    if (!data.ok) throw 0;
+    const mine = data.scores.findIndex(r => r.id === LB.id) + 1;
+    document.getElementById('stRank').textContent = mine ? mine + '위' : '-';
+    ol.innerHTML = '';
+    if (!data.scores.length){
+      const d = document.createElement('li'); d.className = 'emptyRank';
+      d.textContent = '아직 기록이 없어요. 첫 주인공이 되어보세요';
+      ol.appendChild(d); return;
+    }
+    data.scores.slice(0, 3).forEach((r, i) => ol.appendChild(rankRow(r, i)));
+    if (mine > 3){
+      const me = data.scores[mine-1];
+      const row = rankRow(me, mine-1);
+      row.classList.add('apart');          // 위 3줄과 떨어뜨려 '내 순위'로 읽히게
+      ol.appendChild(row);
+    }
+  } catch(e){
+    ol.innerHTML = '';
+    const d = document.createElement('li'); d.className = 'emptyRank';
+    d.textContent = '순위를 불러오지 못했어요';
+    ol.appendChild(d);
+  }
+}
+
+function rankRow(r, i){
+  const li = document.createElement('li');
+  if (r.id === LB.id) li.className = 'me';
+  let no;
+  if (i < 3) {                       // 1~3위는 시안에서 오려낸 메달 그림
+    no = document.createElement('img');
+    no.className = 'no medal'; no.src = 'img/medal-' + (i+1) + '.webp'; no.alt = (i+1) + '위';
+  } else {
+    no = document.createElement('span'); no.className = 'no'; no.textContent = i+1;
+  }
+  const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = r.nick || r.id;
+  const sc = document.createElement('span'); sc.className = 'sc'; sc.textContent = r.score.toLocaleString();
+  li.append(no, nm, sc);
+  return li;
+}
+
+function enterGame(){
+  document.getElementById('namePanel').classList.remove('show');
+  document.getElementById('titleScreen').classList.remove('show');
+  document.getElementById('lobby').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+  document.body.classList.add('playing');      // 이때 비로소 게임판이 보인다
+  setMascot(false);
+  setAmbient('bg-game');
+  S.paused = false;
+  const saved = loadSavedGame();
+  if (saved) resumeGame(saved); else startFreshGame();
+}
+
+function applyAuth(data){
+  keepIdSave();                      // 로그인·가입에 성공한 시점의 체크 상태를 기억
+  LB.id = data.id;
+  LB.nick = data.nick || data.id;
+  LB.token = data.token;
+  LB.best = Math.max(LB.best, data.best || 0);
+  if (data.stats) LB.stats = data.stats;
+  lbSaveLocal();
+  renderRank(data.scores, '');
+  showLobby();                       // 바로 게임이 아니라 로비로
+  if (LB.pending > 0) submitScore(LB.pending, 0);
+}
+
+// 타이틀에서 바로 로그인
+async function doLogin(){
+  const errEl = document.getElementById('authErr');
+  const btn = document.getElementById('btnGoLogin');
+  const id = cleanField(document.getElementById('idInput').value, 16);
+  const pw = document.getElementById('pwInput').value;
+
+  if (!id) { errEl.textContent = '아이디를 입력해주세요'; return; }
+  if (!pw) { errEl.textContent = '비밀번호를 입력해주세요'; return; }
+
+  btn.disabled = true;
+  errEl.textContent = '';
+  try {
+    const res = await fetch(LB.api + '/api/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, pw }),
+    });
+    const data = await res.json();
+    if (!data.ok) { errEl.textContent = data.error || '로그인에 실패했어요'; return; }
+    if (data.admin) {
+      // 관리자 계정이면 게임이 아니라 관리자 페이지로
+      try { sessionStorage.setItem('snowball.admin', data.token); } catch(e){}
+      location.href = 'admin.html';
+      return;
+    }
+    applyAuth(data);
+  } catch (e) {
+    errEl.textContent = '서버에 연결할 수 없어요';
+  } finally { btn.disabled = false; }
+}
+
+// 회원가입 창
+let regIdAvailable = null;
+let regNickAvailable = null;
+function showRegister(){
+  setMascot(true);
+  document.getElementById('mascot').classList.add('front');
+  setAmbient('bg-lobby');   // 타이틀과 같은 풍경을 유지한다
+  // 타이틀은 아래에 깔아둔 채 가입 화면을 위에 페이드인시킨다.
+  // 타이틀을 먼저 내리면 전환 중 한 프레임 동안 게임이 비친다.
+  // 회원가입은 로그인 칸과 무관하게 항상 빈 칸에서 시작한다.
+  document.getElementById('regId').value = '';
+  document.getElementById('regPw').value = '';
+  document.getElementById('regPwConfirm').value = '';
+  document.getElementById('regNick').value = '';
+  document.getElementById('regErr').textContent = '';
+  document.getElementById('regIdMsg').textContent = ''; document.getElementById('regIdMsg').className = 'checkMsg';
+  document.getElementById('regNickMsg').textContent = ''; document.getElementById('regNickMsg').className = 'checkMsg';
+  resetGenderRow('genderRow');
+  regIdAvailable = null; regNickAvailable = null;
+  document.getElementById('namePanel').classList.add('show');
+  setTimeout(() => document.getElementById('regId').focus(), 80);
+}
+
+async function doRegister(){
+  const errEl = document.getElementById('regErr');
+  const btn = document.getElementById('btnAuthOk');
+  const id = cleanField(document.getElementById('regId').value, 16);
+  const pw = document.getElementById('regPw').value;
+  const pwConfirm = document.getElementById('regPwConfirm').value;
+  const nick = cleanField(document.getElementById('regNick').value, 12);
+  const gender = getGender('genderRow');
+
+  if (!id) { errEl.textContent = '아이디를 입력해주세요'; return; }
+  if (regIdAvailable === false) { errEl.textContent = '이미 있는 아이디예요'; return; }
+  if (!PW_RE.test(pw)) { errEl.textContent = '비밀번호는 8자 이상, 영문·숫자·특수문자를 모두 포함해주세요'; return; }
+  if (pw !== pwConfirm) { errEl.textContent = '비밀번호 확인이 서로 달라요'; return; }
+  if (!nick) { errEl.textContent = '닉네임을 입력해주세요'; return; }
+  if (regNickAvailable === false) { errEl.textContent = '이미 있는 닉네임이에요'; return; }
+  if (!gender) { errEl.textContent = '성별을 선택해주세요'; return; }
+
+  btn.disabled = true;
+  errEl.textContent = '';
+  try {
+    const res = await fetch(LB.api + '/api/register', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, pw, nick, gender }),
+    });
+    const data = await res.json();
+    if (!data.ok) { errEl.textContent = data.error || '가입에 실패했어요'; return; }
+    applyAuth(data);
+  } catch (e) {
+    errEl.textContent = '서버에 연결할 수 없어요';
+  } finally { btn.disabled = false; }
+}
+
+// ---- 네이버로 로그인 (기본 골격만. 실제 OAuth 연동은 보안 검토 후 붙일 예정) ----
+// 지금은 네이버 화면 흉내만 내고, "로그인"을 누르면 성공한 것으로 치고
+// 새로 발급한 가상 네이버 아이디로 넘어간다. 비밀번호는 사용자가 정하지 않는다.
+let naverPending = null;
+function showNaverLogin(){
+  document.getElementById('titleScreen').classList.remove('show');
+  document.getElementById('mascot').classList.remove('front');   // 눈덩이가 흰 네이버 화면 위로 뜨지 않게
+  document.getElementById('naverIdMock').value = '';
+  document.getElementById('naverPwMock').value = '';
+  document.getElementById('naverScreen').classList.add('show');
+  setTimeout(() => document.getElementById('naverIdMock').focus(), 80);
+}
+
+async function doNaverSubmit(){
+  const btn = document.getElementById('btnNaverSubmit');
+  btn.disabled = true;
+  btn.textContent = '로그인 중...';
+  await new Promise(r => setTimeout(r, 500));   // 실제 연동 전까지의 임시 연출
+  naverPending = { id: 'naver_' + Math.random().toString(36).slice(2, 10) };
+  btn.disabled = false;
+  btn.textContent = '로그인';
+  document.getElementById('naverScreen').classList.remove('show');
+  showNaverNick();
+}
+
+let naverNickAvailable = null;
+function showNaverNick(){
+  document.getElementById('naverNick').value = '';
+  document.getElementById('naverNickMsg').textContent = ''; document.getElementById('naverNickMsg').className = 'checkMsg';
+  document.getElementById('naverNickErr').textContent = '';
+  resetGenderRow('naverGenderRow');
+  naverNickAvailable = null;
+  setMascot(true);
+  document.getElementById('naverNickPanel').classList.add('show');
+  setTimeout(() => document.getElementById('naverNick').focus(), 80);
+}
+
+async function doNaverNickOk(){
+  const errEl = document.getElementById('naverNickErr');
+  const btn = document.getElementById('btnNaverNickOk');
+  const nick = cleanField(document.getElementById('naverNick').value, 12);
+  const gender = getGender('naverGenderRow');
+
+  if (!naverPending) { errEl.textContent = '네이버 로그인을 다시 진행해주세요'; return; }
+  if (!nick) { errEl.textContent = '닉네임을 입력해주세요'; return; }
+  if (naverNickAvailable === false) { errEl.textContent = '이미 있는 닉네임이에요'; return; }
+  if (!gender) { errEl.textContent = '성별을 선택해주세요'; return; }
+
+  btn.disabled = true;
+  errEl.textContent = '';
+  try {
+    const res = await fetch(LB.api + '/api/register', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: naverPending.id, nick, gender, provider: 'naver' }),
+    });
+    const data = await res.json();
+    if (!data.ok) { errEl.textContent = data.error || '가입에 실패했어요'; return; }
+    naverPending = null;
+    document.getElementById('naverNickPanel').classList.remove('show');
+    applyAuth(data);
+  } catch (e) {
+    errEl.textContent = '서버에 연결할 수 없어요';
+  } finally { btn.disabled = false; }
+}
+
+function updateReturning(dt){
+  for (let i=S.returning.length-1;i>=0;i--){
+    const r = S.returning[i];
+    const dx = S.launcherX - r.x;
+    const dy = LAUNCHER_Y - r.y;
+    const dist = Math.hypot(dx, dy);
+    const move = CONFIG.RETURN_SPEED * dt;
+    if (dist <= move) { S.returning.splice(i,1); continue; }
+    r.x += (dx/dist)*move;
+    r.y += (dy/dist)*move;
+  }
+}
+
+// Keep the first couple of seconds at normal speed - the ball spray is the
+// payoff - then compress hard so a big volley never becomes a wait.
+function autoSpeedFor(wallTime){
+  return wallTime > 6 ? 8 : wallTime > 4 ? 4 : wallTime > 2 ? 2 : 1;
+}
+
+function stepPhysics(dt){
+  if (S.state !== 'firing') return;
+  // 공 하나가 한 프레임에 깎을 수 있는 숫자 벽돌은 하나뿐이다.
+  // 벽돌 틈에 끼면 서브스텝마다 이웃까지 갈아버려서, 뒤쪽 숫자가 한꺼번에 떨어졌다.
+  for (const b of S.activeBalls) b.dmgLock = false;
+  const substeps = physicsSubsteps();
+  const subDt = dt/substeps;
+  for (let s=0;s<substeps;s++) substep(subDt);
+  handleFireQueue(dt);
+  updateReturning(dt);
+
+  // Hard backstop: no turn may outlive this, whatever the balls are doing.
+  S.turnTime += dt;
+  if (S.turnTime > CONFIG.TURN_HARD_CAP) {
+    S.frenzyActive = false;
+    S.fireQueueRemaining = 0;
+    for (const b of S.activeBalls) {
+      S.collectedForNextTurn++;
+      S.returning.push({ x: clamp(b.x, 0, WIDTH), y: b.y });
+    }
+    S.activeBalls.length = 0;
+  }
+
+  updateHud();
+  if (S.fireQueueRemaining <= 0 && S.activeBalls.length === 0 && S.returning.length === 0) finishTurn();
+}
+
+function startFiring(dir){
+  S.aimDir = dir;
+  S.ballCountAtTurnStart = S.ballCount;
+  S.fireQueueRemaining = S.ballCount;
+  S.fireTimer = 0;
+  S.turnTime = 0;
+  S.turnWallTime = 0;
+  S.combo = 0;
+  S.frenzyActive = false;
+  S.scoreMult = 1;
+  S.state = 'firing';
+  if (!S.hintDismissed) { S.hintDismissed = true; try { localStorage.setItem('snowball.hintSeen','1'); } catch(e){} }
+}
+
+function clampAngleFromVertical(dir, maxAngle){
+  const angle = Math.atan2(dir.x, -dir.y);
+  const clamped = clamp(angle, -maxAngle, maxAngle);
+  return { x: Math.sin(clamped), y: -Math.cos(clamped) };
+}
+
+// ---- rendering ----
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas(){
+  const stage = document.getElementById('stage');
+  const availW = stage.clientWidth, availH = stage.clientHeight;
+  if (!availW || !availH) return;
+
+  const before = CONFIG.GRID_ROWS;
+  layoutBoard(availW, availH);
+  // 줄 수가 바뀌면 격자 배열 길이도 맞춰준다 (아래쪽에 빈 줄을 덧대거나 잘라냄)
+  if (S.grid && CONFIG.GRID_ROWS !== before) {
+    while (S.grid.length < CONFIG.GRID_ROWS) S.grid.push(new Array(CONFIG.COLS).fill(null));
+    if (S.grid.length > CONFIG.GRID_ROWS) S.grid.length = CONFIG.GRID_ROWS;
+  }
+
+  const scale = Math.min(availW/WIDTH, availH/HEIGHT);
+  canvas.style.width = Math.floor(WIDTH*scale)+'px';
+  canvas.style.height = Math.floor(HEIGHT*scale)+'px';
+  const dpr = Math.min(window.devicePixelRatio||1, 2.5);
+  canvas.width = Math.floor(WIDTH*dpr); canvas.height = Math.floor(HEIGHT*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+window.addEventListener('resize', resizeCanvas);
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function render(){
+  ctx.clearRect(0,0,WIDTH,HEIGHT);
+
+  ctx.save();
+  if (S.shake > 0) {
+    ctx.translate((Math.random()-0.5)*S.shake, (Math.random()-0.5)*S.shake);
+  }
+
+  ctx.strokeStyle = T.gridLine;
+  ctx.lineWidth = 1;
+  for (let c=1;c<CONFIG.COLS;c++){
+    ctx.beginPath(); ctx.moveTo(c*CONFIG.CELL,0); ctx.lineTo(c*CONFIG.CELL,GRID_H); ctx.stroke();
+  }
+  for (let r=1;r<CONFIG.GRID_ROWS;r++){
+    ctx.beginPath(); ctx.moveTo(0,r*CONFIG.CELL); ctx.lineTo(WIDTH,r*CONFIG.CELL); ctx.stroke();
+  }
+
+  const shiftOffset = -S.shiftAnim * CONFIG.CELL;
+
+  const dangerRow = CONFIG.GRID_ROWS-2;
+  if (S.grid[dangerRow] && S.grid[dangerRow].some(c => c !== null)) {
+    const pulse = 0.16 + Math.sin(Date.now()/220)*0.10;
+    const dy = (CONFIG.GRID_ROWS-1)*CONFIG.CELL + shiftOffset;
+    const g = ctx.createLinearGradient(0, dy, 0, dy+CONFIG.CELL);
+    g.addColorStop(0, `rgba(${T.danger},0)`);
+    g.addColorStop(1, `rgba(${T.danger},${pulse})`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, dy, WIDTH, CONFIG.CELL);
+  }
+
+  for (let r=0;r<CONFIG.GRID_ROWS;r++){
+    for (let c=0;c<CONFIG.COLS;c++){
+      const brick = S.grid[r][c];
+      if (!brick) continue;
+      const x = c*CONFIG.CELL, y = r*CONFIG.CELL + shiftOffset;
+      const pad = 3;
+      if (brick.type === 'hp') {
+        const tier = hpTier(brick.hp);
+        const bw = CONFIG.CELL-pad*2, bh = CONFIG.CELL-pad*2;
+        const grad = ctx.createLinearGradient(x, y, x, y+CONFIG.CELL);
+        if (brick.boss)       { grad.addColorStop(0,T.boss[0]); grad.addColorStop(1,T.boss[1]); }
+        else if (brick.curse) { grad.addColorStop(0,T.curse[0]); grad.addColorStop(1,T.curse[1]); }
+        else                  { grad.addColorStop(0, tier.light); grad.addColorStop(1, tier.base); }
+        ctx.fillStyle = grad;
+        roundRect(ctx, x+pad, y+pad, bw, bh, 7);
+        ctx.fill();
+
+        ctx.fillStyle = T.gloss;
+        roundRect(ctx, x+pad+2, y+pad+2, bw-4, bh*0.38, 5);
+        ctx.fill();
+
+        if (brick.boss || brick.curse) {
+          const puls = 0.5 + Math.sin(Date.now()/300 + x*0.5)*0.5;
+          ctx.save();
+          ctx.shadowColor = brick.boss ? T.bossEdge : T.curseEdge;
+          ctx.shadowBlur = 4 + puls*8;
+          ctx.strokeStyle = brick.boss ? T.bossEdge : T.curseEdge;
+          ctx.lineWidth = 2 + puls*1.2;
+          roundRect(ctx, x+pad, y+pad, bw, bh, 7);
+          ctx.stroke();
+          ctx.restore();
+          ctx.font = (CONFIG.CELL*0.28)+'px sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(brick.boss ? '👑' : '▲', x+CONFIG.CELL/2, y+pad+CONFIG.CELL*0.18);
+        }
+
+        if (brick.flash > 0) {
+          ctx.fillStyle = `rgba(255,255,255,${brick.flash*0.75})`;
+          roundRect(ctx, x+pad, y+pad, bw, bh, 7);
+          ctx.fill();
+          brick.flash -= 0.12;
+        }
+
+        ctx.fillStyle = T.brickShade;
+        ctx.font = 'bold 15px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(brick.hp, x+CONFIG.CELL/2, y+CONFIG.CELL/2+2);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(brick.hp, x+CONFIG.CELL/2, y+CONFIG.CELL/2+1);
+      } else if (brick.type === 'op') {
+        ctx.fillStyle = opColor(brick.op);
+        roundRect(ctx, x+pad, y+pad, CONFIG.CELL-pad*2, CONFIG.CELL-pad*2, 6);
+        ctx.fill();
+        ctx.fillStyle = '#101828';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const label = brick.op==='x2' ? '×2' : brick.op==='add' ? '+'+brick.val : '-'+brick.val;
+        ctx.fillText(label, x+CONFIG.CELL/2, y+CONFIG.CELL/2+1);
+      } else {
+        // 아이템은 희귀하니 확실히 튀어야 한다: 자기 색 + 맥동하는 발광 테두리
+        const vis = itemVisual(brick.kind);
+        const puls = 0.5 + Math.sin(Date.now()/260 + x*0.6)*0.5;
+        const bw = CONFIG.CELL-pad*2;
+        ctx.save();
+        ctx.shadowColor = vis.color;
+        ctx.shadowBlur = 6 + puls*10;
+        ctx.fillStyle = vis.soft;
+        roundRect(ctx, x+pad, y+pad, bw, bw, 10);
+        ctx.fill();
+        ctx.restore();
+        ctx.strokeStyle = vis.color;
+        ctx.lineWidth = 2 + puls*1.2;
+        roundRect(ctx, x+pad, y+pad, bw, bw, 10);
+        ctx.stroke();
+        ctx.font = (CONFIG.CELL*0.5)+'px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(vis.icon, x+CONFIG.CELL/2, y+CONFIG.CELL/2+1);
+      }
+    }
+  }
+
+  for (const w of S.waves) {
+    const t = Math.max(0, w.life);
+    ctx.globalAlpha = t * 0.85;
+    ctx.strokeStyle = w.color;
+    ctx.lineWidth = w.width * t;
+    ctx.beginPath(); ctx.arc(w.x, w.y, w.r, 0, Math.PI*2); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  for (const p of S.particles) {
+    ctx.globalAlpha = Math.max(0, p.life/p.maxLife);
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  for (const b of S.activeBalls) {
+    if (b.trail) {
+      for (let t=0;t<b.trail.length;t++){
+        const tp = b.trail[t];
+        ctx.globalAlpha = 0.12 + (t/b.trail.length)*0.22;
+        ctx.fillStyle = T.trail;
+        ctx.beginPath(); ctx.arc(tp.x, tp.y, CONFIG.BALL_RADIUS*0.75, 0, Math.PI*2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+  ctx.fillStyle = T.ball;
+  for (const b of S.activeBalls) {
+    ctx.beginPath(); ctx.arc(b.x, b.y, CONFIG.BALL_RADIUS, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle = T.returning;
+  for (const r of S.returning) {
+    ctx.beginPath(); ctx.arc(r.x, r.y, CONFIG.BALL_RADIUS*0.8, 0, Math.PI*2); ctx.fill();
+  }
+
+  for (const p of S.popups) {
+    const t = p.life/p.maxLife;
+    ctx.globalAlpha = Math.min(1, t*1.6);
+    ctx.fillStyle = p.color;
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(p.text, p.x, p.y);
+  }
+  ctx.globalAlpha = 1;
+
+  if (S.state === 'aiming') {
+    if (dragging && dragCurrent && dragStart) {
+      const dir = currentAimDir();
+      if (dir) renderTrajectory(dir);
+    } else if (!S.hintDismissed) {
+      ctx.fillStyle = T.hint;
+      ctx.font = '13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('쏘고 싶은 방향으로 드래그', WIDTH/2, LAUNCHER_Y - 60);
+    }
+  }
+
+  renderLauncherStock();
+
+  ctx.restore();
+
+  if (S.flash) {
+    ctx.globalAlpha = Math.max(0, S.flash.life);
+    ctx.fillStyle = S.flash.color;
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+  }
+}
+
+function currentAimDir(){
+  if (!dragCurrent || !dragStart) return null;
+  const delta = { x: dragCurrent.x-dragStart.x, y: dragCurrent.y-dragStart.y };
+  if (Math.hypot(delta.x, delta.y) < CONFIG.MIN_DRAG) return null;
+  // Direct aiming: the ball flies the way you drag. (Slingshot/pull-back
+  // inverts left and right and reads as a bug.)
+  return clampAngleFromVertical(normalize(delta), CONFIG.MAX_ANGLE_FROM_VERTICAL);
+}
+
+function traceTrajectory(dir){
+  const pts = [{x:S.launcherX, y:LAUNCHER_Y}];
+  let x = S.launcherX, y = LAUNCHER_Y;
+  let vx = dir.x, vy = dir.y;
+  const step = CONFIG.BALL_SPEED * (FIXED_DT / physicsSubsteps());
+  let bounces = 0;
+  let hitBrick = null;
+
+  for (let i=0; i<1400 && bounces < CONFIG.PREVIEW_BOUNCES; i++){
+    x += vx*step; y += vy*step;
+
+    // Wall handling must mirror substep() exactly, including doing the brick
+    // check in the SAME step as a wall bounce, or the guide line drifts.
+    if (x - CONFIG.BALL_RADIUS < 0) { x = CONFIG.BALL_RADIUS; vx = Math.abs(vx); pts.push({x,y}); bounces++; }
+    else if (x + CONFIG.BALL_RADIUS > WIDTH) { x = WIDTH-CONFIG.BALL_RADIUS; vx = -Math.abs(vx); pts.push({x,y}); bounces++; }
+    if (y - CONFIG.BALL_RADIUS < 0) { y = CONFIG.BALL_RADIUS; vy = Math.abs(vy); pts.push({x,y}); bounces++; }
+    if (y > HEIGHT) break;
+
+    const col = Math.floor(x / CONFIG.CELL);
+    const row = Math.floor(y / CONFIG.CELL);
+    let collided = false;
+    for (let rr=row-1; rr<=row+1 && !collided; rr++){
+      if (rr<0 || rr>=CONFIG.GRID_ROWS) continue;
+      for (let cc=col-1; cc<=col+1 && !collided; cc++){
+        if (cc<0 || cc>=CONFIG.COLS) continue;
+        const brick = S.grid[rr][cc];
+        if (!brick) continue;
+        const x0=cc*CONFIG.CELL, y0=rr*CONFIG.CELL;
+        const hit = brickHitInfo(x, y, vx, vy, x0, y0);
+        if (hit) {
+          collided = true;
+          hitBrick = {r:rr, c:cc};
+          if (brick.type === 'hp') {
+            x += hit.nx*hit.push; y += hit.ny*hit.push;
+            vx = hit.vx; vy = hit.vy;
+            pts.push({x,y});
+            bounces++;
+          }
+        }
+      }
+    }
+  }
+  pts.push({x,y});
+  return { pts, hitBrick };
+}
+
+function renderTrajectory(dir){
+  const { pts, hitBrick } = traceTrajectory(dir);
+
+  ctx.save();
+  ctx.strokeStyle = T.aim;
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([7,7]);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  for (let i=1;i<pts.length-1;i++){
+    ctx.fillStyle = T.aimDot;
+    ctx.beginPath(); ctx.arc(pts[i].x, pts[i].y, 3, 0, Math.PI*2); ctx.fill();
+  }
+
+  if (hitBrick) {
+    const hx = hitBrick.c*CONFIG.CELL, hy = hitBrick.r*CONFIG.CELL - S.shiftAnim*CONFIG.CELL;
+    ctx.strokeStyle = T.aimTarget;
+    ctx.lineWidth = 2;
+    roundRect(ctx, hx+3, hy+3, CONFIG.CELL-6, CONFIG.CELL-6, 6);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function renderLauncherStock(){
+  if (S.state === 'gameover') return;
+
+  // The ball sitting at the launch point IS the launcher marker.
+  ctx.fillStyle = S.state === 'firing' ? T.launcherIdle : T.launcher;
+  ctx.beginPath();
+  ctx.arc(S.launcherX, LAUNCHER_Y, CONFIG.BALL_RADIUS, 0, Math.PI*2);
+  ctx.fill();
+
+  if (S.state !== 'aiming' || dragging) return;
+
+  // 공 개수 = 핵심 자원이라 크게. 그 위에 다음 턴 예상치를 붙인다.
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = T.stockText;
+  ctx.font = 'bold 21px sans-serif';
+  ctx.fillText(S.ballCount, S.launcherX, LAUNCHER_Y - 24);
+
+  const delta = (S.collectedForNextTurn - S.pendingPenalty);
+  if (delta !== 0) {
+    const up = delta > 0;
+    ctx.fillStyle = up ? '#22c55e' : '#ef4444';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText((up ? '+' : '') + delta, S.launcherX, LAUNCHER_Y - 44);
+  }
+}
+
+// ---- input ----
+let dragging = false, dragStart = null, dragCurrent = null;
+let aimHistory = [];
+
+function getPos(e){
+  const r = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - r.left) * (WIDTH / r.width),
+    y: (e.clientY - r.top) * (HEIGHT / r.height)
+  };
+}
+
+canvas.addEventListener('pointerdown', e => {
+  if (S.state !== 'aiming') return;
+  const p = getPos(e);
+  dragStart = p; dragCurrent = p; dragging = true; aimHistory = [];
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  dragCurrent = getPos(e);
+  const d = currentAimDir();
+  if (d) { aimHistory.push({ d, t: performance.now() }); if (aimHistory.length > 40) aimHistory.shift(); }
+});
+canvas.addEventListener('pointerup', e => {
+  if (!dragging) return;
+  dragging = false;
+  // Fire the angle from just BEFORE release so a thumb roll on lift-off
+  // cannot nudge the shot. Top-requested fix across the genre.
+  const cutoff = performance.now() - CONFIG.AIM_LATCH_MS;
+  let latched = null;
+  for (let i=aimHistory.length-1;i>=0;i--){ if (aimHistory[i].t <= cutoff) { latched = aimHistory[i].d; break; } }
+  const dir = latched || currentAimDir();
+  if (dir) startFiring(dir);
+  dragStart = null; dragCurrent = null; aimHistory = [];
+});
+canvas.addEventListener('pointercancel', () => { dragging = false; dragStart=null; dragCurrent=null; });
+
+// ---- buttons ----
+const btnSpeed = document.getElementById('btnSpeed');
+const btnCollect = document.getElementById('btnCollect');
+btnSpeed.addEventListener('click', () => {
+  S.speedMult = S.speedMult===1 ? 2 : S.speedMult===2 ? 4 : 1;
+  btnSpeed.textContent = S.speedMult+'배속';
+  btnSpeed.classList.toggle('active', S.speedMult>1);
+});
+btnCollect.addEventListener('click', () => {
+  if (S.state !== 'firing') return;
+  let iterations = 0;
+  while (S.state === 'firing' && iterations < 20000) { stepPhysics(FIXED_DT); iterations++; }
+  S.shiftAnim = 0;
+});
+document.getElementById('btnRetry').addEventListener('click', () => {
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('mascot').classList.remove('front');
+  setMascot(false);
+  startFreshGame();
+});
+document.getElementById('btnShare').addEventListener('click', doShareResult);
+document.getElementById('btnToLobby').addEventListener('click', () => {
+  document.getElementById('overlay').classList.remove('show');
+  showLobby();
+});
+
+const pausePanel = document.getElementById('pausePanel');
+function setPaused(on){
+  S.paused = on;
+  pausePanel.classList.toggle('show', on);
+  if (on) {
+    document.getElementById('pauseScore').textContent = S.score.toLocaleString();
+  }
+}
+document.getElementById('btnPause').addEventListener('click', () => setPaused(true));
+document.getElementById('btnDebugDie').addEventListener('click', () => enterGameOver());   // 임시 테스트 버튼
+document.getElementById('btnResume').addEventListener('click', () => setPaused(false));
+document.getElementById('btnRestart').addEventListener('click', () => { setPaused(false); startFreshGame(); });
+
+// ---- main loop ----
+function frame(){
+  if (S.paused) { render(); requestAnimationFrame(frame); return; }
+  if (S.hitstop > 0) {
+    // 물리만 멈춘다. 파티클과 링은 계속 움직여야 "멈췄다"가 아니라 "꽝"으로 읽힌다.
+    S.hitstop -= FIXED_DT;
+    updateParticles(FIXED_DT);
+    updateBuffEdge();
+    render();
+    requestAnimationFrame(frame);
+    return;
+  }
+  if (S.state === 'firing') {
+    // Wall-clock for the auto-speed ramp. S.turnTime is simulated time and is
+    // advanced inside stepPhysics, so it must not be incremented here too.
+    S.turnWallTime += FIXED_DT;
+    const auto = autoSpeedFor(S.turnWallTime);
+    const mult = Math.max(S.speedMult, auto);
+    for (let i=0;i<mult;i++) stepPhysics(FIXED_DT);
+  } else if (S.state === 'shifting') {
+    updateShift(FIXED_DT);
+  }
+  updateParticles(FIXED_DT);
+  updateBuffEdge();
+  render();
+  requestAnimationFrame(frame);
+}
+
+document.getElementById('btnPlay').addEventListener('click', enterGame);
+document.getElementById('btnGuide').addEventListener('click', () => renderGuide(GUIDE, '블록 도감', 'img/t-guide.webp',
+    '게임에 등장하는 블록과 아이템을 확인해 보세요!'));
+document.getElementById('btnHow').addEventListener('click', () => renderGuide(HOWTO, '게임 방법', 'img/t-howto.webp'));
+document.getElementById('btnGuideT').addEventListener('click', () => renderGuide(GUIDE, '블록 도감', 'img/t-guide.webp',
+    '게임에 등장하는 블록과 아이템을 확인해 보세요!'));
+document.getElementById('btnHowT').addEventListener('click', () => renderGuide(HOWTO, '게임 방법', 'img/t-howto.webp'));
+document.getElementById('btnGuideBack').addEventListener('click', () => {
+  document.getElementById('guideScreen').classList.remove('show');
+  document.getElementById('mascot').classList.remove('front');
+  setMascot(true);                  // 도감은 타이틀·로비에서만 열린다
+});
+document.getElementById('btnAllRank').addEventListener('click', refreshLobbyRank);
+document.getElementById('btnLobbyOut').addEventListener('click', () => {
+  LB.token = ''; lbSaveLocal();
+  document.getElementById('lobby').classList.remove('show');
+  showTitle();
+});
+document.getElementById('btnGoLogin').addEventListener('click', doLogin);
+document.getElementById('btnGoRegister').addEventListener('click', showRegister);
+document.getElementById('btnAuthOk').addEventListener('click', doRegister);
+document.getElementById('btnAuthBack').addEventListener('click', () => {
+  document.getElementById('namePanel').classList.remove('show');   // 아래 타이틀이 그대로 드러난다
+});
+document.getElementById('regId').addEventListener('blur', async () => {
+  const v = cleanField(document.getElementById('regId').value, 16);
+  regIdAvailable = await checkAvailability('id', v, document.getElementById('regIdMsg'));
+});
+document.getElementById('regNick').addEventListener('blur', async () => {
+  const v = cleanField(document.getElementById('regNick').value, 12);
+  regNickAvailable = await checkAvailability('nick', v, document.getElementById('regNickMsg'));
+});
+initGenderRow('genderRow');
+initGenderRow('naverGenderRow');
+document.getElementById('btnNaverLogin').addEventListener('click', showNaverLogin);
+document.getElementById('btnNaverSubmit').addEventListener('click', doNaverSubmit);
+document.getElementById('btnNaverBack').addEventListener('click', () => {
+  document.getElementById('naverScreen').classList.remove('show');
+  document.getElementById('titleScreen').classList.add('show');
+});
+document.getElementById('btnNaverNickOk').addEventListener('click', doNaverNickOk);
+document.getElementById('btnNaverNickBack').addEventListener('click', () => {
+  naverPending = null;
+  document.getElementById('naverNickPanel').classList.remove('show');
+  document.getElementById('titleScreen').classList.add('show');
+});
+document.getElementById('naverNick').addEventListener('blur', async () => {
+  const v = cleanField(document.getElementById('naverNick').value, 12);
+  naverNickAvailable = await checkAvailability('nick', v, document.getElementById('naverNickMsg'));
+});
+['idInput','pwInput'].forEach(k =>
+  document.getElementById(k).addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); }));
+['regId','regPw','regPwConfirm','regNick'].forEach(k =>
+  document.getElementById(k).addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); }));
+document.getElementById('naverNick').addEventListener('keydown', e => { if (e.key === 'Enter') doNaverNickOk(); });
+document.getElementById('btnName').addEventListener('click', () => {
+  setPaused(false);
+  showLobby();
+});
+
+try { S.hintDismissed = !!localStorage.getItem('snowball.hintSeen'); } catch(e){}
+
+resizeCanvas();
+startFreshGame();
+requestAnimationFrame(frame);
+
+// 게임을 세워둔 다음 어느 화면부터 보여줄지 정한다.
+// 이미 로그인돼 있으면 곧장 게임, 아니면 타이틀부터.
+lbLoad();
+setAmbient('bg-lobby');           // 첫 화면이 뜨기 전에 미리 깔아둔다
+if (lbSignedIn()) { refreshRank(); showLobby(); } else showTitle();
+</script>
+</body>
+</html>

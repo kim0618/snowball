@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>눈덩이 관리자</title>
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#eef1f8; --bg2:#e3e8f4; --surface:#fff;
+    --ink:#151d33; --ink2:#5b6580; --ink3:#8d97ae;
+    --line:rgba(21,29,51,.09); --accent:#3b5bfd; --danger:#e5484d;
+    --shadow-sm:0 1px 2px rgba(21,29,51,.06), 0 2px 8px rgba(21,29,51,.05);
+    --shadow-lg:0 10px 30px rgba(21,29,51,.13), 0 30px 70px rgba(21,29,51,.13);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;min-height:100vh;color:var(--ink);
+    background:linear-gradient(180deg,var(--bg),var(--bg2));
+    font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Malgun Gothic',sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 16px 60px;}
+  h1{font-size:20px;font-weight:800;letter-spacing:-.02em;margin:0 0 20px;
+    display:flex;align-items:center;gap:10px;}
+  h1 small{font-size:12px;color:var(--ink3);font-weight:600;}
+
+  .login{max-width:330px;margin:14vh auto 0;background:var(--surface);border-radius:22px;
+    padding:26px 22px;text-align:center;box-shadow:var(--shadow-lg), 0 0 0 1px var(--line);}
+  .login h2{margin:0 0 8px;font-size:19px;font-weight:800;}
+  .login .note{margin:0 0 18px;font-size:13px;color:var(--ink2);line-height:1.6;}
+  .login input{width:100%;margin-bottom:9px;padding:14px;border-radius:13px;
+    border:1.5px solid var(--line);background:#f7f9fd;color:var(--ink);font-size:15px;
+    text-align:center;outline:none;transition:border-color .15s,background .15s;}
+  .login input:focus{border-color:var(--accent);background:#fff;}
+  .login button{width:100%;margin-top:6px;padding:14px 0;border:none;border-radius:13px;
+    background:var(--accent);color:#fff;font-size:15px;font-weight:700;
+    box-shadow:0 4px 14px rgba(59,91,253,.3);}
+  .err{min-height:18px;font-size:12.5px;color:var(--danger);margin:4px 0;font-weight:600;}
+
+  .bar{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+  .bar input{flex:1;min-width:170px;padding:11px 14px;border-radius:12px;
+    border:1.5px solid var(--line);background:var(--surface);color:var(--ink);
+    font-size:14px;outline:none;box-shadow:var(--shadow-sm);}
+  .bar input:focus{border-color:var(--accent);}
+  .bar button{padding:11px 18px;border:none;border-radius:12px;background:var(--surface);
+    color:var(--ink2);font-size:13px;font-weight:700;box-shadow:var(--shadow-sm);}
+  .bar button:active{transform:scale(.97);}
+
+  .stats{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  .stats div{flex:1;min-width:120px;background:var(--surface);border-radius:14px;
+    padding:14px;text-align:center;box-shadow:var(--shadow-sm);}
+  .stats span{display:block;font-size:11px;color:var(--ink3);margin-bottom:5px;font-weight:600;}
+  .stats b{font-size:21px;font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+
+  .tableWrap{overflow-x:auto;border-radius:16px;background:var(--surface);
+    box-shadow:var(--shadow-sm), 0 0 0 1px var(--line);}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:700px;}
+  th,td{padding:12px 14px;text-align:left;white-space:nowrap;}
+  th{background:#f5f7fc;color:var(--ink3);font-size:11.5px;font-weight:700;
+    position:sticky;top:0;letter-spacing:.02em;}
+  td{border-top:1px solid var(--line);}
+  tr:hover td{background:#fafbfe;}
+  .rank{color:var(--ink3);font-variant-numeric:tabular-nums;width:36px;font-weight:700;}
+  .rank.top{color:#e8a33d;}
+  .score{font-variant-numeric:tabular-nums;font-weight:800;}
+  .pw{display:inline-block;font-family:ui-monospace,Menlo,monospace;color:#9333ea;
+    background:#f9f5ff;padding:3px 9px;border-radius:7px;font-size:12.5px;
+    border:1px solid #efe4fd;}
+  .muted{color:var(--ink3);font-size:12.5px;}
+  .del{background:none;border:none;color:var(--danger);font-size:12px;font-weight:700;
+    padding:5px 10px;border-radius:7px;}
+  .del:hover{background:#fdecec;}
+  .empty{padding:44px;text-align:center;color:var(--ink3);font-size:13.5px;}
+</style>
+</head>
+<body>
+
+<div id="loginView" class="login">
+  <h2>관리자 전용</h2>
+  <p class="note">로그인 화면에서 관리자 계정으로 들어와주세요.</p>
+  <button id="btnLogin">로그인 화면으로</button>
+</div>
+
+<div id="mainView" class="wrap" style="display:none">
+  <h1>눈덩이 관리자 <small id="serverInfo"></small></h1>
+
+  <div class="stats">
+    <div><span>가입자</span><b id="stUsers">0</b></div>
+    <div><span>기록 있음</span><b id="stPlayed">0</b></div>
+    <div><span>최고점</span><b id="stTop">0</b></div>
+    <div><span>평균점</span><b id="stAvg">0</b></div>
+  </div>
+
+  <div class="bar">
+    <input id="q" placeholder="아이디 / 닉네임 검색">
+    <button id="btnReload">새로고침</button>
+    <button id="btnLogout">로그아웃</button>
+  </div>
+
+  <div class="tableWrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="rank">#</th>
+          <th>아이디</th>
+          <th>비밀번호</th>
+          <th>닉네임</th>
+          <th>성별</th>
+          <th>가입경로</th>
+          <th>점수</th>
+          <th>라운드</th>
+          <th>기록일</th>
+          <th>가입일</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="empty" style="display:none">아직 가입한 사람이 없어요</div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const API = (window.SNOWBALL_API !== undefined) ? window.SNOWBALL_API : '';
+let token = '';
+let all = [];
+
+const $ = id => document.getElementById(id);
+
+function fmtDate(s){
+  if (!s) return '-';
+  const d = new Date(s);
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+
+async function load(){
+  try {
+    const res = await fetch(API + '/api/admin/users?token=' + encodeURIComponent(token));
+    const d = await res.json();
+    if (!d.ok) { logout(); return; }
+    all = d.users;
+    render();
+  } catch(e){
+    $('rows').innerHTML = '';
+    $('empty').style.display = '';
+    $('empty').textContent = '서버에 연결할 수 없어요';
+  }
+}
+
+function render(){
+  const q = $('q').value.trim().toLowerCase();
+  const list = q
+    ? all.filter(u => u.id.toLowerCase().includes(q) || (u.nick||'').toLowerCase().includes(q))
+    : all;
+
+  const played = all.filter(u => u.score > 0);
+  $('stUsers').textContent = all.length;
+  $('stPlayed').textContent = played.length;
+  $('stTop').textContent = played.length ? Math.max(...played.map(u=>u.score)).toLocaleString() : '0';
+  $('stAvg').textContent = played.length
+    ? Math.round(played.reduce((a,u)=>a+u.score,0)/played.length).toLocaleString() : '0';
+
+  const tb = $('rows');
+  tb.innerHTML = '';
+  list.forEach((u, i) => {
+    const tr = document.createElement('tr');
+    const cells = [
+      ['rank' + (u.score>0 && i<3 ? ' top' : ''), u.score>0 ? (i+1) : '-'],
+      ['', u.id],
+      ['pwCell', u.pw],
+      ['', u.nick],
+      ['muted', u.gender === 'm' ? '남자' : u.gender === 'f' ? '여자' : '-'],
+      ['muted', u.provider === 'naver' ? '네이버' : '일반'],
+      ['score', u.score.toLocaleString()],
+      ['muted', u.round || '-'],
+      ['muted', fmtDate(u.at)],
+      ['muted', fmtDate(u.joined)],
+    ];
+    for (const [cls, val] of cells){
+      const td = document.createElement('td');
+      if (cls === 'pwCell') {
+        const chip = document.createElement('span');
+        chip.className = 'pw';
+        chip.textContent = val;        // textContent: 값이 그대로 표시되고 실행되지 않음
+        td.appendChild(chip);
+      } else {
+        if (cls) td.className = cls;
+        td.textContent = val;
+      }
+      tr.appendChild(td);
+    }
+    const td = document.createElement('td');
+    const btn = document.createElement('button');
+    btn.className = 'del';
+    btn.textContent = '삭제';
+    btn.onclick = () => del(u.id);
+    td.appendChild(btn);
+    tr.appendChild(td);
+    tb.appendChild(tr);
+  });
+  $('empty').style.display = list.length ? 'none' : '';
+  $('empty').textContent = all.length ? '검색 결과가 없어요' : '아직 가입한 사람이 없어요';
+}
+
+async function del(id){
+  if (!confirm(`"${id}" 계정을 삭제할까요? 되돌릴 수 없어요.`)) return;
+  await fetch(API + '/api/admin/delete', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ token, id })
+  });
+  load();
+}
+
+function logout(){
+  token = '';
+  try { sessionStorage.removeItem('snowball.admin'); } catch(e){}
+  location.href = '/';          // 로그인 화면으로
+}
+
+$('btnLogin').onclick = () => { location.href = '/'; };
+$('btnReload').onclick = load;
+$('btnLogout').onclick = logout;
+$('q').oninput = render;
+
+// 게임 로그인 화면에서 넘어왔거나, 새로고침한 경우 세션 유지
+try {
+  const saved = sessionStorage.getItem('snowball.admin');
+  if (saved) {
+    token = saved;
+    $('loginView').style.display = 'none';
+    $('mainView').style.display = '';
+    load();
+  }
+} catch(e){}
+</script>
+</body>
+</html>
