@@ -12,6 +12,7 @@ function load(extraExports = '') {
     get(t, k) {
       if (k === 'measureText') return () => ({ width: 10 });
       if (k === 'createLinearGradient') return () => ({ addColorStop: noop });
+      if (k === 'createRadialGradient') return () => ({ addColorStop: noop });
       return typeof t[k] === 'undefined' ? noop : t[k];
     },
     set(t, k, v) { t[k] = v; return true; }
@@ -23,6 +24,8 @@ function load(extraExports = '') {
     classList: { add: noop, remove: noop, toggle: noop, contains: () => false },
     addEventListener: noop, setPointerCapture: noop, appendChild: noop, append: noop,
     getContext: () => ctxStub,
+    // 게으르게 만든다 - 즉시 el() 을 넣으면 무한 재귀
+    get parentElement() { return el(); },
     querySelector: () => el(), querySelectorAll: () => [],
     getBoundingClientRect: () => ({ left: 0, top: 0, width: 360, height: 600 })
   });

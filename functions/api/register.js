@@ -1,11 +1,11 @@
 import {
-  ok, fail, clean, makeToken, readJson, getUser, putUser, getBoard, issueUserSession,
+  ok, fail, clean, readJson, getUser, putUser, getBoard, issueUserSession,
   appendLoginHistory,
   MAX_ID, MAX_NICK, MAX_PW, PW_RE, GENDERS,
 } from '../_shared.js';
 
 // provider:'naver' 는 네이버 로그인 화면(아직 골격만) 경로다.
-// 비밀번호를 사용자가 입력하지 않으므로 서버가 대신 채운다.
+// 실제 연동 전에는 일반 가입처럼 화면에서 입력한 비밀번호를 그대로 저장한다.
 export async function onRequestPost({ request, env }) {
   const body = await readJson(request);
   if (!body) return fail('잘못된 형식');
@@ -26,8 +26,8 @@ export async function onRequestPost({ request, env }) {
     if (!PW_RE.test(pw)) {
       return fail('비밀번호는 8자 이상, 영문·숫자·특수문자를 모두 포함해야 해요');
     }
-  } else {
-    pw = makeToken();
+  } else if (!pw) {
+    return fail('비밀번호를 입력해주세요');
   }
 
   const user = {
@@ -37,9 +37,6 @@ export async function onRequestPost({ request, env }) {
     joined: new Date().toISOString(),
   };
   const expiresAt = issueUserSession(user);
-  if (provider === 'naver' && body.hadFailedLoginTest) {
-    appendLoginHistory(user, false, 'naver', '비밀번호 오류(테스트)');
-  }
   appendLoginHistory(user, true, provider, '가입 후 로그인');
   await putUser(env, id, user);
   await env.SNOWBALL_KV.put(`nick:${nick}`, id);

@@ -7,7 +7,7 @@
 //
 // API
 //   POST /api/register        {id, pw, nick, gender, provider?}   -> {token}
-//                              provider:'naver' 면 pw 없이 서버가 대신 발급(네이버 화면은 아직 골격만)
+//                              provider:'naver' 도 실제 연동 전에는 입력한 pw를 그대로 사용
 //   POST /api/login           {id, pw}                -> {token}
 //   GET  /api/check-id?id=                              아이디 중복 확인
 //   GET  /api/check-nick?nick=                           닉네임 중복 확인
@@ -151,7 +151,7 @@ const server = http.createServer((req, res) => {
 
   // ---- 가입 ----
   // provider:'naver' 는 네이버 로그인 화면(아직 골격만, 실제 OAuth 연동 전) 경로다.
-  // 비밀번호는 사용자가 입력하지 않으므로 서버가 대신 토큰을 발급해 채운다.
+  // 연동 전에는 일반 가입처럼 화면에서 입력한 비밀번호를 그대로 저장한다.
   if (req.method === 'POST' && p === '/api/register') {
     return readBody(req, body => {
       if (!body) return send(res, 400, { ok: false, error: '잘못된 형식' });
@@ -172,8 +172,8 @@ const server = http.createServer((req, res) => {
         if (!PW_RE.test(pw)) {
           return send(res, 400, { ok: false, error: '비밀번호는 8자 이상, 영문·숫자·특수문자를 모두 포함해야 해요' });
         }
-      } else {
-        pw = makeToken();   // 네이버 가입은 사용자가 입력하는 비밀번호가 없다
+      } else if (!pw) {
+        return send(res, 400, { ok: false, error: '비밀번호를 입력해주세요' });
       }
 
       const token = makeToken();
@@ -184,9 +184,6 @@ const server = http.createServer((req, res) => {
         bestRound: 0, plays: 0,
         joined: new Date().toISOString(),
       };
-      if (provider === 'naver' && body.hadFailedLoginTest) {
-        appendLoginHistory(users[id], false, 'naver', '비밀번호 오류(테스트)');
-      }
       appendLoginHistory(users[id], true, provider, '가입 후 로그인');
       save();
       return send(res, 200, { ok: true, id, nick, token, expiresAt, best: 0,

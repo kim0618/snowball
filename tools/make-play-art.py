@@ -51,11 +51,23 @@ def bake_frame():
 
     out = im.copy()
     out.putalpha(alpha)
-    pad = 12
-    box = (OUTER[0] - pad, SNOW_TOP - 4, OUTER[2] + pad, OUTER[3] + pad)
+
+    # 자르는 범위는 '실제로 뭔가 그려진 곳'에서 뽑는다. 예전엔 SNOW_TOP 을 박아 뒀는데
+    # 지금 시안엔 액자 위에 눈이 거의 없어서, 위쪽에만 40px 짜리 빈 여백이 남았다.
+    # CSS 는 이 그림을 테두리 칸에 늘려 깔기 때문에 그 여백만큼 판 위가 두꺼워 보인다.
+    pad = 10
+    bb = alpha.getbbox()
+    box = (max(0, bb[0] - pad), max(0, bb[1] - pad),
+           min(W, bb[2] + pad), min(H, bb[3] + pad))
     out = out.crop(box)
     out.save(os.path.join(OUT, 'frame-ice.webp'), 'WEBP', quality=94, method=6, lossless=False)
-    print('frame-ice.webp', out.size, '| 슬라이스 계산용 여백', pad)
+
+    # 캔버스 테두리 폭은 이 비율을 그대로 써야 액자와 판이 맞물린다 (index.html 의 FRAME)
+    w, h = out.size
+    print('frame-ice.webp', out.size, '| 여백', pad)
+    print('  FRAME = { side: %.4f, top: %.4f, bottom: %.4f, radius: %.4f, innerRadius: %.4f }' % (
+        (INNER[0] - box[0]) / w, (INNER[1] - box[1]) / h,
+        (box[3] - INNER[3]) / h, R_OUT / w, R_IN / w))
     return box
 
 
@@ -102,17 +114,62 @@ def bake_button():
 BRIGHTEN = 1.16
 SATURATE = 1.06
 
+# 시안의 HUD 하늘은 새까맣지 않다 - #01095B 에서 아래로 갈수록 #002BA0 쪽으로 밝아진다.
+# bg-auth 의 윗부분은 거의 검정이라 그대로 쓰면 라운드·점수 글자가 검은 판에 뜬 것처럼
+# 보인다. 그래서 시안 하늘색을 행 단위로 재서 위쪽만 끌어올린다.
+HUD_RATIO = 194 / 1672    # 시안에서 HUD 가 차지하는 세로 비율
+# HUD 아래는 판에 가려 좌우 여백만 보인다. 거기서 갑자기 원래 검정으로 돌아오면
+# 가로 띠가 생기므로, 오로라가 자연히 밝아지는 40% 지점까지 길게 풀어준다.
+FADE_TO = 0.40
+
+
+def sky_column():
+    """시안에서 글자·장식을 피한 x 구간만 골라 행마다 하늘색을 잰다."""
+    cols = list(range(196, 268)) + list(range(556, 640))
+    rows = []
+    for y in range(0, 194):
+        vals = [im.getpixel((x, y))[:3] for x in cols]
+        vals.sort(key=lambda c: sum(c))
+        mid = vals[len(vals) // 2]          # 중앙값 - 별·눈송이에 안 흔들린다
+        rows.append(mid)
+    return rows
+
 
 def bake_bg():
     from PIL import ImageEnhance
     src = Image.open(os.path.join(OUT, 'bg-auth.webp')).convert('RGB')
     out = ImageEnhance.Brightness(src).enhance(BRIGHTEN)
     out = ImageEnhance.Color(out).enhance(SATURATE)
+
+    sky = sky_column()
+    W, H = out.size
+    px = out.load()
+    hud_h = H * HUD_RATIO
+    lift_to = int(H * FADE_TO)
+    # 시안 하늘은 아래로 갈수록 밝아지고(오로라가 판 뒤에 있다) 이 그림은 40% 지점까지
+    # 어두워진다. 두 기울기를 다 맞추려 들면 판 옆 여백에 밝은 가로 띠가 한 줄 남는다.
+    # 그래서 기울기 대신 '톤'만 가져온다 - 시안 HUD 하늘의 대표색까지 맨 위를 끌어올리고,
+    # 아래로는 단조롭게 풀어 원래 그림에 녹인다.
+    top = sorted(px[x, 0] for x in range(W))[W // 2]
+    # 대표색은 HUD 위쪽 1/3 지점. 한가운데 색을 쓰면 화면 맨 위가 시안보다 밝아진다.
+    tone = sky[int(len(sky) * 0.33)]
+    d0 = [tone[i] - top[i] for i in range(3)]
+    for y in range(lift_to):
+        t = y / lift_to
+        w = 1 - t * t * (3 - 2 * t)                   # smoothstep 로 0 까지
+        d = [c * w for c in d0]
+        for x in range(W):
+            r, g, b = px[x, y]
+            px[x, y] = (min(255, max(0, int(r + d[0]))),
+                        min(255, max(0, int(g + d[1]))),
+                        min(255, max(0, int(b + d[2]))))
     out.save(os.path.join(OUT, 'bg-play.webp'), 'WEBP', quality=88, method=6)
-    print('bg-play.webp', out.size, f'(bg-auth 밝기 x{BRIGHTEN})')
+    print('bg-play.webp', out.size, f'(bg-auth 밝기 x{BRIGHTEN} + 상단 하늘 시안 보정 {lift_to}행)')
 
 
 if __name__ == '__main__':
-    bake_frame()
-    bake_button()
-    bake_bg()
+    # 두 번째 인자로 굽고 싶은 것만 고를 수 있다: frame | button | bg
+    only = sys.argv[2] if len(sys.argv) > 2 else None
+    if only in (None, 'frame'):  bake_frame()
+    if only in (None, 'button'): bake_button()
+    if only in (None, 'bg'):     bake_bg()

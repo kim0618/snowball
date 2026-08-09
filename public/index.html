@@ -89,7 +89,8 @@
     max-width:100vw;
     max-height:calc(100vw * 19.5 / 9);
     overflow:visible;background:none;}
-
+  body.playing{align-items:center;justify-content:center;background:#e8f5f7;}
+  body.playing #ambient{display:none;}
 
   /* 화면 전체를 쓴다. 캔버스는 남는 공간에 맞춰 알아서 커진다.
      기본은 숨김: 스크립트가 돌기 전 한 프레임 동안 게임판이 먼저 그려지면
@@ -98,66 +99,106 @@
     width:100%;position:absolute;inset:0;
     opacity:0;pointer-events:none;transition:opacity .2s ease;}
   body.playing #app{opacity:1;pointer-events:auto;}
+  /* 플레이 화면은 다운로드 시안의 고정 비율 좌표를 사용한다. 로그인용 flex 흐름과
+     섞으면 브라우저 주소창 높이에 따라 보드와 버튼이 다시 밀린다. */
+  body.playing #app{display:flex;align-items:center;
+    --play-hud-h:clamp(72px,10dvh,96px);
+    --play-footer-h:clamp(68px,9dvh,88px);
+    /* 시안의 좌우 여백은 화면 폭의 5%. 이만큼 비워야 배경의 얼음 결정이 판 옆에 보인다. */
+    --play-side:clamp(13px,5vw,26px);}
+  body.playing #app > header{position:relative;flex:0 0 var(--play-hud-h);height:var(--play-hud-h);}
+  /* 남는 높이를 판 아래 한 곳에만 몰면 판이 화면 위에 딱 붙어 보인다.
+     일부는 판 위 하늘로 돌린다 - 값은 resizeCanvas 가 기기별로 넣어준다. */
+  body.playing #stage{position:relative;flex:0 0 auto;
+    width:calc(100% - (2 * var(--play-side)));margin-top:var(--play-gap-top,0px);
+    aspect-ratio:360 / 550;min-height:0;padding:0;overflow:visible;align-items:flex-start;}
+  /* 판 비율(시안)을 지키면 세로로 긴 폰에서 아래가 남는다. 그 여백은 버튼 위쪽 눈밭으로
+     돌리고 버튼은 시안처럼 화면 바닥 가까이 붙인다 - 가운데 붕 떠 있으면 어정쩡하다. */
+  body.playing #app > footer{position:relative;flex:0 0 var(--play-footer-h);
+    width:calc(100% - (2 * var(--play-side)) - 20px);max-width:none;padding:0;
+    margin:auto 0 clamp(10px,3.2dvh,28px);
+    gap:clamp(8px,4vw,28px);align-items:center;}
   /* 게임 화면의 밤 배경. 폰에서는 #ambient 가 꺼지므로(아래 미디어쿼리) 여기서 직접 깐다 -
      안 그러면 게임판 바깥이 맨 남색으로 남는다. */
   #app{background:#0a1836 url("img/bg-play.webp") center center / cover no-repeat;}
 
-  header{flex:0 0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
-    padding:12px 16px;padding-top:max(12px, env(safe-area-inset-top));
-    max-width:620px;width:100%;margin:0 auto;}
+  header{position:relative;flex:0 0 auto;display:grid;grid-template-columns:1fr auto 1fr;
+    align-items:center;column-gap:10px;padding:12px 16px;padding-top:max(12px, env(safe-area-inset-top));
+    max-width:620px;width:100%;margin:0 auto;background:none;border:0;border-radius:0;box-shadow:none;}
+  header > *{position:relative;z-index:1;}
+  header::before{display:none;}
   /* HUD 는 밤하늘 위에 얹히므로 흰 글자 + 푸른 발광이어야 읽힌다.
      (전에는 어두운 글자색이라 배경을 깔자 그대로 묻혔다) */
-  header .hudSide{text-align:left;}
-  header .hudSide .lbl{display:block;font-size:10.5px;font-weight:700;
-    color:#cfe6ff;text-shadow:0 1px 4px rgba(4,20,60,.8);}
-  header .hudSide b{font-size:21px;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
-    color:#fff;text-shadow:0 0 10px rgba(120,200,255,.85), 0 2px 5px rgba(4,20,60,.8);}
+  header .hudSide{position:relative;text-align:left;padding:0 2px;background:none;border:0;box-shadow:none;}
+  header .hudSide .lbl{display:block;font-size:11.5px;font-weight:800;letter-spacing:.01em;
+    color:#deefff;text-shadow:0 0 9px rgba(95,185,255,.65), 0 1px 4px rgba(4,20,60,.85);}
+  /* 시안의 라운드 숫자는 라벨보다 훨씬 크다. 작게 두면 밤하늘에 묻혀 안 읽힌다. */
+  header .hudSide b{display:block;margin-top:1px;
+    font-size:27px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1;
+    color:#fff;text-shadow:0 0 5px rgba(255,255,255,.9), 0 0 15px rgba(110,200,255,.85),
+                           0 2px 6px rgba(4,20,60,.85);}
   /* 시안처럼 점수 양옆에 눈꽃과 점을 달아 가운데를 잡아준다 */
   header .hudMid{text-align:center;position:relative;}
-  header .hudMid::before,header .hudMid::after{position:absolute;top:9px;white-space:nowrap;
-    font-size:12px;line-height:1;color:#9dc9f5;
+  header .hudMid::before,header .hudMid::after{position:absolute;top:14px;white-space:nowrap;
+    font-size:12.5px;line-height:1;color:#a8d3f8;
     text-shadow:0 0 8px rgba(120,200,255,.7);letter-spacing:3px;}
-  header .hudMid::before{content:'❄ ⋯';right:calc(100% + 12px);}
-  header .hudMid::after {content:'⋯ ❄';left:calc(100% + 12px);}
-  header .score{font-size:30px;font-weight:800;letter-spacing:-.02em;
+  header .hudMid.bare::before, header .hudMid.bare::after{display:none;}
+  header .hudMid::before{content:'❄ ⋯';right:calc(100% + 13px);}
+  header .hudMid::after {content:'⋯ ❄';left:calc(100% + 13px);}
+  /* 점수는 화면의 주인공. 시안처럼 흰 심지 + 얼음빛 후광 2겹으로 띄운다. */
+  header .score{font-size:38px;font-weight:900;letter-spacing:-.025em;
     font-variant-numeric:tabular-nums;line-height:1;
-    color:#fff;text-shadow:0 0 14px rgba(120,200,255,.9), 0 2px 6px rgba(4,20,60,.85);}
+    color:#fff;text-shadow:0 0 6px rgba(255,255,255,.95), 0 0 18px rgba(115,200,255,.9),
+                           0 0 34px rgba(55,145,255,.55), 0 3px 8px rgba(3,16,52,.7);}
   header .hudFx{display:flex;gap:4px;justify-content:center;margin-top:4px;min-height:17px;}
   header .hudFx i{font-style:normal;font-size:10.5px;font-weight:800;padding:2px 7px;
     border-radius:20px;color:#fff;animation:fxIn .22s cubic-bezier(.2,1.3,.4,1);}
   @keyframes fxIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
-  header .hudBtns{justify-self:end;display:flex;gap:9px;align-items:center;}
-  /* 시안의 얼음 버튼: 유리구슬 같은 몸통 + 위에 얹힌 눈 + 푸른 발광 */
-  header .hudBtns button{width:40px;height:40px;padding:0;position:relative;
+  header .hudBtns{justify-self:end;display:flex;gap:8px;align-items:center;}
+  header .hudBtns button{width:38px;height:38px;padding:0;position:relative;
     display:flex;align-items:center;justify-content:center;
-    border:1.5px solid rgba(255,255,255,.85);
-    background:
-      radial-gradient(120% 95% at 32% 22%, rgba(255,255,255,.95) 0%, rgba(214,238,255,.85) 34%,
-                      rgba(150,206,248,.72) 68%, rgba(104,171,231,.72) 100%);
-    box-shadow:0 0 14px rgba(120,200,255,.55), inset 0 2px 6px rgba(255,255,255,.9),
-               inset 0 -5px 10px rgba(40,110,190,.30), 0 4px 10px rgba(4,20,60,.45);
-    color:#12386e;font-size:15px;letter-spacing:1px;
     transition:transform .08s;}
-  header .hudBtns button::after{content:'';position:absolute;left:14%;right:14%;top:-3px;height:9px;
-    background:#fff;border-radius:50% 50% 44% 44%;
-    box-shadow:0 2px 3px rgba(120,170,220,.45);}
+  header .hudBtns button svg{width:21px;height:21px;position:relative;z-index:1;}
+  /* 위에 얹힌 눈: 몸통 폭보다 조금 좁게, 아래로 흘러내린 모양 */
+  header .hudBtns button::after{content:'';position:absolute;left:13%;right:13%;top:-3px;height:8px;
+    background:#fff;border-radius:52% 48% 42% 42% / 80% 80% 30% 30%;
+    box-shadow:0 2px 3px rgba(90,150,210,.35);}
   header .hudBtns button:active{transform:scale(.94);}
-  header #btnPause{border-radius:12px;font-size:11px;}
-  /* 임시 테스트용: 게임오버 화면 확인용 - 배포 전에 지울 것 */
-  header #btnDebugDie{border-radius:50%;font-size:17px;}
+  /* 시안의 멈춤 버튼: 서리 낀 하얀 얼음판 */
+  header #btnPause{border-radius:11px;
+    border:1.5px solid rgba(255,255,255,.9);
+    background:linear-gradient(165deg, #f2f8fe 0%, #ddeefd 46%, #b7d6fb 100%);
+    box-shadow:0 0 14px rgba(120,200,255,.5), inset 0 2px 5px rgba(255,255,255,.95),
+               inset 0 -5px 9px rgba(60,130,205,.28), 0 4px 10px rgba(4,20,60,.45);}
+  header #btnPause svg{fill:#2a5cbe;}
+  /* 임시 테스트용: 게임오버 화면 확인용 - 배포 전에 지울 것.
+     시안에선 속이 비치는 파란 유리 구슬이라 멈춤 버튼과 색이 반대다. */
+  header #btnDebugDie{border-radius:50%;
+    border:1.5px solid rgba(190,228,255,.85);
+    background:
+      radial-gradient(58% 48% at 30% 24%, rgba(255,255,255,.62) 0%, rgba(255,255,255,0) 62%),
+      radial-gradient(120% 110% at 50% 42%, #3d7ce0 0%, #1c53bb 45%, #0c317f 100%);
+    box-shadow:0 0 16px rgba(95,185,255,.65), inset 0 2px 7px rgba(190,230,255,.55),
+               inset 0 -6px 12px rgba(4,26,80,.55), 0 4px 10px rgba(4,20,60,.5);}
 
   #stage{position:relative;flex:1 1 auto;display:flex;align-items:center;
-    justify-content:center;min-height:0;padding:4px 10px;}
-  /* 캔버스는 매 프레임 지워지므로 CSS 배경이 그대로 판 바닥이 된다.
-     위가 살짝 푸르고 가운데가 하얀 언 호수면 + 옅은 눈꽃. 박스 모양(둥글기·그림자)은 원래대로. */
-  canvas{touch-action:none;border-radius:18px;
+    justify-content:center;min-height:0;padding:4px 10px;overflow:hidden;}
+  /* 얼음 액자는 CSS 배경(테두리 칸)에 깔리고, 판 바닥은 캔버스가 직접 그린다.
+     캔버스 픽셀이 배경보다 위에 찍히므로 테두리 폭이 액자 그림 두께보다 얇으면
+     액자 안쪽 띠가 판에 덮여 잘려 보인다. 그래서 네 변 폭·모서리 둥글기 모두
+     그림에서 실측한 비율대로 resizeCanvas 가 넣어준다(여기 값은 스크립트 전 임시). */
+  canvas{touch-action:none;border:14px solid transparent;
+    display:block;max-width:100%;max-height:100%;
+    border-radius:19px;
     background:
-      var(--flake) 13% 17% / 17% auto no-repeat,
-      var(--flake) 87% 41% / 12% auto no-repeat,
-      var(--flake) 24% 73% / 10% auto no-repeat,
-      var(--flake) 74% 87% / 14% auto no-repeat,
-      linear-gradient(180deg, #cfe6fb 0%, #eef7ff 26%, #ffffff 58%, #e4f1fe 100%);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.9), var(--shadow-md);}
+      url('img/frame-ice.webp') center/100% 100% no-repeat,
+      linear-gradient(180deg,#b3d3fa 0%,#c4e0fc 20%,#d6ecfd 52%,#cde6fb 78%,#a3c9f6 100%);
+    /* 액자 그림만 테두리 칸까지 깔고, 바닥 그라데이션은 판 안쪽에서 끊는다.
+       둘 다 border-box 로 두면 액자가 투명한 자리(윗변 눈 자리)가 연한 파란 판때기로
+       메워져 판 위쪽이 아래보다 두꺼워 보인다. */
+    background-origin:border-box, padding-box;
+    background-clip:border-box, padding-box;
+    filter:drop-shadow(0 0 12px rgba(94,194,255,.35)) drop-shadow(0 10px 22px rgba(2,22,78,.30));}
 
   footer{flex:0 0 auto;display:flex;gap:10px;padding:12px 16px;
     padding-bottom:max(12px, env(safe-area-inset-bottom));
@@ -166,13 +207,18 @@
      가운데는 글자를 지우고 깨끗한 기둥으로 다시 채워둬서 라벨이 바뀌어도 안 깨진다. */
   /* btn-ice-wide.webp 는 338x136. 위 눈 46 / 아래 40 / 좌우 96 이 원본 그대로 남을 몫이고,
      테두리 폭은 화면에 얹힐 크기(약 0.41배)로 줄여 잡는다. 이 둘이 어긋나면 그림이 겹쳐 찍힌다. */
-  footer button{flex:1;padding:3px 0;border-style:solid;border-width:19px 39px 16px;
+  /* 좌우 테두리(눈꽃 장식 몫)는 좁은 폰에서 글자 자리를 다 먹어 '다음 라운드' 가 두 줄로
+     접힌다. 화면 폭에 따라 같이 줄이고 라벨은 절대 접지 않는다. */
+  footer button{flex:1;padding:3px 0;border-style:solid;
+    border-width:19px clamp(24px,8.5vw,39px) 16px;
     border-image:url("img/btn-ice-wide.webp") 46 96 40 96 fill stretch;
-    background:none;color:#12386e;font-size:15px;font-weight:800;
+    background:none;color:#12386e;font-weight:800;white-space:nowrap;
+    font-size:clamp(13px,3.9vw,15px);
     text-shadow:0 1px 0 rgba(255,255,255,.75);
     filter:drop-shadow(0 4px 10px rgba(4,20,60,.45));
     transition:transform .08s;}
-  footer button:active{transform:scale(.97);}
+  footer button:hover{filter:drop-shadow(0 5px 12px rgba(4,20,60,.48)) brightness(1.04);}
+  footer button:active{transform:translateY(2px) scale(.97);filter:brightness(.95);}
   footer button.active{color:#0b2d6b;filter:drop-shadow(0 0 12px rgba(120,200,255,.9));}
 
   /* ---- 공통 시트 ---- */
@@ -286,6 +332,9 @@
     box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6), 0 2px 5px rgba(10,40,110,.3);}
   .rank li:nth-child(1) span.no{background:linear-gradient(180deg,#ffd979,#e8a33d);}
   .rank li:nth-child(2) span.no{background:linear-gradient(180deg,#dfe6ef,#98a3b8);}
+  #overlay #btnRetry{margin-top:11px;}
+  #overlay #btnShare,#overlay #btnToLobby{display:inline-flex;width:calc(50% - 5px);
+    margin:8px 2px 0;padding:12px 4px;font-size:13px;vertical-align:top;}
   .rank li:nth-child(3) span.no{background:linear-gradient(180deg,#e5ab7d,#c08457);}
   .rank .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#2b5590;}
   .rank .sc{font-variant-numeric:tabular-nums;font-weight:900;color:#1354c4;}
@@ -331,7 +380,9 @@
   .pauseStat i svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;
     stroke-linecap:round;stroke-linejoin:round;}
   .pauseStat span{display:block;margin:4px 0 1px;font-size:10.5px;font-weight:800;white-space:nowrap;}
-  .pauseStat b{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums;}
+  .pauseStat b{display:block;max-width:100%;overflow:hidden;font-size:clamp(13px,4.7vw,21px);
+    line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.04em;}
+  #pauseScore{font-size:clamp(12px,3.8vw,15px);letter-spacing:-.06em;}
   .pauseSectionTitle{margin:17px 0 9px;font-size:13.5px;font-weight:900;color:#edf8ff;}
   .pauseQuick{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
   #pausePanel .pauseQuick button{margin:0;padding:10px 6px 11px;border:0;border-radius:17px;
@@ -911,6 +962,15 @@
     animation:mascotBob 3.4s ease-in-out infinite;}
   .screen.show ~ .mascot, .mascot.show{opacity:1;}
   .mascot.front{z-index:36;}        /* 도감 얼음판 앞으로 */
+  /* 게임 중에는 판 아래 눈밭 한가운데 세운다. 판은 어느 기기에서나 같은 12줄이라
+     세로로 긴 폰일수록 아래가 남는데, 그 자리를 연출로 메운다.
+     크기·위치·표시 여부는 남는 띠 높이에 따라 resizeCanvas 가 정한다.
+     (가운데 정렬은 margin 으로 - transform 은 mascotBob 애니메이션이 이미 쓴다) */
+  body.playing .mascot{left:50%;bottom:var(--play-mascot-bottom,0px);
+    width:var(--play-mascot-size,0px);height:var(--play-mascot-size,0px);
+    margin-left:calc(var(--play-mascot-size,0px) / -2);}
+  body.playing .mascot.playPose{opacity:1;}
+  body.playing .mascot:not(.playPose){opacity:0;}
   .mascot img{width:100%;height:100%;display:block;
     filter:drop-shadow(0 8px 14px rgba(6,22,60,.45));}
   @keyframes mascotBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
@@ -928,17 +988,25 @@
     margin-bottom:7px;letter-spacing:.02em;}
 
   /* 모바일 브라우저의 주소창이 화면 높이를 줄여도 로그인 화면 전체가 한 번에 보이게 한다. */
-  @media (max-width: 600px){
+  @media (max-width: 900px){
     body{align-items:stretch;justify-content:stretch;}
     #frame{width:100vw;height:100dvh;max-width:none;max-height:none;}
     .screen{padding:max(12px, env(safe-area-inset-top)) 20px
       max(12px, env(safe-area-inset-bottom));}
     .title{max-width:min(330px, 100%);}
     #ambient{display:none;}
-    #titleScreen, #namePanel, #naverNickPanel, #overlay{
+    /* PC에서는 바깥 ambient가 풍경을 담당하지만 모바일에서는 꺼지므로,
+       기본 화면들이 같은 세로 배경을 직접 그려야 색감이 달라지지 않는다. */
+    #titleScreen, #lobby{background:url('img/bg-lobby.webp') center/cover no-repeat;}
+    #titleScreen, #lobby, #namePanel, #naverNickPanel, #overlay{
       background-position:center center;background-size:cover;}
   }
-  @media (max-width: 600px) and (max-height: 900px){
+  /* 고해상도 모바일은 CSS 너비가 900px을 넘기도 한다. 터치 기기에서는 너비와
+     관계없이 플레이 화면을 실제 가시 영역 전체에 맞춘다. */
+  @media (pointer:coarse){
+    body.playing #frame{width:100vw;height:100dvh;max-width:none;max-height:none;}
+  }
+  @media (max-width: 900px) and (max-height: 900px){
     #titleScreen .title{zoom:.88;}
     #lobby .lobbyWrap{zoom:.82;}
     #lobby .lobbyTop{margin-bottom:13px;}
@@ -946,8 +1014,27 @@
     #lobby .statRow{margin-bottom:11px;}
     #lobby .panel{margin-bottom:10px;}
     .mascot{left:10px;bottom:5px;width:92px;height:92px;}
+    #overlay{align-items:flex-start;padding:8px 14px max(8px,env(safe-area-inset-bottom));}
+    #overlay .brand{margin-bottom:7px;}
+    #overlay .brand .markImg{width:56px;margin-bottom:3px;}
+    #overlay .brand .wordImg{width:44%;margin-top:0;}
+    .goFrame{padding:8px;border-radius:30px;}
+    .goPanel{padding:14px 10px 10px;border-radius:23px;}
+    .goSnow i{width:43px;height:92px;top:-8px;}
+    .goTag{padding:5px 13px;margin-bottom:4px;}
+    #overlay .final{font-size:40px;line-height:1.08;}
+    #overlay .best{margin-top:2px;min-height:15px;font-size:11.5px;}
+    .goStats{gap:7px;margin-top:14px;}
+    .goStats div{padding:10px 3px 7px;}
+    .goFeed{margin-top:8px;min-height:17px;line-height:1.4;}
+    .rankNote{margin:10px 0 6px;}
+    .goRankBox{padding:5px;border-radius:15px;}
+    #overlay .rank{max-height:190px;}
+    #overlay .rank li{padding:7px 9px;font-size:13px;}
+    #overlay #btnRetry{margin-top:8px;padding:13px 0 11px;}
+    #overlay #btnShare,#overlay #btnToLobby{margin-top:6px;padding:10px 3px;font-size:12px;}
   }
-  @media (max-width: 600px) and (max-height: 780px){
+  @media (max-width: 900px) and (max-height: 780px){
     #titleScreen .title{zoom:.84;}
     #titleScreen .brand{margin-bottom:10px;}
     #titleScreen .brand .markImg{width:96px;}
@@ -955,7 +1042,7 @@
     #titleScreen .glassCard{padding-top:14px;}
     .mascot{left:10px;bottom:4px;width:86px;height:86px;}
   }
-  @media (max-width: 600px) and (max-height: 680px){
+  @media (max-width: 900px) and (max-height: 680px){
     #titleScreen .title{zoom:.72;}
     #lobby .lobbyWrap{zoom:.7;}
     .mascot{width:74px;height:74px;}
@@ -981,6 +1068,9 @@
     color:#6f8db7;font-size:13px;font-weight:750;}
   .installSteps{display:none;margin:-3px 0 14px;padding:11px 12px;border-radius:12px;
     background:#dceeff;color:#315f9d;font-size:13px;font-weight:750;line-height:1.55;}
+  .shareIcon{display:inline-block;width:17px;height:17px;vertical-align:-3px;
+    margin:0 2px;fill:none;stroke:currentColor;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round;}
   #installPrompt.ios .installSteps{display:block;}
 </style>
 </head>
@@ -991,7 +1081,7 @@
     <img src="img/logo-icon.webp" alt="">
     <h2 id="installTitle">눈덩이 앱 설치</h2>
     <p>홈 화면에 설치하면 주소창 없이 더 넓고 편하게 플레이할 수 있어요.</p>
-    <div class="installSteps">아래의 공유 버튼 <b>□↑</b>을 누른 뒤<br><b>‘홈 화면에 추가’</b>를 선택해 주세요.</div>
+    <div class="installSteps">아래의 공유 버튼 <svg class="shareIcon" viewBox="0 0 24 24" aria-label="공유"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 11v9h14v-9"/></svg>을 누른 뒤<br><b>‘홈 화면에 추가’</b>를 선택해 주세요.</div>
     <button type="button" class="installAction" id="btnInstall">앱 다운로드</button>
     <button type="button" class="installLater" id="btnInstallLater">나중에 할게요</button>
   </div>
@@ -1010,8 +1100,8 @@
       <div class="hudFx" id="hudFx"></div>
     </div>
     <div class="hudBtns">
-      <button id="btnDebugDie" aria-label="죽기(테스트용)" title="테스트용: 즉시 게임오버">💀</button>
-      <button id="btnPause" aria-label="멈춤">❚❚</button>
+      <button id="btnDebugDie" aria-label="죽기(테스트용)" title="테스트용: 즉시 게임오버"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.7c-4.5 0-7.9 3.3-7.9 7.6 0 2.6 1.2 4.7 3.2 6 .4.3.6.7.6 1.1v.8c0 .9.7 1.6 1.6 1.6h5c.9 0 1.6-.7 1.6-1.6v-.8c0-.4.2-.8.6-1.1 2-1.3 3.2-3.4 3.2-6 0-4.3-3.4-7.6-7.9-7.6z" fill="#fdfbff"/><ellipse cx="8.9" cy="10.7" rx="2.15" ry="2.5" fill="#3b2d55"/><ellipse cx="15.1" cy="10.7" rx="2.15" ry="2.5" fill="#3b2d55"/><path d="M12 13.6c.5 0 .85.42.85.94s-.35.94-.85.94-.85-.42-.85-.94.35-.94.85-.94z" fill="#3b2d55"/><path d="M10.1 17.6v2.1M12 17.6v2.1M13.9 17.6v2.1" stroke="#3b2d55" stroke-width="1.05" stroke-linecap="round"/></svg></button>
+      <button id="btnPause" aria-label="멈춤"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7.1" y="5.4" width="3.9" height="13.2" rx="1.5"/><rect x="13" y="5.4" width="3.9" height="13.2" rx="1.5"/></svg></button>
     </div>
   </header>
   <div id="stage">
@@ -1240,7 +1330,7 @@
       <div class="err" id="naverAuthErr"></div>
       <button id="btnNaverSubmit" class="naverSubmit">로그인</button>
       <button id="btnNaverBack" class="naverLink">뒤로</button>
-      <p class="naverNote">준비 중인 화면이에요. 어떤 값을 입력해도 진행돼요.<br>실제 네이버 연동은 이후 보안 검토와 함께 붙일 예정이에요.</p>
+      <p class="naverNote">실제 네이버 연동 전 임시 가입 화면이에요.<br>입력한 아이디와 비밀번호로 계정이 만들어져요.</p>
     </div>
   </div>
 </div>
@@ -1398,10 +1488,9 @@ const CONFIG = {
   FIRE_TOTAL_TARGET: 1.8,
   MIN_DRAG: 18,
   MAX_ANGLE_FROM_VERTICAL: 80 * Math.PI/180,
-  // 성능 한계일 뿐, 플레이어의 공 자원(S.ballCount)에는 상한이 없다.
-  // 브릭 체력이 공 개수에 비례해 오르므로(brickBaseHp), 자원 자체를 잘라내면
-  // 라운드가 오를수록 절대 못 이기게 된다 - 예전엔 이 값(150)으로 둘 다 막고 있었다.
-  ACTIVE_BALL_CAP: 512,
+  // 보유량과 실제 동시 발사량 모두 150개로 제한한다. 합친 대표 공은 사용하지 않는다.
+  MAX_BALLS: 150,
+  ACTIVE_BALL_CAP: 150,
   PRESSURE_AT_14: 0.72,
   PRESSURE_BASE: 0.72,
   MIN_ROWS: 12,
@@ -1429,9 +1518,16 @@ const CONFIG = {
   CURSE_CHANCE: 0.07,
   CURSE_FROM_ROUND: 6,
   CURSE_HP_MULT: 0.6,
-  CURSE_SPREAD: 2,
+  // 증식 블록은 공의 합산 공격력과 관계없이 충돌 1회마다 주변 HP를 1만 올린다.
+  CURSE_SPREAD: 1,
   FRENZY_BOUNCE_CHANCE: 0.08,
   X2_SHARE: 0.08,
+  // ×2 는 곱하기라 상한이 없으면 라운드마다 총 공격력이 배가 된다(실측: 86라운드에 20억).
+  // 블록 체력이 공격력을 따라가게 설계돼 있어 난이도는 안 무너지지만, 숫자가 화면과
+  // 순위표를 망가뜨리고 결국 정수 정밀도(2^53)까지 넘긴다.
+  // 천장은 +N 블록으로 자라는 속도(라운드의 제곱 언저리)와 같은 차수로 둔다. 8개 시드로
+  // 끝까지 돌려 보니 실제 플레이는 천장의 3~22% 선이라, 폭주할 때만 걸리고 평소엔 안 걸린다.
+  POWER_CAP_SLOPE: 2.5,
   GOLD_MULT: 2,
   SHIFT_DURATION: 0.28,
   PREVIEW_BOUNCES: 2,
@@ -1448,8 +1544,8 @@ const CONFIG = {
   AIM_LATCH_MS: 90,
 };
 
-// 판 크기는 화면 비율에 맞춰 정해진다. 고정 비율로 두면 폰에서 위아래에 빈 띠가 생긴다.
-// 칸은 항상 정사각형이고, 세로로 몇 줄이 들어가는지를 화면이 결정한다.
+  // 판은 화면에 반응하되 지나치게 긴 폰에서 세로로 잡아늘리지 않는다.
+  // 12줄 판의 비율이 원본 얼음 프레임과 가장 가깝고, 남는 높이는 밤 배경으로 둔다.
 let WIDTH, GRID_H, HEIGHT, DANGER_Y, LAUNCHER_Y, LAND_Y;
 
 function layoutBoard(viewW, viewH){
@@ -1463,7 +1559,9 @@ function layoutBoard(viewW, viewH){
   GRID_H     = rows * CONFIG.CELL;
   HEIGHT     = GRID_H + CONFIG.LAUNCH_ZONE_H;
   DANGER_Y   = GRID_H;
-  LAUNCHER_Y = HEIGHT - 14;
+  // 발사구는 판 아래끝에서 조금 올라와 있고, 그 아래 남는 띠가 안내 문구
+  // ('…드래그') 자리다. 바닥에 붙여 두면 문구를 놓을 데가 없다.
+  LAUNCHER_Y = HEIGHT - 36;
   LAND_Y     = HEIGHT - 8;
   // 줄이 많아지면 죽기까지의 여유도 길어지므로 압력을 그만큼 올려
   // 기기가 달라도 한 판 길이가 비슷하게 유지되도록 한다.
@@ -1525,6 +1623,10 @@ function generateHpBrick(rng, round, power, variant){
   if (variant === 'curse') hp = Math.max(1, Math.round(hp * CONFIG.CURSE_HP_MULT));
   return { type:'hp', hp, maxHp:hp, boss: variant==='boss', curse: variant==='curse' };
 }
+// 라운드 r 에서 가질 수 있는 총 공격력(공 개수 + 보너스 공격력)의 천장
+function powerCap(round){
+  return CONFIG.MAX_BALLS + Math.round(round * round * CONFIG.POWER_CAP_SLOPE);
+}
 function generateOpBrick(rng, round){
   const subChance = clamp(CONFIG.SUB_CHANCE_BASE + round*CONFIG.SUB_CHANCE_PER_ROUND, CONFIG.SUB_CHANCE_BASE, CONFIG.SUB_CHANCE_MAX);
   const r = rng.next();
@@ -1579,14 +1681,15 @@ function opColor(op){
   return op==='x2' ? '#ffd54a' : op==='add' ? '#4ade80' : '#f87171';
 }
 function itemVisual(kind){
-  if (kind==='bomb')   return { color:'#ff6b35', soft:'#fff1e8', icon:'💥' };
-  if (kind==='frenzy') return { color:'#8b5cf6', soft:'#f3edff', icon:'⚡' };
-  return                      { color:'#f59e0b', soft:'#fff7e6', icon:'💰' };
+  if (kind==='bomb')   return { color:'#ff6b35', light:'#ffb08a', soft:'#fff1e8', icon:'💥' };
+  if (kind==='frenzy') return { color:'#8b5cf6', light:'#c4aaff', soft:'#f3edff', icon:'⚡' };
+  return                      { color:'#f59e0b', light:'#ffd77a', soft:'#fff7e6', icon:'💰' };
 }
 // 캔버스에 그리는 모든 색은 여기 한 곳에서. 흩어져 있으면 테마를 못 바꾼다.
 const T = {
   field:      '#eef1f7',
-  gridLine:   'rgba(28,42,80,0.055)',
+  // 시안의 격자는 판보다 어두운 선이 아니라 서리처럼 한 톤 밝은 선이다.
+  gridLine:   'rgba(255,255,255,0.24)',
   ball:       '#2b3a63',
   ballCore:   '#4c6ef5',
   trail:      '#8aa8e8',
@@ -1600,13 +1703,13 @@ const T = {
   launcher:   '#3b5bfd',
   launcherIdle:'rgba(59,91,253,0.30)',
   returning:  '#9aa8c8',
-  stockText:  '#1e2740',
-  hint:       'rgba(40,55,95,0.35)',
+  stockText:  '#12244f',
+  hint:       'rgba(70,110,170,0.62)',
   danger:     '250,110,110',
   boss:       ['#ff9ec1','#e11d63'],
-  curse:      ['#e0b7ff','#7c22cf'],
+  curse:      ['#4b5563','#05070b'],
   bossEdge:   '#f6b93b',
-  curseEdge:  '#c964f5',
+  curseEdge:  '#cbd5e1',
   itemBg:     '#ffffff',
 };
 
@@ -1624,12 +1727,12 @@ function hpTier(hp){
 }
 
 const S = {
-  round: 1, score: 0, ballCount: 1, maxBalls: 1,
+  round: 1, score: 0, ballCount: 1, bonusPower: 0, maxBalls: 1,
   grid: [], activeBalls: [], particles: [],
   state: 'aiming',
   launcherX: WIDTH/2,
   aimDir: {x:0, y:-1},
-  fireQueueRemaining: 0, fireTimer: 0, ballCountAtTurnStart: 1,
+  fireQueueRemaining: 0, firePowerQueue: [], fireTimer: 0, ballCountAtTurnStart: 1,
   collectedForNextTurn: 0, pendingPenalty: 0, landedThisTurn: false,
   speedMult: 1,
   seed: 0,
@@ -1661,7 +1764,7 @@ function resetTransientState(){
   S.waves = []; S.flash = null; S.hitstop = 0;
   S.launcherX = WIDTH/2;
   S.collectedForNextTurn = 0; S.pendingPenalty = 0; S.landedThisTurn = false;
-  S.fireQueueRemaining = 0;
+  S.fireQueueRemaining = 0; S.firePowerQueue = [];
   S.frenzyActive = false; S.scoreMult = 1;
   S.state = 'aiming';
   updateHud();
@@ -1672,7 +1775,7 @@ function startFreshGame(seed){
   S.seed = (seed === undefined) ? ((Date.now() ^ (Math.random()*1e9)) >>> 0) : (seed >>> 0);
   S.rng = createRng(S.seed);
   S.round = 1; S.score = 0;
-  S.ballCount = CONFIG.START_BALLS; S.maxBalls = CONFIG.START_BALLS;
+  S.ballCount = CONFIG.START_BALLS; S.bonusPower = 0; S.maxBalls = CONFIG.START_BALLS;
   S.grid = Array.from({length: CONFIG.GRID_ROWS}, () => new Array(CONFIG.COLS).fill(null));
   S.grid[0] = generateRow(S.rng, 1, CONFIG.START_BALLS);
   S.bossKills = 0;
@@ -1689,7 +1792,8 @@ function saveGame(){
   try {
     localStorage.setItem(saveKey(), JSON.stringify({
       v: SAVE_VERSION, seed: S.seed, rngState: S.rng.state,
-      round: S.round, score: S.score, ballCount: S.ballCount, maxBalls: S.maxBalls,
+      round: S.round, score: S.score, ballCount: S.ballCount, bonusPower: S.bonusPower,
+      maxBalls: S.maxBalls,
       bossKills: S.bossKills, grid: S.grid,
     }));
   } catch(e){}
@@ -1711,7 +1815,9 @@ function resumeGame(data){
   S.seed = data.seed;
   S.rng = createRng(0); S.rng.state = data.rngState >>> 0;
   S.round = data.round; S.score = data.score;
-  S.ballCount = data.ballCount; S.maxBalls = data.maxBalls;
+  S.ballCount = Math.min(CONFIG.MAX_BALLS, Math.max(1, Number(data.ballCount) || 1));
+  S.bonusPower = Math.max(0, Math.floor(Number(data.bonusPower) || 0));
+  S.maxBalls = Math.min(CONFIG.MAX_BALLS, Math.max(S.ballCount, Number(data.maxBalls) || 1));
   S.grid = data.grid;
   S.bossKills = data.bossKills || 0;
   resetTransientState();
@@ -1724,6 +1830,20 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) saveG
 window.addEventListener('pagehide', saveGame);
 
 function addScore(n){ S.score += Math.round(n * S.scoreMult); updateHud(); }
+
+// 블록 체력·점수는 후반에 억 단위까지 간다. 칸은 40px 뿐이라 그대로 찍으면
+// 숫자가 블록 밖으로 삐져나온다. 네 글자를 넘지 않게 줄여 쓴다 (1234 -> 1.2K).
+function shortNum(n){
+  n = Math.round(Number(n) || 0);
+  const abs = Math.abs(n);
+  if (abs < 1000) return String(n);
+  for (const [unit, size] of [['T',1e12],['B',1e9],['M',1e6],['K',1e3]]) {
+    if (abs >= size) {
+      const q = n / size;
+      return (Math.abs(q) < 10 ? q.toFixed(1) : String(Math.round(q))) + unit;
+    }
+  }
+}
 
 function showBuffBanner(text){
   const el = document.getElementById('buffBanner');
@@ -1746,7 +1866,15 @@ function updateBuffEdge(){
 
 function updateHud(){
   const scoreEl = document.getElementById('hudScore');
-  scoreEl.textContent = S.score.toLocaleString();
+  const scoreText = S.score.toLocaleString();
+  scoreEl.textContent = scoreText;
+  // 점수는 자릿수 제한이 없어서 후반엔 '458,215,714' 처럼 길어진다. 그대로 두면
+  // 좌우 버튼을 밀고 나가므로 길어질수록 글자를 줄인다(축약은 안 한다 - 점수는 다 보여야 한다).
+  scoreEl.style.fontSize = scoreText.length > 12 ? '20px'
+                         : scoreText.length > 9  ? '24px'
+                         : scoreText.length > 6  ? '30px' : '';
+  // 자리가 없으면 양옆 눈꽃 장식부터 접는다 - 장식이 라운드·버튼을 밀면 안 된다
+  scoreEl.parentElement.classList.toggle('bare', scoreText.length > 9);
   scoreEl.style.color = S.scoreMult > 1 ? '#e8a33d' : '';
   document.getElementById('hudRound').textContent = S.round;
 
@@ -1895,8 +2023,13 @@ function cloneBallJitter(src){
   // Inherit age/lastHit: a clone born at age 0 that can itself spawn clones
   // makes a frenzy turn immortal and the round never resolves.
   return { x: src.x, y: src.y, vx: r.vx, vy: r.vy,
-           age: src.age, lastHit: src.lastHit || 0, dmgLock: src.dmgLock };
+           age: src.age, lastHit: src.lastHit || 0, dmgLock: src.dmgLock,
+           power: Math.max(1, Math.floor(src.power || 1)) };
 }
+
+const ballPower = b => Math.max(1, Math.floor(Number(b && b.power) || 1));
+const queuedPower = () => S.firePowerQueue.reduce((sum, power) => sum + power, 0);
+const totalOwnedPower = () => S.ballCount + S.bonusPower;
 
 function applyOperator(brick, selfIndex, removeSet, spawnList){
   if (brick.op === 'x2') {
@@ -1906,7 +2039,7 @@ function applyOperator(brick, selfIndex, removeSet, spawnList){
     let room = CONFIG.ACTIVE_BALL_CAP - currentTotal;
     for (const srcBall of alive) {
       if (room > 0) { spawnList.push(cloneBallJitter(srcBall)); room--; }
-      else addScore(CONFIG.OVERFLOW_BONUS);
+      else srcBall.power = ballPower(srcBall) * 2;
     }
     vibrate(PATTERN.opX2);
   } else if (brick.op === 'add') {
@@ -2009,7 +2142,7 @@ function substep(subDt){
               b.vx = hit.vx; b.vy = hit.vy;
               if (b.dmgLock) { /* 이번 프레임 몫은 이미 썼다: 튕기기만 한다 */ } else {
               b.dmgLock = true;
-              brick.hp--;
+              brick.hp -= ballPower(b);
               brick.flash = 1;
               const hitColor = brick.boss ? T.boss[1] : brick.curse ? T.curse[1] : T.hitSpark;
               spawnHitParticle(b.x, b.y, hitColor);
@@ -2031,7 +2164,7 @@ function substep(subDt){
                 const gain = brick.maxHp*10 + (S.combo-1)*CONFIG.COMBO_STEP;
                 addScore(gain);
                 spawnBreakParticle(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, hitColor);
-                spawnPopup(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, '+'+Math.round(gain*S.scoreMult), hitColor);
+                spawnPopup(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, '+'+shortNum(gain*S.scoreMult), hitColor);
                 if (brick.boss) {
                   S.bossKills = (S.bossKills || 0) + 1;
                   S.collectedForNextTurn += CONFIG.BOSS_REWARD_BALLS;
@@ -2077,7 +2210,7 @@ function substep(subDt){
 
     if (b.y + CONFIG.BALL_RADIUS >= LAND_Y) {
       removeSet.add(i);
-      S.collectedForNextTurn++;
+      S.collectedForNextTurn += ballPower(b);
       if (!S.landedThisTurn) {
         S.landedThisTurn = true;
         S.launcherX = clamp(b.x, 20, WIDTH-20);
@@ -2091,7 +2224,7 @@ function substep(subDt){
       // Same rule as every other removal: a ball leaving play must be visible
       // flying home, never deleted where it stands.
       removeSet.add(i);
-      S.collectedForNextTurn++;
+      S.collectedForNextTurn += ballPower(b);
       S.returning.push({ x: clamp(b.x, 0, WIDTH), y: b.y });
       continue;
     }
@@ -2113,14 +2246,15 @@ function substep(subDt){
   if (spawnList.length) S.activeBalls.push(...spawnList);
 }
 
-function spawnBall(){
+function spawnBall(power = 1){
   // Every ball leaves from the same muzzle. Spreading them sideways makes them
   // travel as several parallel streams instead of one line.
   S.activeBalls.push({
     x: S.launcherX, y: LAUNCHER_Y,
     vx: S.aimDir.x * CONFIG.BALL_SPEED,
     vy: S.aimDir.y * CONFIG.BALL_SPEED,
-    age: 0
+    age: 0,
+    power: Math.max(1, Math.floor(power))
   });
 }
 
@@ -2138,24 +2272,27 @@ function handleFireQueue(dt){
     // 대기시간을 그대로 쌓아두면 자리가 나는 순간 한꺼번에 몰아 쏘게 된다.
     if (S.activeBalls.length >= CONFIG.ACTIVE_BALL_CAP) { S.fireTimer = Math.min(S.fireTimer, interval); break; }
     S.fireTimer -= interval;
-    spawnBall();
+    spawnBall(S.firePowerQueue.shift() || 1);
     S.fireQueueRemaining--;
   }
 }
 
 function shiftRowsAndSpawnNewRow(){
   for (let r=CONFIG.GRID_ROWS-1; r>0; r--) S.grid[r] = S.grid[r-1];
-  S.grid[0] = generateRow(S.rng, S.round, S.ballCount);
+  S.grid[0] = generateRow(S.rng, S.round, totalOwnedPower());
 }
 function checkGameOver(){
   return S.grid[CONFIG.GRID_ROWS-1].some(c => c !== null);
 }
 
 function finishTurn(){
-  // 공 개수는 더 이상 여기서 잘리지 않는다: 이게 곧 다음 라운드 브릭 체력을 정하는
-  // 화력이라, 여기서 캡을 걸면 라운드가 오를수록 이길 수 없는 판이 된다(엔드리스 설계).
-  // 동시에 날아다니는 공 수는 ACTIVE_BALL_CAP 이 따로 막아 성능을 지킨다.
-  S.ballCount = Math.max(1, S.collectedForNextTurn - S.pendingPenalty);
+  // 물리 공은 최대 150개, 초과분은 공들에 고르게 나눠지는 추가 공격력으로 보존한다.
+  // 천장은 여기 한 곳에서만 건다 - 공 개수·보너스 공격력·블록 체력·점수가 전부
+  // 이 값에서 파생되므로, 여기만 막으면 아래로 다 따라온다.
+  const totalPower = clamp(Math.max(1, S.collectedForNextTurn - S.pendingPenalty),
+                           1, powerCap(S.round + 1));
+  S.ballCount = Math.min(CONFIG.MAX_BALLS, totalPower);
+  S.bonusPower = Math.max(0, totalPower - S.ballCount);
   S.maxBalls = Math.max(S.maxBalls, S.ballCount);
   S.collectedForNextTurn = 0;
   S.pendingPenalty = 0;
@@ -2182,9 +2319,9 @@ function enterGameOver(){
   clearSavedGame();           // 이 판은 끝났다 - 다음 '게임 시작'은 새 판이어야 한다
   vibrate(PATTERN.gameOver);
 
-  // 얼음판이 화면 아래쪽까지 꽉 채우므로, 마스코트가 판 뒤에 묻히지 않게 앞으로 올린다
-  document.getElementById('mascot').classList.add('front');
-  setMascot(true);
+  // 결과 정보와 하단 버튼을 가리지 않도록 게임오버 화면에서는 마스코트를 숨긴다.
+  document.getElementById('mascot').classList.remove('front');
+  setMascot(false);
 
   const isRecord = S.score > LB.best;
   const gap = LB.best - S.score;
@@ -2193,7 +2330,13 @@ function enterGameOver(){
   tag.textContent = isRecord ? '🎉 최고 기록 갱신!' : '게임 오버';
   tag.classList.toggle('record', isRecord);
 
-  document.getElementById('finalScore').textContent = S.score.toLocaleString();
+  const finalEl = document.getElementById('finalScore');
+  const finalText = S.score.toLocaleString();
+  finalEl.textContent = finalText;
+  // 억 단위가 되면 47px 로는 카드 폭(300px)을 넘는다
+  finalEl.parentElement.style.fontSize = finalText.length > 12 ? '30px'
+                                       : finalText.length > 9  ? '36px'
+                                       : finalText.length > 6  ? '42px' : '';
   document.getElementById('goRound').textContent = S.round;
   document.getElementById('goBalls').textContent = S.maxBalls;
   document.getElementById('goBoss').textContent = S.bossKills || 0;
@@ -2486,7 +2629,7 @@ const GUIDE = [
   ['기본', [
     ['#5b8def', '7',  '숫자 블록', '적힌 숫자만큼 맞아야 깨져요.', '숫자가 클수록 색이 진해져요', 'num'],
     ['#e11d63', '👑', '보스',      '체력이 3배인 대형 블록. 잡으면 공 4개를 줘요.', '4라운드부터 등장', 'boss'],
-    ['#7c22cf', '▲',  '증식',      '때릴 때마다 주변 8칸의 숫자가 2씩 올라가요.', '한 번에 깨거나, 아예 건드리지 마세요', 'grow'],
+    ['#111827', '▲',  '증식',      '때릴 때마다 주변 8칸의 숫자가 1씩 올라가요.', '한 번에 깨거나, 아예 건드리지 마세요', 'grow'],
   ]],
   ['공 개수', [
     ['#f5c518', '×2', '두 배',     '날아가는 공이 그 자리에서 2배로 늘어나요.', '공이 많을 때 맞히면 이득이 커요', 'x2'],
@@ -2541,8 +2684,9 @@ function renderGuide(data, title, art, sub){
         chip = document.createElement('span');
         chip.className = 'gChip art';
         chip.style.backgroundImage = `url(img/badge-${art}.webp)`;
-        chip.style.filter = `drop-shadow(0 4px 5px rgba(10,40,110,.4))`
-                          + ` drop-shadow(0 0 9px ${color}80)`;
+        chip.style.filter = art === 'grow'
+          ? 'grayscale(1) contrast(2.15) brightness(.62) drop-shadow(0 4px 5px rgba(0,0,0,.55)) drop-shadow(0 0 5px #cbd5e1)'
+          : `drop-shadow(0 4px 5px rgba(10,40,110,.4)) drop-shadow(0 0 9px ${color}80)`;
         // 시안에 없던 블록은 글자를 지운 빈 큐브에 이름을 얹어 같은 결로 맞춘다
         if (art.startsWith('blank')) chip.textContent = icon;
       } else {                                   // 그림이 없는 항목은 CSS 로 비슷하게 세운다
@@ -2657,6 +2801,13 @@ function enterGame(){
   document.getElementById('lobby').classList.remove('show');
   document.getElementById('overlay').classList.remove('show');
   document.body.classList.add('playing');      // 이때 비로소 게임판이 보인다
+  // playing에서 프레임 비율이 9:16으로 바뀐다. 이전 로비 크기로 계산된 캔버스를
+  // 그대로 두면 HUD와 버튼을 침범하므로 레이아웃 변경 직후 반드시 다시 잰다.
+  resizeCanvas();
+  requestAnimationFrame(() => {
+    resizeCanvas();
+    requestAnimationFrame(resizeCanvas);
+  });
   setMascot(false);
   setAmbient('bg-play');   // 게임 본편은 밤 배경(시안 기준)
   S.paused = false;
@@ -2697,7 +2848,8 @@ async function doLogin(){
     const data = await res.json();
     if (!data.ok) { errEl.textContent = data.error || '로그인에 실패했어요'; return; }
     if (data.admin) {
-      // 관리자 계정이면 게임이 아니라 관리자 페이지로
+      // 관리자 계정도 체크된 로그인 정보 저장 설정을 똑같이 적용한 뒤 이동한다.
+      keepIdSave(id, pw);
       try { sessionStorage.setItem('snowball.admin', data.token); } catch(e){}
       location.href = 'admin.html';
       return;
@@ -2764,10 +2916,9 @@ async function doRegister(){
 }
 
 // ---- 네이버로 로그인 (기본 골격만. 실제 OAuth 연동은 보안 검토 후 붙일 예정) ----
-// 지금은 네이버 화면 흉내만 내고, "로그인"을 누르면 성공한 것으로 치고
-// 새로 발급한 가상 네이버 아이디로 넘어간다. 비밀번호는 사용자가 정하지 않는다.
+// 실제 OAuth 연동 전에는 입력한 아이디와 비밀번호를 그대로 사용해
+// 일반 회원가입과 같은 계정을 만든다.
 let naverPending = null;
-let naverValidationTestPending = true;
 function showNaverLogin(){
   document.getElementById('titleScreen').classList.remove('show');
   document.getElementById('mascot').classList.remove('front');   // 눈덩이가 흰 네이버 화면 위로 뜨지 않게
@@ -2781,16 +2932,15 @@ function showNaverLogin(){
 async function doNaverSubmit(){
   const btn = document.getElementById('btnNaverSubmit');
   const errEl = document.getElementById('naverAuthErr');
-  if (naverValidationTestPending) {
-    naverValidationTestPending = false;
-    errEl.textContent = '아이디 또는 비밀번호가 달라요';
-    return;
-  }
+  const id = cleanField(document.getElementById('naverIdMock').value, 16);
+  const pw = document.getElementById('naverPwMock').value.slice(0, 32);
+  if (!id) { errEl.textContent = '아이디를 입력해주세요'; return; }
+  if (!pw) { errEl.textContent = '비밀번호를 입력해주세요'; return; }
   errEl.textContent = '';
   btn.disabled = true;
   btn.textContent = '로그인 중...';
   await new Promise(r => setTimeout(r, 500));   // 실제 연동 전까지의 임시 연출
-  naverPending = { id: 'naver_' + Math.random().toString(36).slice(2, 10) };
+  naverPending = { id, pw };
   btn.disabled = false;
   btn.textContent = '로그인';
   document.getElementById('naverScreen').classList.remove('show');
@@ -2826,14 +2976,15 @@ async function doNaverNickOk(){
     const res = await fetch(LB.api + '/api/register', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        id: naverPending.id, nick, gender, provider: 'naver', hadFailedLoginTest: true
+        id: naverPending.id, pw: naverPending.pw, nick, gender, provider: 'naver'
       }),
     });
     const data = await res.json();
     if (!data.ok) { errEl.textContent = data.error || '가입에 실패했어요'; return; }
+    const pw = naverPending.pw;
     naverPending = null;
     document.getElementById('naverNickPanel').classList.remove('show');
-    applyAuth(data);
+    applyAuth(data, pw);
   } catch (e) {
     errEl.textContent = '서버에 연결할 수 없어요';
   } finally { btn.disabled = false; }
@@ -2873,9 +3024,11 @@ function stepPhysics(dt){
   S.turnTime += dt;
   if (S.turnTime > CONFIG.TURN_HARD_CAP) {
     S.frenzyActive = false;
+    S.collectedForNextTurn += queuedPower();
     S.fireQueueRemaining = 0;
+    S.firePowerQueue = [];
     for (const b of S.activeBalls) {
-      S.collectedForNextTurn++;
+      S.collectedForNextTurn += ballPower(b);
       S.returning.push({ x: clamp(b.x, 0, WIDTH), y: b.y });
     }
     S.activeBalls.length = 0;
@@ -2888,7 +3041,12 @@ function stepPhysics(dt){
 function startFiring(dir){
   S.aimDir = dir;
   S.ballCountAtTurnStart = S.ballCount;
-  S.fireQueueRemaining = S.ballCount;
+  const totalPower = totalOwnedPower();
+  const basePower = Math.floor(totalPower / S.ballCount);
+  const strongerBalls = totalPower % S.ballCount;
+  S.firePowerQueue = Array.from({ length:S.ballCount }, (_, i) =>
+    basePower + (i < strongerBalls ? 1 : 0));
+  S.fireQueueRemaining = S.firePowerQueue.length;
   S.fireTimer = 0;
   S.turnTime = 0;
   S.turnWallTime = 0;
@@ -2909,43 +3067,350 @@ function clampAngleFromVertical(dir, maxAngle){
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
+// frame-ice.webp 에서 실측한 액자 두께. 그림 가장자리부터 판이 시작되는 안쪽까지의 비율로,
+// 좌우는 그림 폭 대비 / 위아래는 그림 높이 대비다(윗변에 눈이 얹혀 있어 위가 두껍다).
+// 캔버스 테두리를 이 값으로 잡아야 액자 안쪽 띠가 판에 안 덮인다.
+// (값은 tools/make-play-art.py 가 그림을 구울 때 찍어준다)
+const FRAME = { side: 0.0392, top: 0.0329, bottom: 0.0237, radius: 0.0530, innerRadius: 0.0392 };
+
 function resizeCanvas(){
   const stage = document.getElementById('stage');
+  if (document.body.classList.contains('playing')) {
+    const app = document.getElementById('app');
+    const hud = app.querySelector('header');
+    const controls = app.querySelector('footer');
+    // 좌우 여백은 시안 비율(화면 폭의 5%). 여기서 정한 값을 CSS 변수로 되돌려
+    // 아래 버튼 줄까지 같은 폭으로 맞춘다 - 예전엔 16px 로 박아둬서 CSS 쪽 값이 죽었다.
+    const side = clamp(Math.round(app.clientWidth * 0.05), 13, 26);
+    app.style.setProperty('--play-side', side + 'px');
+    const widthLimit = Math.max(240, app.clientWidth - side*2);
+    const gapBelow = parseFloat(getComputedStyle(controls).marginBottom) || 0;
+    const heightLimit = Math.max(360,
+      app.clientHeight - hud.offsetHeight - controls.offsetHeight - gapBelow - 8);
+    // 판은 어느 기기에서든 같은 줄 수(MIN_ROWS)·같은 비율이어야 한다. 순위표가 있는
+    // 게임이라 화면이 길다고 줄이 늘어나면 사람마다 다른 판으로 겨루는 셈이 된다.
+    // 남는 높이는 판이 아니라 아래 눈밭으로 간다.
+    // 액자 위아래 두께까지 감안한 바깥 높이 = 안쪽 높이 / (1 - 위 - 아래)
+    const boxPerW = (550/360) * (1 - FRAME.side*2) / (1 - FRAME.top - FRAME.bottom);
+    const fittedW = Math.min(widthLimit, heightLimit / boxPerW);
+    stage.style.width = Math.floor(fittedW) + 'px';
+    stage.style.height = Math.floor(fittedW * boxPerW) + 'px';
+  }
   const availW = stage.clientWidth, availH = stage.clientHeight;
   if (!availW || !availH) return;
 
+  // 좌우 테두리는 폭 기준. 위아래는 나중에 확정된 바깥 높이에서 다시 잡는다.
+  const bx = Math.max(5, Math.round(availW * FRAME.side));
+
+  // 폭을 기준으로 판 높이를 정한다. 남는 높이를 판에 주면 줄 수가 늘어
+  // 기기마다 다른 판이 되므로, MIN_ROWS 비율에서 자른다.
+  const innerW = availW - bx*2;
+  const naturalH = innerW * ((CONFIG.MIN_ROWS * CONFIG.CELL + CONFIG.LAUNCH_ZONE_H) /
+                            (CONFIG.COLS * CONFIG.CELL));
+  const boardH = Math.min(availH * (1 - FRAME.top - FRAME.bottom), naturalH);
+
   const before = CONFIG.GRID_ROWS;
-  layoutBoard(availW, availH);
+  layoutBoard(innerW, boardH);
   // 줄 수가 바뀌면 격자 배열 길이도 맞춰준다 (아래쪽에 빈 줄을 덧대거나 잘라냄)
   if (S.grid && CONFIG.GRID_ROWS !== before) {
     while (S.grid.length < CONFIG.GRID_ROWS) S.grid.push(new Array(CONFIG.COLS).fill(null));
     if (S.grid.length > CONFIG.GRID_ROWS) S.grid.length = CONFIG.GRID_ROWS;
   }
 
-  const scale = Math.min(availW/WIDTH, availH/HEIGHT);
-  canvas.style.width = Math.floor(WIDTH*scale)+'px';
-  canvas.style.height = Math.floor(HEIGHT*scale)+'px';
+  // 칸이 정사각으로 남으려면 '테두리 안쪽'이 WIDTH:HEIGHT 비율이어야 한다.
+  // 예전엔 테두리를 빼지 않고 계산해서 칸이 세로로 4% 눌려 있었다.
+  const scale = Math.min(innerW/WIDTH, boardH/HEIGHT);
+  const inW = Math.floor(WIDTH*scale), inH = Math.floor(HEIGHT*scale);
+  const boxH = Math.round(inH / (1 - FRAME.top - FRAME.bottom));
+  const bt = Math.round(boxH * FRAME.top);
+  const bb = Math.max(4, boxH - inH - bt);
+  const boxW = inW + bx*2;
+  canvas.style.borderWidth = `${bt}px ${bx}px ${bb}px`;
+  canvas.style.borderRadius = Math.round(boxW * FRAME.radius) + 'px';
+  canvas.style.width = boxW+'px';
+  canvas.style.height = (inH + bt + bb)+'px';
+  // 남은 높이는 스테이지에서 덜어내 판 아래 눈밭으로 돌린다
+  if (document.body.classList.contains('playing')) {
+    stage.style.height = (inH + bt + bb)+'px';
+    layoutPlaySpare(inH + bt + bb);
+  }
   const dpr = Math.min(window.devicePixelRatio||1, 2.5);
   canvas.width = Math.floor(WIDTH*dpr); canvas.height = Math.floor(HEIGHT*dpr);
   ctx.setTransform(dpr,0,0,dpr,0,0);
+  // 액자 안쪽 모서리 둥글기를 캔버스 좌표로 환산해 넘긴다
+  buildBoardSurface(dpr, boxW * FRAME.innerRadius * WIDTH / Math.max(1, inW));
+}
+
+// 판은 어느 기기에서나 같은 12줄이라, 세로로 긴 폰일수록 아래가 남는다(SE 24px ~ Pixel7 164px).
+// 그 남는 높이를 어디에 둘지 정한다: 일부는 판 위 하늘로 올려 판이 화면 위에 붙지 않게 하고,
+// 나머지 눈밭이 넉넉하면 눈덩이를 세워 빈 자리를 연출로 메운다.
+// CSS 변수는 #frame 에 건다 - 눈덩이가 #app 바깥(형제)이라 #app 에 걸면 상속이 안 닿는다.
+function layoutPlaySpare(boardH){
+  const frame = document.getElementById('frame');
+  const app = document.getElementById('app');
+  const hud = app.querySelector('header');
+  const footer = app.querySelector('footer');
+  const below = footer.offsetHeight + (parseFloat(getComputedStyle(footer).marginBottom) || 0);
+  const spare = Math.max(0, app.clientHeight - hud.offsetHeight - boardH - below);
+
+  // 위로 올리는 몫은 남는 높이의 28%, 많아도 46px 까지. 더 주면 판이 가운데로 내려앉는다.
+  const top = Math.min(Math.round(spare * 0.28), 46);
+  frame.style.setProperty('--play-gap-top', top + 'px');
+
+  // 눈덩이는 남은 띠의 68% 크기로 띠 한가운데. 띠가 60px 아래면 설 자리가 없어 숨긴다.
+  const band = spare - top;
+  const size = band < 60 ? 0 : clamp(Math.round(band * 0.68), 56, 120);
+  const mascot = document.getElementById('mascot');
+  mascot.classList.toggle('playPose', size > 0);
+  if (size > 0) {
+    frame.style.setProperty('--play-mascot-size', size + 'px');
+    frame.style.setProperty('--play-mascot-bottom', Math.round(below + (band - size)/2) + 'px');
+  }
 }
 window.addEventListener('resize', resizeCanvas);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', resizeCanvas);
 
 // 눈 결정이 비치는 유리구슬. 빛은 왼쪽 위에서 온다.
-function iceBall(cx, cy, r, dim){
+function iceBall(cx, cy, r, dim, flake){
   ctx.save();
-  ctx.shadowColor = 'rgba(90,180,255,.9)';
-  ctx.shadowBlur = r*1.8;
-  const g = ctx.createRadialGradient(cx-r*0.35, cy-r*0.4, r*0.15, cx, cy, r);
-  g.addColorStop(0, dim ? '#dff0ff' : '#ffffff');
-  g.addColorStop(0.45, dim ? '#8fc6f5' : '#6fc0ff');
-  g.addColorStop(1, dim ? '#3f7fc0' : '#1b6fd0');
+  ctx.shadowColor = dim ? 'rgba(115,175,225,.58)' : 'rgba(70,175,255,.95)';
+  ctx.shadowBlur = r*2.4;
+  // 시안의 구슬은 속이 꽤 진한 파랑이라 흰 눈 결정이 또렷하게 뜬다.
+  // 예전엔 가운데까지 하얘서 그냥 물방울처럼 보였다.
+  const g = ctx.createRadialGradient(cx-r*0.35, cy-r*0.4, r*0.10, cx, cy, r);
+  g.addColorStop(0, dim ? '#dff0ff' : '#eaf7ff');
+  g.addColorStop(0.30, dim ? '#9ed0f8' : '#6dc4fb');
+  g.addColorStop(0.66, dim ? '#5795cf' : '#1c76dd');
+  g.addColorStop(1, dim ? '#315f9d' : '#053d95');
   ctx.fillStyle = g;
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+  // 테두리는 얇게. 굵게 두르면 유리구슬이 아니라 아이콘 버튼처럼 보인다.
+  ctx.strokeStyle = dim ? 'rgba(225,244,255,.40)' : 'rgba(255,255,255,.42)';
+  ctx.lineWidth = Math.max(.8, r*.06);
+  ctx.beginPath(); ctx.arc(cx, cy, r-.5, 0, Math.PI*2); ctx.stroke();
   ctx.restore();
-  // 위쪽 하이라이트 한 점
-  ctx.fillStyle = 'rgba(255,255,255,.85)';
-  ctx.beginPath(); ctx.ellipse(cx-r*0.32, cy-r*0.42, r*0.30, r*0.20, -0.5, 0, Math.PI*2); ctx.fill();
+  // 시안의 발사구 구슬은 속 오른쪽 아래에 눈 결정이 비친다. 날아다니는 공까지
+  // 이걸 넣으면 화면이 지저분해지므로 발사구 하나만 켠다.
+  if (flake) drawFlake(ctx, cx + r*0.22, cy + r*0.20, r*0.50, .45, Math.max(.7, r*0.055));
+  // 왼쪽 위 반사광
+  ctx.fillStyle = 'rgba(255,255,255,.9)';
+  ctx.beginPath(); ctx.ellipse(cx-r*0.34, cy-r*0.40, r*0.28, r*0.17, -0.55, 0, Math.PI*2); ctx.fill();
+}
+
+// ---- 얼음판 바닥 ----
+// 매 프레임 그라데이션을 여러 겹 칠하면 비싸고, 그렇다고 맨 그라데이션 하나만 두면
+// 시안처럼 '얼어붙은 호수면'으로 안 보인다. 그래서 안 움직이는 것(비네트·서리·눈꽃·
+// 안쪽 그림자)은 화면 크기가 바뀔 때 한 번만 구워두고 매 프레임엔 통째로 한 장 얹는다.
+let boardSurface = null;
+
+// 무늬 위치는 기기·판이 달라도 늘 같아야 한다. S.rng 는 게임 판정용이라 건드리면
+// 안 되므로 여기서만 쓰는 작은 난수를 따로 돌린다.
+function textureRng(seed){
+  let s = seed >>> 0;
+  return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+}
+
+// 6갈래 눈꽃. 가지 두 쌍을 달아야 CSS 쪽 무늬(--flake)와 결이 맞는다.
+function drawFlake(g, cx, cy, r, alpha, width){
+  g.save();
+  g.translate(cx, cy);
+  // 시안의 눈꽃은 푸른 선이 아니라 흰 서리다. 파랗게 그리면 바탕에 묻혀 안 보인다.
+  g.strokeStyle = `rgba(255,255,255,${alpha})`;
+  g.lineWidth = width;
+  g.lineCap = 'round';
+  for (let i = 0; i < 6; i++) {
+    g.rotate(Math.PI/3);
+    g.beginPath();
+    g.moveTo(0, 0);          g.lineTo(0, -r);
+    g.moveTo(0, -r*0.40);    g.lineTo(-r*0.23, -r*0.60);
+    g.moveTo(0, -r*0.40);    g.lineTo( r*0.23, -r*0.60);
+    g.moveTo(0, -r*0.70);    g.lineTo(-r*0.17, -r*0.86);
+    g.moveTo(0, -r*0.70);    g.lineTo( r*0.17, -r*0.86);
+    g.stroke();
+  }
+  g.restore();
+}
+
+function roundRectPath(g, x, y, w, h, r){
+  g.beginPath();
+  g.moveTo(x+r, y);
+  g.arcTo(x+w, y, x+w, y+h, r);
+  g.arcTo(x+w, y+h, x, y+h, r);
+  g.arcTo(x, y+h, x, y, r);
+  g.arcTo(x, y, x+w, y, r);
+  g.closePath();
+}
+
+function buildBoardSurface(dpr, cornerR){
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.floor(WIDTH*dpr));
+  c.height = Math.max(1, Math.floor(HEIGHT*dpr));
+  const g = c.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);   // 아래 좌표는 전부 캔버스 단위(360x550)
+
+  // 액자 안쪽 모서리는 둥글다. 네모로 칠하면 모서리에서 바닥이 액자를 비집고 나온다.
+  const R = Math.max(0, cornerR || 14);
+  g.save();
+  roundRectPath(g, 0, 0, WIDTH, HEIGHT, R);
+  g.clip();
+
+  // 1) 바닥색. 위아래가 푸르고 가운데가 밝은 언 호수면 (시안 실측값)
+  const base = g.createLinearGradient(0, 0, 0, HEIGHT);
+  base.addColorStop(0,   '#b3d3fa');
+  base.addColorStop(.20, '#c4e0fc');
+  base.addColorStop(.52, '#d6ecfd');
+  base.addColorStop(.78, '#cde6fb');
+  base.addColorStop(1,   '#a3c9f6');
+  g.fillStyle = base;
+  g.fillRect(0, 0, WIDTH, HEIGHT);
+
+  // 2) 비네트. 가운데로 빛이 모이고 가장자리는 푸르게 가라앉는다 - 이게 없으면
+  //    아무리 색을 맞춰도 판이 종이처럼 납작해 보인다.
+  const vig = g.createRadialGradient(WIDTH*0.5, HEIGHT*0.40, WIDTH*0.10,
+                                     WIDTH*0.5, HEIGHT*0.50, WIDTH*1.02);
+  vig.addColorStop(0,   'rgba(255,255,255,.18)');
+  vig.addColorStop(.50, 'rgba(255,255,255,.03)');
+  vig.addColorStop(1,   'rgba(56,126,200,.32)');
+  g.fillStyle = vig;
+  g.fillRect(0, 0, WIDTH, HEIGHT);
+
+  const rng = textureRng(20260809);
+
+  // 3) 서리 구름. 얼룩덜룩해야 얼음처럼 보인다
+  for (let i = 0; i < 8; i++) {
+    const cx = rng()*WIDTH, cy = rng()*HEIGHT, r = WIDTH*(0.14 + rng()*0.22);
+    const cl = g.createRadialGradient(cx, cy, 0, cx, cy, r);
+    cl.addColorStop(0, `rgba(255,255,255,${(0.09 + rng()*0.07).toFixed(3)})`);
+    cl.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = cl;
+    g.beginPath(); g.arc(cx, cy, r, 0, Math.PI*2); g.fill();
+  }
+
+  // 4) 가장자리에 몰린 성엣장 알갱이.
+  //    한때 여기에 흰 띠를 깔았는데, 액자 안쪽이 하얘지면서 얼음 액자와 판의 경계가
+  //    지워져 액자가 없는 것처럼 보였다. 결은 알갱이로만 내고 명암은 8)의 그림자에 맡긴다.
+  const crust = 20;
+  for (let i = 0; i < 110; i++) {
+    const onSide = rng() < 0.5;
+    const x = onSide ? (rng() < 0.5 ? rng()*crust : WIDTH - rng()*crust) : rng()*WIDTH;
+    const y = onSide ? rng()*HEIGHT : (rng() < 0.5 ? rng()*crust : HEIGHT - rng()*crust);
+    const s = 0.5 + rng()*1.4;
+    g.fillStyle = `rgba(255,255,255,${(0.14 + rng()*0.26).toFixed(3)})`;
+    g.beginPath(); g.arc(x, y, s, 0, Math.PI*2); g.fill();
+  }
+
+  // 5) 눈꽃 무늬. 시안처럼 크기를 섞고 가장자리 쪽에 치우치게 둔다
+  //    (한가운데 크게 박으면 블록·궤적선과 겹쳐 지저분해진다)
+  const flakes = [
+    [0.09, 0.07, 15, .40], [0.90, 0.13, 10, .34], [0.05, 0.26, 8,  .30],
+    [0.95, 0.34, 13, .32], [0.14, 0.44, 7,  .26], [0.86, 0.52, 9,  .30],
+    [0.06, 0.62, 12, .36], [0.93, 0.70, 8,  .28], [0.12, 0.86, 10, .30],
+    [0.88, 0.90, 7,  .24], [0.40, 0.20, 6,  .18], [0.62, 0.78, 6,  .18],
+  ];
+  for (const [fx, fy, r, a] of flakes) {
+    drawFlake(g, WIDTH*fx, HEIGHT*fy, r, a, Math.max(1, r*0.075));
+  }
+
+  // 6) 서릿가루. 잘게 흩뿌려야 표면에 결이 생긴다
+  for (let i = 0; i < 150; i++) {
+    const x = rng()*WIDTH, y = rng()*HEIGHT, s = 0.4 + rng()*0.9;
+    g.fillStyle = `rgba(255,255,255,${(0.18 + rng()*0.34).toFixed(3)})`;
+    g.beginPath(); g.arc(x, y, s, 0, Math.PI*2); g.fill();
+  }
+
+  // 7) 발사 구역: 아래로 갈수록 깊어지는 물빛 + 죽음선.
+  //    죽음선은 있어야 하는 정보지만 시안엔 없는 선이라, 서리 자국처럼 흐리게만 남긴다.
+  const zone = g.createLinearGradient(0, GRID_H, 0, HEIGHT);
+  zone.addColorStop(0,   'rgba(92,171,235,.04)');
+  zone.addColorStop(.45, 'rgba(105,184,244,.12)');
+  zone.addColorStop(1,   'rgba(35,112,196,.20)');
+  g.fillStyle = zone;
+  g.fillRect(0, GRID_H, WIDTH, HEIGHT-GRID_H);
+  g.strokeStyle = 'rgba(255,255,255,.22)';
+  g.lineWidth = 1;
+  g.setLineDash([5, 5]);
+  g.beginPath(); g.moveTo(16, GRID_H+.5); g.lineTo(WIDTH-16, GRID_H+.5); g.stroke();
+  g.setLineDash([]);
+
+  // 8) 얼음 벽이 판 위로 드리우는 그림자. 캔버스 바깥에 선을 긋고 그 그림자만
+  //    안쪽에 남기는 방식이라 네 변이 한 번에 처리된다.
+  g.save();
+  g.shadowColor = 'rgba(40,108,186,.62)';
+  g.shadowBlur = 18;
+  g.strokeStyle = '#000';
+  g.lineWidth = 8;
+  roundRectPath(g, -8, -8, WIDTH+16, HEIGHT+16, R+8);
+  g.stroke();
+  g.restore();
+
+  // 9) 얼음 벽과 판이 만나는 자리에 서리 실선 한 줄. 이 선이 액자를 판에서 떼어 놓는다.
+  g.strokeStyle = 'rgba(255,255,255,.55)';
+  g.lineWidth = 1.2;
+  roundRectPath(g, .6, .6, WIDTH-1.2, HEIGHT-1.2, Math.max(0, R-.6));
+  g.stroke();
+
+  g.restore();   // 모서리 클립 해제
+  boardSurface = c;
+}
+
+// 매 프레임 얹는 것: 구워둔 바닥 한 장 + 살아 있는 반짝임 몇 개
+function renderBoardSurface(){
+  if (boardSurface) ctx.drawImage(boardSurface, 0, 0, WIDTH, HEIGHT);
+
+  const now = Date.now();
+  const twinkles = [[.14,.17],[.79,.28],[.26,.49],[.88,.61],[.41,.72],[.63,.88],[.09,.83]];
+  for (let i = 0; i < twinkles.length; i++) {
+    const [px, py] = twinkles[i];
+    const a = Math.sin(now/900 + i*1.9);
+    if (a <= 0) continue;
+    ctx.fillStyle = `rgba(255,255,255,${(a*0.5).toFixed(3)})`;
+    ctx.beginPath(); ctx.arc(WIDTH*px, HEIGHT*py, 0.7 + a*1.1, 0, Math.PI*2); ctx.fill();
+  }
+
+  // 발사구 주변 빛무리 - 조준 기준점이 어디인지 한눈에 잡히게
+  const halo = ctx.createRadialGradient(S.launcherX, LAUNCHER_Y, 2,
+    S.launcherX, LAUNCHER_Y, 66);
+  halo.addColorStop(0,   'rgba(96,186,255,.26)');
+  halo.addColorStop(.45, 'rgba(96,186,255,.09)');
+  halo.addColorStop(1,   'rgba(96,186,255,0)');
+  ctx.fillStyle = halo;
+  ctx.beginPath(); ctx.arc(S.launcherX, LAUNCHER_Y, 66, 0, Math.PI*2); ctx.fill();
+}
+
+// 아이템 아이콘은 이모지 대신 직접 그린다. 이모지는 안드로이드·iOS·PC 가 다 다르게
+// 그리고 헤드리스에서는 아예 두부 문자로 빠진다.
+function drawItemIcon(kind, cx, cy, r){
+  ctx.save();
+  ctx.fillStyle = '#fff';
+  ctx.strokeStyle = '#fff';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  if (kind === 'bomb') {
+    ctx.beginPath(); ctx.arc(cx, cy + r*0.22, r*0.82, 0, Math.PI*2); ctx.fill();
+    ctx.lineWidth = r*0.24;                       // 심지
+    ctx.beginPath();
+    ctx.moveTo(cx + r*0.42, cy - r*0.42);
+    ctx.quadraticCurveTo(cx + r*0.95, cy - r*0.95, cx + r*0.72, cy - r*1.25);
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx + r*0.66, cy - r*1.42, r*0.22, 0, Math.PI*2); ctx.fill();
+  } else if (kind === 'frenzy') {
+    ctx.beginPath();                              // 번개
+    ctx.moveTo(cx + r*0.34, cy - r*1.05);
+    ctx.lineTo(cx - r*0.62, cy + r*0.16);
+    ctx.lineTo(cx - r*0.04, cy + r*0.16);
+    ctx.lineTo(cx - r*0.30, cy + r*1.05);
+    ctx.lineTo(cx + r*0.66, cy - r*0.20);
+    ctx.lineTo(cx + r*0.06, cy - r*0.20);
+    ctx.closePath(); ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.arc(cx, cy, r*0.92, 0, Math.PI*2); ctx.fill();   // 동전
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.lineWidth = r*0.16;
+    ctx.beginPath(); ctx.arc(cx, cy, r*0.58, 0, Math.PI*2); ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  ctx.restore();
 }
 
 function roundRect(ctx,x,y,w,h,r){
@@ -2960,6 +3425,9 @@ function roundRect(ctx,x,y,w,h,r){
 
 function render(){
   ctx.clearRect(0,0,WIDTH,HEIGHT);
+
+  // 바닥은 흔들리지 않는다. 같이 흔들면 판 가장자리에 빈 틈이 비친다.
+  renderBoardSurface();
 
   ctx.save();
   if (S.shake > 0) {
@@ -3031,12 +3499,13 @@ function render(){
           brick.flash -= 0.12;
         }
 
+        const hpText = shortNum(brick.hp);
         ctx.fillStyle = T.brickShade;
-        ctx.font = 'bold 15px sans-serif';
+        ctx.font = 'bold ' + (hpText.length > 3 ? 12.5 : 15) + 'px sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(brick.hp, x+CONFIG.CELL/2, y+CONFIG.CELL/2+2);
+        ctx.fillText(hpText, x+CONFIG.CELL/2, y+CONFIG.CELL/2+2);
         ctx.fillStyle = '#fff';
-        ctx.fillText(brick.hp, x+CONFIG.CELL/2, y+CONFIG.CELL/2+1);
+        ctx.fillText(hpText, x+CONFIG.CELL/2, y+CONFIG.CELL/2+1);
       } else if (brick.type === 'op') {
         ctx.fillStyle = opColor(brick.op);
         roundRect(ctx, x+pad, y+pad, CONFIG.CELL-pad*2, CONFIG.CELL-pad*2, 6);
@@ -3044,27 +3513,35 @@ function render(){
         ctx.fillStyle = '#101828';
         ctx.font = 'bold 13px sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        const label = brick.op==='x2' ? '×2' : brick.op==='add' ? '+'+brick.val : '-'+brick.val;
+        const label = brick.op==='x2' ? '×2'
+                    : (brick.op==='add' ? '+' : '-') + shortNum(brick.val);
+        ctx.font = 'bold ' + (label.length > 3 ? 11 : 13) + 'px sans-serif';
         ctx.fillText(label, x+CONFIG.CELL/2, y+CONFIG.CELL/2+1);
       } else {
-        // 아이템은 희귀하니 확실히 튀어야 한다: 자기 색 + 맥동하는 발광 테두리
+        // 아이템도 체력 블록과 같은 형태로 그린다. 예전엔 혼자 흰 바탕 + 이모지라
+        // 판 위에서 비어 보였고, 이모지는 기기마다 모양이 달라 통일도 안 됐다.
+        // 대신 자기 색 + 맥동하는 흰 테두리로 희귀함을 표현한다.
         const vis = itemVisual(brick.kind);
         const puls = 0.5 + Math.sin(Date.now()/260 + x*0.6)*0.5;
         const bw = CONFIG.CELL-pad*2;
+        const grad = ctx.createLinearGradient(x, y, x, y+CONFIG.CELL);
+        grad.addColorStop(0, vis.light);
+        grad.addColorStop(1, vis.color);
         ctx.save();
         ctx.shadowColor = vis.color;
-        ctx.shadowBlur = 6 + puls*10;
-        ctx.fillStyle = vis.soft;
-        roundRect(ctx, x+pad, y+pad, bw, bw, 10);
+        ctx.shadowBlur = 5 + puls*9;
+        ctx.fillStyle = grad;
+        roundRect(ctx, x+pad, y+pad, bw, bw, 7);
         ctx.fill();
         ctx.restore();
-        ctx.strokeStyle = vis.color;
-        ctx.lineWidth = 2 + puls*1.2;
-        roundRect(ctx, x+pad, y+pad, bw, bw, 10);
+        ctx.fillStyle = T.gloss;
+        roundRect(ctx, x+pad+2, y+pad+2, bw-4, bw*0.38, 5);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(255,255,255,${(0.5 + puls*0.45).toFixed(2)})`;
+        ctx.lineWidth = 1.6;
+        roundRect(ctx, x+pad, y+pad, bw, bw, 7);
         ctx.stroke();
-        ctx.font = (CONFIG.CELL*0.5)+'px sans-serif';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(vis.icon, x+CONFIG.CELL/2, y+CONFIG.CELL/2+1);
+        drawItemIcon(brick.kind, x+CONFIG.CELL/2, y+CONFIG.CELL/2, bw*0.30);
       }
     }
   }
@@ -3096,7 +3573,25 @@ function render(){
       ctx.globalAlpha = 1;
     }
   }
-  for (const b of S.activeBalls) iceBall(b.x, b.y, CONFIG.BALL_RADIUS, false);
+  for (const b of S.activeBalls) {
+    iceBall(b.x, b.y, CONFIG.BALL_RADIUS, false);
+    if (ballPower(b) > 1) {
+      // 강화 공은 외곽선을 두르지 않는다. 공이 겹칠 때 노란 선처럼 이어져 보이므로
+      // 얼음구슬 안쪽의 작은 금빛 코어만 밝혀 구분한다.
+      const power = ballPower(b);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.shadowColor = 'rgba(120,210,255,.9)';
+      ctx.shadowBlur = 5;
+      const core = ctx.createRadialGradient(b.x-1, b.y-1, .2, b.x, b.y, 3.2);
+      core.addColorStop(0, '#ffffff');
+      core.addColorStop(.38, '#fff4b0');
+      core.addColorStop(1, 'rgba(84,177,255,0)');
+      ctx.fillStyle = core;
+      ctx.beginPath(); ctx.arc(b.x, b.y, Math.min(3.6, 2.2+Math.log2(power)*.35), 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+  }
   for (const r of S.returning)   iceBall(r.x, r.y, CONFIG.BALL_RADIUS*0.8, true);
 
   for (const p of S.popups) {
@@ -3114,10 +3609,21 @@ function render(){
       const dir = currentAimDir();
       if (dir) renderTrajectory(dir);
     } else if (!S.hintDismissed) {
+      // 시안처럼 공 '아래'. 위에 두면 공 개수 숫자와 겹쳐 읽는 순서가 꼬인다.
+      ctx.save();
       ctx.fillStyle = T.hint;
-      ctx.font = '13px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('쏘고 싶은 방향으로 드래그', WIDTH/2, LAUNCHER_Y - 60);
+      ctx.font = '600 12px "Noto Sans KR", system-ui, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(255,255,255,.85)';
+      ctx.shadowBlur = 5;
+      const hint = '쏘고 싶은 방향으로 드래그';
+      const hy = LAUNCHER_Y + 22;
+      ctx.fillText(hint, WIDTH/2, hy);
+      // 시안처럼 문구 양옆에 작은 눈꽃을 하나씩 (폭은 restore 전에 재야 글꼴이 맞다)
+      const half = ctx.measureText(hint).width/2 + 12;
+      drawFlake(ctx, WIDTH/2 - half, hy, 5, .5, 1);
+      drawFlake(ctx, WIDTH/2 + half, hy, 5, .5, 1);
+      ctx.restore();
     }
   }
 
@@ -3194,14 +3700,21 @@ function renderTrajectory(dir){
   const { pts, hitBrick } = traceTrajectory(dir);
 
   ctx.save();
-  ctx.strokeStyle = T.aim;
-  ctx.lineWidth = 2.5;
-  ctx.setLineDash([7,7]);
+  const beam = ctx.createLinearGradient(pts[0].x, pts[0].y, pts[pts.length-1].x, pts[pts.length-1].y);
+  beam.addColorStop(0, 'rgba(255,255,255,.96)');
+  beam.addColorStop(.45, 'rgba(92,183,255,.92)');
+  beam.addColorStop(1, 'rgba(35,105,225,.78)');
+  ctx.shadowColor = 'rgba(65,170,255,.75)';
+  ctx.shadowBlur = 8;
+  ctx.strokeStyle = beam;
+  ctx.lineWidth = 2.8;
+  ctx.setLineDash([8,6]);
   ctx.lineCap = 'round';
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
   for (let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x, pts[i].y);
   ctx.stroke();
+  ctx.shadowBlur = 0;
   ctx.setLineDash([]);
 
   for (let i=1;i<pts.length-1;i++){
@@ -3211,8 +3724,11 @@ function renderTrajectory(dir){
 
   if (hitBrick) {
     const hx = hitBrick.c*CONFIG.CELL, hy = hitBrick.r*CONFIG.CELL - S.shiftAnim*CONFIG.CELL;
-    ctx.strokeStyle = T.aimTarget;
-    ctx.lineWidth = 2;
+    const pulse = .6 + Math.sin(Date.now()/120)*.25;
+    ctx.shadowColor = 'rgba(36,119,255,.8)';
+    ctx.shadowBlur = 8;
+    ctx.strokeStyle = `rgba(22,83,190,${pulse})`;
+    ctx.lineWidth = 2.4;
     roundRect(ctx, hx+3, hy+3, CONFIG.CELL-6, CONFIG.CELL-6, 6);
     ctx.stroke();
   }
@@ -3224,22 +3740,34 @@ function renderLauncherStock(){
 
   // The ball sitting at the launch point IS the launcher marker.
   // 조준 기준점이라 다른 공보다 크고 또렷하게 그린다.
-  iceBall(S.launcherX, LAUNCHER_Y, CONFIG.BALL_RADIUS*1.7, S.state === 'firing');
+  iceBall(S.launcherX, LAUNCHER_Y, CONFIG.BALL_RADIUS*1.9, S.state === 'firing', true);
 
   if (S.state !== 'aiming' || dragging) return;
 
   // 공 개수 = 핵심 자원이라 크게. 그 위에 다음 턴 예상치를 붙인다.
+  // 발사구가 아래로 내려가면 숫자가 죽음선에 걸치므로, 선 위쪽으로 붙여 둔다.
+  const countY = Math.min(LAUNCHER_Y - 26, GRID_H - 13);
+  ctx.save();
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(255,255,255,.9)';
+  ctx.shadowBlur = 6;
   ctx.fillStyle = T.stockText;
-  ctx.font = 'bold 21px sans-serif';
-  ctx.fillText(S.ballCount, S.launcherX, LAUNCHER_Y - 24);
+  ctx.font = '900 22px "Noto Sans KR", system-ui, sans-serif';
+  ctx.fillText(shortNum(S.ballCount), S.launcherX, countY);
+  ctx.restore();
 
   const delta = (S.collectedForNextTurn - S.pendingPenalty);
-  if (delta !== 0) {
+  if (S.bonusPower > 0) {
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('공격력 +' + shortNum(S.bonusPower), S.launcherX, countY - 20);
+  } else if (delta !== 0) {
     const up = delta > 0;
     ctx.fillStyle = up ? '#22c55e' : '#ef4444';
     ctx.font = 'bold 11px sans-serif';
-    ctx.fillText((up ? '+' : '') + delta, S.launcherX, LAUNCHER_Y - 44);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText((up ? '+' : '') + shortNum(delta), S.launcherX, countY - 20);
   }
 }
 
@@ -3292,7 +3820,7 @@ btnSpeed.addEventListener('click', () => {
 btnNextRound.addEventListener('click', () => {
   if (S.state === 'aiming') {
     // 아직 쏘지 않았다면 현재 공을 그대로 보존한 채 이번 라운드를 건너뛴다.
-    S.collectedForNextTurn = S.ballCount;
+    S.collectedForNextTurn = totalOwnedPower();
     finishTurn();
     return;
   }
@@ -3300,9 +3828,11 @@ btnNextRound.addEventListener('click', () => {
 
   // 이미 돌아온 공과 획득 보너스는 collectedForNextTurn에 들어 있다.
   // 화면에 남은 공과 아직 발사되지 않은 공만 회수해 즉시 다음 라운드로 넘긴다.
-  S.collectedForNextTurn += S.activeBalls.length + S.fireQueueRemaining;
+  S.collectedForNextTurn += S.activeBalls.reduce((sum, b) => sum + ballPower(b), 0)
+    + queuedPower();
   S.activeBalls.length = 0;
   S.fireQueueRemaining = 0;
+  S.firePowerQueue = [];
   S.returning.length = 0;
   S.frenzyActive = false;
   S.scoreMult = 1;
@@ -3330,6 +3860,7 @@ function setPaused(on){
     document.getElementById('pauseBalls').textContent = S.ballCount.toLocaleString();
     document.getElementById('pauseBoss').textContent = (S.bossKills || 0).toLocaleString();
     const effects = [];
+    if (S.bonusPower > 0) effects.push('💥 추가 공격력 +' + S.bonusPower.toLocaleString());
     if (S.frenzyActive) effects.push('⚡ 공 분열');
     if (S.scoreMult > 1) effects.push('💰 점수 2배');
     document.getElementById('pauseEffect').textContent = effects.length

@@ -7,6 +7,6 @@
     "start": "node server/server.js",
     "dev": "wrangler pages dev public",
     "deploy": "wrangler pages deploy public --project-name=snow-block",
-    "test": "node test/sweep.js"
+    "test": "node test/ball-cap.js && node test/sweep.js"
   }
 }
