@@ -61,6 +61,7 @@
     /* 판 바닥에 옅게 비치는 눈꽃 워터마크 */
     --flake:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg stroke='%23bcd9f2' stroke-opacity='.26' stroke-width='4' stroke-linecap='round' fill='none'%3E%3Cg%3E%3Cpath d='M50 8v84M14 29l72 42M86 29 14 71'/%3E%3Cpath d='M50 22 40 32M50 22l10 10M50 78 40 68M50 78l10 10'/%3E%3Cpath d='m28 36 1.6 14M28 36l-13.6 3M72 64l-1.6-14M72 64l13.6-3'/%3E%3Cpath d='m72 36-1.6 14M72 36l13.6 3M28 64l1.6-14M28 64l-13.6-3'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     /* 스탯 상자 위에 걸터앉는 하늘색 왕관 */
+    --crown-gold:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 26'%3E%3Cpath d='M3 23 1 6l10 7 9-11 9 11 10-7-2 17z' fill='%23fff3c4' stroke='%237a5200' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E");
     --crown-ice:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 26'%3E%3Cpath d='M3 23 1 6l10 7 9-11 9 11 10-7-2 17z' fill='%23a9d6f7' stroke='%23ffffff' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
@@ -280,6 +281,10 @@
     box-shadow:0 2px 6px rgba(6,22,60,.16), inset 0 1px 0 rgba(255,255,255,.9);}
   .goTag.record{background:linear-gradient(180deg,#ffd85c,#f0a92c);color:#4a3000;
     box-shadow:0 4px 14px rgba(240,169,44,.5), inset 0 1px 0 rgba(255,255,255,.7);}
+  /* 신기록 배지 앞의 왕관. 이모지는 기기마다 모양이 달라 직접 그린 것을 쓴다. */
+  .goTag.record::before{content:'';display:inline-block;vertical-align:-2px;
+    width:15px;height:11px;margin-right:5px;
+    background:var(--crown-gold) center/contain no-repeat;}
   /* 스탯 상자: 서리 낀 유리판 + 위 테두리에 걸터앉은 하늘색 왕관 + 눈꽃 한 송이 */
   .goStats{display:flex;gap:9px;margin:20px 0 0;}
   .goStats div{position:relative;flex:1;border-radius:15px;padding:13px 4px 9px;
@@ -302,10 +307,15 @@
   .goFeed .hi{color:#1b4fd6;font-weight:900;}
 
   /* 순위 목록을 감싸는 얼음판 - 위엔 눈꽃 구분선(rankNote), 안엔 명단 */
+  .rankNote:empty{display:none;}
   .rankNote{display:flex;align-items:center;justify-content:center;gap:8px;
     font-size:12.5px;color:#1c4a8c;margin:18px 0 8px;min-height:16px;font-weight:800;}
   .rankNote:not(:empty)::before, .rankNote:not(:empty)::after{content:'';width:13px;height:13px;
     background:var(--flake-b) center/contain no-repeat;opacity:.65;}
+  /* 명단이 비면(비로그인·오프라인) 상자를 아예 접는다. 예전엔 빈 얼음판이
+     회색 막대처럼 남아 로딩이 덜 된 화면으로 보였다.
+     :has() 대신 클래스로 - 구형 웹뷰까지 확실히 먹는다(renderRank 가 붙인다). */
+  .goRankBox.empty{display:none;}
   .goRankBox{border-radius:19px;padding:7px;
     background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(226,242,255,.55));
     border:1.5px solid rgba(255,255,255,.9);
@@ -333,8 +343,11 @@
   .rank li:nth-child(1) span.no{background:linear-gradient(180deg,#ffd979,#e8a33d);}
   .rank li:nth-child(2) span.no{background:linear-gradient(180deg,#dfe6ef,#98a3b8);}
   #overlay #btnRetry{margin-top:11px;}
-  #overlay #btnShare,#overlay #btnToLobby{display:inline-flex;width:calc(50% - 5px);
-    margin:8px 2px 0;padding:12px 4px;font-size:13px;vertical-align:top;}
+  /* 두 보조 버튼은 한 줄. 예전엔 inline-flex + width:50% 였는데 사이 공백 한 칸 때문에
+     100% 를 넘겨 매번 줄바꿈됐다 - 진짜 flex 줄로 묶는다. */
+  .goSubBtns{display:flex;gap:9px;margin-top:9px;}
+  #overlay #btnShare,#overlay #btnToLobby{flex:1;width:auto;margin:0;
+    padding:12px 4px;font-size:13px;}
   .rank li:nth-child(3) span.no{background:linear-gradient(180deg,#e5ab7d,#c08457);}
   .rank .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#2b5590;}
   .rank .sc{font-variant-numeric:tabular-nums;font-weight:900;color:#1354c4;}
@@ -463,6 +476,11 @@
      사진 톤이 그대로 눌러붙어 카드처럼 보이고 뒤 배경과 겉돌았다 - 대신 진짜 유리처럼
      뒤 배경을 그대로 흐리고 밝혀서 비치게 한다(backdrop-filter), 얼음 느낌이 훨씬 산다. */
   #overlay{background:url('img/bg-lobby.webp') center/cover no-repeat;}
+  /* 순위 목록이 없으면 카드가 짧아져 화면 아래가 텅 빈다. 그렇다고 align-items:center
+     로 잡으면 목록이 길 때 위쪽이 잘려 스크롤로도 못 본다.
+     flex-start + margin:auto 조합이 짧을 땐 가운데, 길 땐 위에서부터를 둘 다 만족한다. */
+  #overlay{align-items:flex-start;overflow-y:auto;}
+  #overlay > .title{margin-top:auto;margin-bottom:auto;}
   /* .title 기본 폭(330px)에 갇히면 판이 좁고 답답해진다 - 시안처럼 화면을 넉넉히 쓴다 */
   #overlay .title{max-width:352px;}
   #overlay .brand{margin-bottom:12px;}
@@ -712,6 +730,10 @@
   .regTitle{height:62px;max-width:78%;margin:2px auto 10px;}
   .gSub{display:none;margin:-4px 0 12px;font-size:12.5px;font-weight:800;color:#dcefff;
     text-shadow:0 2px 6px rgba(4,16,48,.75);}
+  /* 캔버스로 그린 진짜 블록 칩 - 배경·테두리 없이 그림만 */
+  .gChip.brick{width:54px;height:54px;border-radius:0;background:none;
+    box-shadow:none;flex:0 0 auto;display:block;
+    filter:drop-shadow(0 4px 6px rgba(10,40,110,.35));}
   .gChip.art{width:54px;height:54px;border-radius:0;box-shadow:none;
     background:center/contain no-repeat;
     color:#fff;font-size:15px;font-weight:900;letter-spacing:-.05em;
@@ -1165,14 +1187,16 @@
           <div class="rankNote" id="rankNote"></div>
           <div class="goRankBox"><ol class="rank" id="rankList"></ol></div>
           <button id="btnRetry">다시 도전</button>
-          <button id="btnShare" class="ghost shareBtn">
-            <svg viewBox="0 0 24 24"><path d="M12 3v12M12 3l4 4M12 3L8 7M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
-            결과 공유하기
-          </button>
-          <button id="btnToLobby" class="ghost homeBtn">
-            <svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg>
-            로비로
-          </button>
+          <div class="goSubBtns">
+            <button id="btnShare" class="ghost shareBtn">
+              <svg viewBox="0 0 24 24"><path d="M12 3v12M12 3l4 4M12 3L8 7M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+              결과 공유하기
+            </button>
+            <button id="btnToLobby" class="ghost homeBtn">
+              <svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg>
+              로비로
+            </button>
+          </div>
         </div>
       </div>
       <span class="goSnow" aria-hidden="true"><i class="l"></i><i class="r"></i></span>
@@ -1211,9 +1235,10 @@
       <ol class="rank" id="lobbyRank"></ol>
     </div>
 
+    <!-- 순서는 타이틀·일시정지 화면과 같게: 게임 방법 -> 블록 도감 -->
     <div class="twoBtn">
-      <button id="btnGuide" class="ghost"><img src="img/icon-guide.webp" alt="">블록 도감</button>
       <button id="btnHow" class="ghost"><img src="img/icon-howto.webp" alt="">게임 방법</button>
+      <button id="btnGuide" class="ghost"><img src="img/icon-guide.webp" alt="">블록 도감</button>
     </div>
   </div>
 </div>
@@ -1541,6 +1566,9 @@ const CONFIG = {
   TURN_HARD_CAP: 22,
   RETURN_SPEED: 900,
   COMBO_STEP: 2,
+  // 블록 하나를 깰 때 체력 1당 붙는 점수. 체력은 공격력을 따라가고 공격력은 라운드의
+  // 제곱으로 자라므로, 이 값이 크면 후반에 점수가 한 턴에 수백만씩 뛴다.
+  SCORE_PER_HP: 3,
   AIM_LATCH_MS: 90,
 };
 
@@ -2063,7 +2091,7 @@ function applyItem(kind, rr, cc){
         const t = S.grid[r2][c2];
         if (t && t.type === 'hp') {
           S.grid[r2][c2] = null;
-          addScore(t.maxHp*10);
+          addScore(t.maxHp * CONFIG.SCORE_PER_HP);
           spawnBreakParticle(c2*CONFIG.CELL+CONFIG.CELL/2, r2*CONFIG.CELL+CONFIG.CELL/2, '#ff6b35');
         }
       }
@@ -2161,7 +2189,7 @@ function substep(subDt){
               if (brick.hp <= 0) {
                 S.grid[rr][cc] = null;
                 S.combo++;
-                const gain = brick.maxHp*10 + (S.combo-1)*CONFIG.COMBO_STEP;
+                const gain = brick.maxHp * CONFIG.SCORE_PER_HP + (S.combo-1)*CONFIG.COMBO_STEP;
                 addScore(gain);
                 spawnBreakParticle(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, hitColor);
                 spawnPopup(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, '+'+shortNum(gain*S.scoreMult), hitColor);
@@ -2327,7 +2355,7 @@ function enterGameOver(){
   const gap = LB.best - S.score;
 
   const tag = document.getElementById('goTag');
-  tag.textContent = isRecord ? '🎉 최고 기록 갱신!' : '게임 오버';
+  tag.textContent = isRecord ? '최고 기록 갱신!' : '게임 오버';
   tag.classList.toggle('record', isRecord);
 
   const finalEl = document.getElementById('finalScore');
@@ -2514,7 +2542,9 @@ function renderRank(list, note){
   ol.innerHTML = '';
   // 로비와 같은 줄 생성기를 쓴다 - 1~3위 그림 메달까지 그대로 따라온다
   // (예전엔 여기서만 따로 만들면서 숫자 동그라미로 떨어졌다)
-  (list || []).slice(0, 20).forEach((r, i) => ol.appendChild(rankRow(r, i)));
+  const rows = (list || []).slice(0, 20);
+  rows.forEach((r, i) => ol.appendChild(rankRow(r, i)));
+  ol.parentElement.classList.toggle('empty', rows.length === 0);
   document.getElementById('rankNote').textContent = note || '';
 }
 
@@ -2538,7 +2568,11 @@ async function submitScore(score, round){
         LB.token = ''; LB.expiresAt = 0; lbSaveLocal();
         renderRank([], '다시 로그인해주세요'); return;
       }
-      throw new Error(data.error || '실패');
+      // 서버가 내용을 보고 거절한 것은 다시 보내도 똑같이 거절당한다. '오프라인'으로
+      // 뭉뚱그리면 계속 재시도하면서 사용자는 이유를 영영 모른다. 그대로 보여준다.
+      LB.pending = 0; lbSaveLocal();
+      renderRank([], data.error || '기록을 올리지 못했어요');
+      return;
     }
     LB.pending = 0;
     LB.best = Math.max(LB.best, data.best);
@@ -2546,6 +2580,7 @@ async function submitScore(score, round){
     lbSaveLocal();
     renderRank(data.scores, data.rank ? `내 순위 ${data.rank}위` : '');
   } catch (e) {
+    // 여기까지 온 건 진짜 통신 실패(네트워크·서버 다운)뿐이다
     LB.pending = Math.max(LB.pending, LB.best); lbSaveLocal();
     renderRank([], '오프라인 - 다음 접속 때 기록이 올라가요');
   }
@@ -2625,21 +2660,33 @@ function showTitle(){
 }
 
 // ---- 블록 도감 ----
+// 도감의 그림은 게임판이 실제로 그리는 블록 그대로다(brick 자리에 실제 블록 데이터).
+// 예전엔 시안에서 오려낸 badge-*.webp 를 썼는데, 게임 렌더링을 손볼 때마다 도감과
+// 실제 화면이 어긋났다. 이제 drawBrick() 하나에서 둘 다 나온다.
 const GUIDE = [
   ['기본', [
-    ['#5b8def', '7',  '숫자 블록', '적힌 숫자만큼 맞아야 깨져요.', '숫자가 클수록 색이 진해져요', 'num'],
-    ['#e11d63', '👑', '보스',      '체력이 3배인 대형 블록. 잡으면 공 4개를 줘요.', '4라운드부터 등장', 'boss'],
-    ['#111827', '▲',  '증식',      '때릴 때마다 주변 8칸의 숫자가 1씩 올라가요.', '한 번에 깨거나, 아예 건드리지 마세요', 'grow'],
+    ['#5b8def', '7',  '숫자 블록', '적힌 숫자만큼 맞아야 깨져요.', '숫자가 클수록 색이 진해져요',
+      null, {type:'hp', hp:7, maxHp:7}],
+    ['#e11d63', '👑', '보스',      '체력이 3배인 대형 블록. 잡으면 공 4개를 줘요.', '4라운드부터 등장',
+      null, {type:'hp', hp:24, maxHp:24, boss:true}],
+    ['#111827', '▲',  '증식',      '때릴 때마다 주변 8칸의 숫자가 1씩 올라가요.', '한 번에 깨거나, 아예 건드리지 마세요',
+      null, {type:'hp', hp:9, maxHp:9, curse:true}],
   ]],
   ['공 개수', [
-    ['#f5c518', '×2', '두 배',     '날아가는 공이 그 자리에서 2배로 늘어나요.', '공이 많을 때 맞히면 이득이 커요', 'x2'],
-    ['#22c55e', '+N', '추가',      '다음 턴에 공 N개를 더 발사해요.', '이번 턴이 아니라 다음 턴', 'plus'],
-    ['#ef4444', '−N', '감소',      '다음 턴 발사량이 N개 줄어요.', '날아가는 공은 그대로 끝까지 가요', 'minus'],
+    ['#f5c518', '×2', '두 배',     '날아가는 공이 그 자리에서 2배로 늘어나요.', '공이 많을 때 맞히면 이득이 커요',
+      null, {type:'op', op:'x2'}],
+    ['#22c55e', '+N', '추가',      '다음 턴에 공 N개를 더 발사해요.', '이번 턴이 아니라 다음 턴',
+      null, {type:'op', op:'add', val:3}],
+    ['#ef4444', '−N', '감소',      '다음 턴 발사량이 N개 줄어요.', '날아가는 공은 그대로 끝까지 가요',
+      null, {type:'op', op:'sub', val:4}],
   ]],
   ['아이템', [
-    ['#ff6b35', '💥', '폭탄',      '닿는 순간 주변 3×3을 즉시 부숴요.', '막힌 구간을 뚫을 때', 'bomb'],
-    ['#8b5cf6', '분열', '분열',   '이번 턴 동안 공이 벽에 튕길 때마다 늘어나요.', '오래 살아남을수록 많이 불어나요', 'blank-purple'],
-    ['#f59e0b', '점수', '점수 2배', '이번 턴에 얻는 점수가 2배가 돼요.', '많이 깰 수 있는 턴에', 'blank-gold'],
+    ['#ff6b35', '💥', '폭탄',      '닿는 순간 주변 3×3을 즉시 부숴요.', '막힌 구간을 뚫을 때',
+      null, {type:'item', kind:'bomb'}],
+    ['#8b5cf6', '분열', '분열',   '이번 턴 동안 공이 벽에 튕길 때마다 늘어나요.', '오래 살아남을수록 많이 불어나요',
+      null, {type:'item', kind:'frenzy'}],
+    ['#f59e0b', '점수', '점수 2배', '이번 턴에 얻는 점수가 2배가 돼요.', '많이 깰 수 있는 턴에',
+      null, {type:'item', kind:'gold'}],
   ]],
 ];
 
@@ -2664,6 +2711,24 @@ function shade(hex, amt){
   return '#' + c.map(v => Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0')).join('');
 }
 
+// 도감에 넣을 블록 그림 한 장. 게임판과 같은 drawBrick 을 쓰되, 한 칸만 크게 그린다.
+function brickChip(brick){
+  const px = 54, dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const cv = document.createElement('canvas');
+  cv.className = 'gChip brick';
+  cv.width = Math.round(px * dpr); cv.height = Math.round(px * dpr);
+  cv.style.width = px + 'px'; cv.style.height = px + 'px';
+  const g = cv.getContext('2d');
+  if (!g) return cv;
+  // drawBrick 은 칸(CELL) 안에 여백 3을 두고 그린다. 칸이 아니라 '블록'이 칩을 채우도록
+  // 블록 크기 기준으로 확대하고, 발광이 잘리지 않게 가장자리 3px 만 남긴다.
+  const inner = CONFIG.CELL - 6, edge = 3;
+  const k = (px - edge*2) / inner;
+  g.setTransform(k*dpr, 0, 0, k*dpr, (edge - edge*k)*dpr, (edge - edge*k)*dpr);
+  drawBrick(g, { ...brick }, 0, 0);   // 사본 - flash 같은 필드를 원본에 남기지 않는다
+  return cv;
+}
+
 function renderGuide(data, title, art, sub){
   const t = document.getElementById('guideTitle');
   t.src = art; t.alt = title;
@@ -2677,10 +2742,12 @@ function renderGuide(data, title, art, sub){
     const flake = document.createElement('b'); flake.textContent = '❄';
     tab.append(flake, document.createTextNode(sec));
     const grp = document.createElement('div'); grp.className = 'gGroup';
-    for (const [color, icon, name, desc, tip, art] of items){
+    for (const [color, icon, name, desc, tip, art, brick] of items){
       const row = document.createElement('div'); row.className = 'gItem';
       let chip;
-      if (art){                                  // 시안에서 오려낸 얼음 블록 그림
+      if (brick){                                // 게임판과 같은 코드로 그린 진짜 블록
+        chip = brickChip(brick);
+      } else if (art){                           // 시안에서 오려낸 얼음 블록 그림
         chip = document.createElement('span');
         chip.className = 'gChip art';
         chip.style.backgroundImage = `url(img/badge-${art}.webp)`;
@@ -3380,37 +3447,37 @@ function renderBoardSurface(){
 
 // 아이템 아이콘은 이모지 대신 직접 그린다. 이모지는 안드로이드·iOS·PC 가 다 다르게
 // 그리고 헤드리스에서는 아예 두부 문자로 빠진다.
-function drawItemIcon(kind, cx, cy, r){
-  ctx.save();
-  ctx.fillStyle = '#fff';
-  ctx.strokeStyle = '#fff';
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
+function drawItemIcon(g, kind, cx, cy, r){
+  g.save();
+  g.fillStyle = '#fff';
+  g.strokeStyle = '#fff';
+  g.lineCap = 'round';
+  g.lineJoin = 'round';
   if (kind === 'bomb') {
-    ctx.beginPath(); ctx.arc(cx, cy + r*0.22, r*0.82, 0, Math.PI*2); ctx.fill();
-    ctx.lineWidth = r*0.24;                       // 심지
-    ctx.beginPath();
-    ctx.moveTo(cx + r*0.42, cy - r*0.42);
-    ctx.quadraticCurveTo(cx + r*0.95, cy - r*0.95, cx + r*0.72, cy - r*1.25);
-    ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx + r*0.66, cy - r*1.42, r*0.22, 0, Math.PI*2); ctx.fill();
+    g.beginPath(); g.arc(cx, cy + r*0.22, r*0.82, 0, Math.PI*2); g.fill();
+    g.lineWidth = r*0.24;                       // 심지
+    g.beginPath();
+    g.moveTo(cx + r*0.42, cy - r*0.42);
+    g.quadraticCurveTo(cx + r*0.95, cy - r*0.95, cx + r*0.72, cy - r*1.25);
+    g.stroke();
+    g.beginPath(); g.arc(cx + r*0.66, cy - r*1.42, r*0.22, 0, Math.PI*2); g.fill();
   } else if (kind === 'frenzy') {
-    ctx.beginPath();                              // 번개
-    ctx.moveTo(cx + r*0.34, cy - r*1.05);
-    ctx.lineTo(cx - r*0.62, cy + r*0.16);
-    ctx.lineTo(cx - r*0.04, cy + r*0.16);
-    ctx.lineTo(cx - r*0.30, cy + r*1.05);
-    ctx.lineTo(cx + r*0.66, cy - r*0.20);
-    ctx.lineTo(cx + r*0.06, cy - r*0.20);
-    ctx.closePath(); ctx.fill();
+    g.beginPath();                              // 번개
+    g.moveTo(cx + r*0.34, cy - r*1.05);
+    g.lineTo(cx - r*0.62, cy + r*0.16);
+    g.lineTo(cx - r*0.04, cy + r*0.16);
+    g.lineTo(cx - r*0.30, cy + r*1.05);
+    g.lineTo(cx + r*0.66, cy - r*0.20);
+    g.lineTo(cx + r*0.06, cy - r*0.20);
+    g.closePath(); g.fill();
   } else {
-    ctx.beginPath(); ctx.arc(cx, cy, r*0.92, 0, Math.PI*2); ctx.fill();   // 동전
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.lineWidth = r*0.16;
-    ctx.beginPath(); ctx.arc(cx, cy, r*0.58, 0, Math.PI*2); ctx.stroke();
-    ctx.globalCompositeOperation = 'source-over';
+    g.beginPath(); g.arc(cx, cy, r*0.92, 0, Math.PI*2); g.fill();   // 동전
+    g.globalCompositeOperation = 'destination-out';
+    g.lineWidth = r*0.16;
+    g.beginPath(); g.arc(cx, cy, r*0.58, 0, Math.PI*2); g.stroke();
+    g.globalCompositeOperation = 'source-over';
   }
-  ctx.restore();
+  g.restore();
 }
 
 function roundRect(ctx,x,y,w,h,r){
@@ -3421,6 +3488,93 @@ function roundRect(ctx,x,y,w,h,r){
   ctx.arcTo(x,y+h,x,y,r);
   ctx.arcTo(x,y,x+w,y,r);
   ctx.closePath();
+}
+
+// 블록 한 칸을 그린다. 게임판과 블록 도감이 같은 코드를 써야 둘이 안 어긋난다.
+// (예전엔 도감이 시안에서 오려낸 badge-*.webp 를 따로 썼다)
+function drawBrick(g, brick, x, y){
+  const pad = 3;
+  if (brick.type === 'hp') {
+    const tier = hpTier(brick.hp);
+    const bw = CONFIG.CELL-pad*2, bh = CONFIG.CELL-pad*2;
+    const grad = g.createLinearGradient(x, y, x, y+CONFIG.CELL);
+    if (brick.boss)       { grad.addColorStop(0,T.boss[0]); grad.addColorStop(1,T.boss[1]); }
+    else if (brick.curse) { grad.addColorStop(0,T.curse[0]); grad.addColorStop(1,T.curse[1]); }
+    else                  { grad.addColorStop(0, tier.light); grad.addColorStop(1, tier.base); }
+    g.fillStyle = grad;
+    roundRect(g, x+pad, y+pad, bw, bh, 7);
+    g.fill();
+
+    g.fillStyle = T.gloss;
+    roundRect(g, x+pad+2, y+pad+2, bw-4, bh*0.38, 5);
+    g.fill();
+
+    if (brick.boss || brick.curse) {
+      const puls = 0.5 + Math.sin(Date.now()/300 + x*0.5)*0.5;
+      g.save();
+      g.shadowColor = brick.boss ? T.bossEdge : T.curseEdge;
+      g.shadowBlur = 4 + puls*8;
+      g.strokeStyle = brick.boss ? T.bossEdge : T.curseEdge;
+      g.lineWidth = 2 + puls*1.2;
+      roundRect(g, x+pad, y+pad, bw, bh, 7);
+      g.stroke();
+      g.restore();
+      g.font = (CONFIG.CELL*0.28)+'px sans-serif';
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(brick.boss ? '👑' : '▲', x+CONFIG.CELL/2, y+pad+CONFIG.CELL*0.18);
+    }
+
+    if (brick.flash > 0) {
+      g.fillStyle = `rgba(255,255,255,${brick.flash*0.75})`;
+      roundRect(g, x+pad, y+pad, bw, bh, 7);
+      g.fill();
+      brick.flash -= 0.12;
+    }
+
+    const hpText = shortNum(brick.hp);
+    g.fillStyle = T.brickShade;
+    g.font = 'bold ' + (hpText.length > 3 ? 12.5 : 15) + 'px sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(hpText, x+CONFIG.CELL/2, y+CONFIG.CELL/2+2);
+    g.fillStyle = '#fff';
+    g.fillText(hpText, x+CONFIG.CELL/2, y+CONFIG.CELL/2+1);
+  } else if (brick.type === 'op') {
+    g.fillStyle = opColor(brick.op);
+    roundRect(g, x+pad, y+pad, CONFIG.CELL-pad*2, CONFIG.CELL-pad*2, 6);
+    g.fill();
+    g.fillStyle = '#101828';
+    g.font = 'bold 13px sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    const label = brick.op==='x2' ? '×2'
+                : (brick.op==='add' ? '+' : '-') + shortNum(brick.val);
+    g.font = 'bold ' + (label.length > 3 ? 11 : 13) + 'px sans-serif';
+    g.fillText(label, x+CONFIG.CELL/2, y+CONFIG.CELL/2+1);
+  } else {
+    // 아이템도 체력 블록과 같은 형태로 그린다. 예전엔 혼자 흰 바탕 + 이모지라
+    // 판 위에서 비어 보였고, 이모지는 기기마다 모양이 달라 통일도 안 됐다.
+    // 대신 자기 색 + 맥동하는 흰 테두리로 희귀함을 표현한다.
+    const vis = itemVisual(brick.kind);
+    const puls = 0.5 + Math.sin(Date.now()/260 + x*0.6)*0.5;
+    const bw = CONFIG.CELL-pad*2;
+    const grad = g.createLinearGradient(x, y, x, y+CONFIG.CELL);
+    grad.addColorStop(0, vis.light);
+    grad.addColorStop(1, vis.color);
+    g.save();
+    g.shadowColor = vis.color;
+    g.shadowBlur = 5 + puls*9;
+    g.fillStyle = grad;
+    roundRect(g, x+pad, y+pad, bw, bw, 7);
+    g.fill();
+    g.restore();
+    g.fillStyle = T.gloss;
+    roundRect(g, x+pad+2, y+pad+2, bw-4, bw*0.38, 5);
+    g.fill();
+    g.strokeStyle = `rgba(255,255,255,${(0.5 + puls*0.45).toFixed(2)})`;
+    g.lineWidth = 1.6;
+    roundRect(g, x+pad, y+pad, bw, bw, 7);
+    g.stroke();
+    drawItemIcon(g, brick.kind, x+CONFIG.CELL/2, y+CONFIG.CELL/2, bw*0.30);
+  }
 }
 
 function render(){
@@ -3460,89 +3614,7 @@ function render(){
     for (let c=0;c<CONFIG.COLS;c++){
       const brick = S.grid[r][c];
       if (!brick) continue;
-      const x = c*CONFIG.CELL, y = r*CONFIG.CELL + shiftOffset;
-      const pad = 3;
-      if (brick.type === 'hp') {
-        const tier = hpTier(brick.hp);
-        const bw = CONFIG.CELL-pad*2, bh = CONFIG.CELL-pad*2;
-        const grad = ctx.createLinearGradient(x, y, x, y+CONFIG.CELL);
-        if (brick.boss)       { grad.addColorStop(0,T.boss[0]); grad.addColorStop(1,T.boss[1]); }
-        else if (brick.curse) { grad.addColorStop(0,T.curse[0]); grad.addColorStop(1,T.curse[1]); }
-        else                  { grad.addColorStop(0, tier.light); grad.addColorStop(1, tier.base); }
-        ctx.fillStyle = grad;
-        roundRect(ctx, x+pad, y+pad, bw, bh, 7);
-        ctx.fill();
-
-        ctx.fillStyle = T.gloss;
-        roundRect(ctx, x+pad+2, y+pad+2, bw-4, bh*0.38, 5);
-        ctx.fill();
-
-        if (brick.boss || brick.curse) {
-          const puls = 0.5 + Math.sin(Date.now()/300 + x*0.5)*0.5;
-          ctx.save();
-          ctx.shadowColor = brick.boss ? T.bossEdge : T.curseEdge;
-          ctx.shadowBlur = 4 + puls*8;
-          ctx.strokeStyle = brick.boss ? T.bossEdge : T.curseEdge;
-          ctx.lineWidth = 2 + puls*1.2;
-          roundRect(ctx, x+pad, y+pad, bw, bh, 7);
-          ctx.stroke();
-          ctx.restore();
-          ctx.font = (CONFIG.CELL*0.28)+'px sans-serif';
-          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          ctx.fillText(brick.boss ? '👑' : '▲', x+CONFIG.CELL/2, y+pad+CONFIG.CELL*0.18);
-        }
-
-        if (brick.flash > 0) {
-          ctx.fillStyle = `rgba(255,255,255,${brick.flash*0.75})`;
-          roundRect(ctx, x+pad, y+pad, bw, bh, 7);
-          ctx.fill();
-          brick.flash -= 0.12;
-        }
-
-        const hpText = shortNum(brick.hp);
-        ctx.fillStyle = T.brickShade;
-        ctx.font = 'bold ' + (hpText.length > 3 ? 12.5 : 15) + 'px sans-serif';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(hpText, x+CONFIG.CELL/2, y+CONFIG.CELL/2+2);
-        ctx.fillStyle = '#fff';
-        ctx.fillText(hpText, x+CONFIG.CELL/2, y+CONFIG.CELL/2+1);
-      } else if (brick.type === 'op') {
-        ctx.fillStyle = opColor(brick.op);
-        roundRect(ctx, x+pad, y+pad, CONFIG.CELL-pad*2, CONFIG.CELL-pad*2, 6);
-        ctx.fill();
-        ctx.fillStyle = '#101828';
-        ctx.font = 'bold 13px sans-serif';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        const label = brick.op==='x2' ? '×2'
-                    : (brick.op==='add' ? '+' : '-') + shortNum(brick.val);
-        ctx.font = 'bold ' + (label.length > 3 ? 11 : 13) + 'px sans-serif';
-        ctx.fillText(label, x+CONFIG.CELL/2, y+CONFIG.CELL/2+1);
-      } else {
-        // 아이템도 체력 블록과 같은 형태로 그린다. 예전엔 혼자 흰 바탕 + 이모지라
-        // 판 위에서 비어 보였고, 이모지는 기기마다 모양이 달라 통일도 안 됐다.
-        // 대신 자기 색 + 맥동하는 흰 테두리로 희귀함을 표현한다.
-        const vis = itemVisual(brick.kind);
-        const puls = 0.5 + Math.sin(Date.now()/260 + x*0.6)*0.5;
-        const bw = CONFIG.CELL-pad*2;
-        const grad = ctx.createLinearGradient(x, y, x, y+CONFIG.CELL);
-        grad.addColorStop(0, vis.light);
-        grad.addColorStop(1, vis.color);
-        ctx.save();
-        ctx.shadowColor = vis.color;
-        ctx.shadowBlur = 5 + puls*9;
-        ctx.fillStyle = grad;
-        roundRect(ctx, x+pad, y+pad, bw, bw, 7);
-        ctx.fill();
-        ctx.restore();
-        ctx.fillStyle = T.gloss;
-        roundRect(ctx, x+pad+2, y+pad+2, bw-4, bw*0.38, 5);
-        ctx.fill();
-        ctx.strokeStyle = `rgba(255,255,255,${(0.5 + puls*0.45).toFixed(2)})`;
-        ctx.lineWidth = 1.6;
-        roundRect(ctx, x+pad, y+pad, bw, bw, 7);
-        ctx.stroke();
-        drawItemIcon(brick.kind, x+CONFIG.CELL/2, y+CONFIG.CELL/2, bw*0.30);
-      }
+      drawBrick(ctx, brick, c*CONFIG.CELL, r*CONFIG.CELL + shiftOffset);
     }
   }
 

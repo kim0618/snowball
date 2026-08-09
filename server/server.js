@@ -38,7 +38,10 @@ const ADMIN_PW = process.env.ADMIN_PW || '1234';
 const MAX_ID = 16;
 const MAX_NICK = 12;
 const MAX_PW = 32;
-const MAX_SCORE = 50_000_000;
+// 점수는 라운드가 갈수록 커진다(공격력 천장이 라운드의 제곱이라 점수는 그 이상으로 자란다).
+// 5천만은 정상 플레이로 금방 넘겨서, 넘긴 사람은 그때부터 기록이 영영 안 올라갔다.
+// 여기 값은 '말도 안 되는 값 거르기' 용도지 정상 상한이 아니다.
+const MAX_SCORE = 1_000_000_000;
 const MAX_ENTRIES = 500;
 const USER_SESSION_MS = 60 * 60 * 1000;
 // 8자 이상, 영문/숫자/특수문자를 모두 포함
