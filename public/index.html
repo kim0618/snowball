@@ -268,12 +268,14 @@
      뒤에 먼저 깔아야 획이 안 잠식된다. */
   #overlay .final{font-size:47px;font-weight:900;letter-spacing:-.02em;line-height:1.15;
     font-variant-numeric:tabular-nums;
-    background:linear-gradient(180deg,#3d8ff5 0%,#1550d0 42%,#0a3196 100%);
+    /* 맨 위에 흰빛을 한 겹 더 얹어 얼음에 새긴 듯한 광택을 만든다 */
+    background:linear-gradient(180deg,#eaf6ff 0%,#4b9bf8 22%,#1550d0 58%,#0a3196 100%);
     -webkit-background-clip:text;background-clip:text;color:transparent;
     /* 테두리는 획 양쪽을 파고들어 실제로는 2배로 먹힌다. 3px 로 뒀더니 파란 심지가
        거의 안 남아 뿌옇게 보였다 - 얇게 두르고 빛번짐으로 또렷함을 만든다. */
-    -webkit-text-stroke:1.5px #fff;paint-order:stroke fill;
+    -webkit-text-stroke:1.7px #fff;paint-order:stroke fill;
     filter:drop-shadow(0 0 7px rgba(255,255,255,.95))
+           drop-shadow(0 0 18px rgba(120,200,255,.7))
            drop-shadow(0 3px 8px rgba(10,50,140,.4));}
   #overlay .best{font-size:12.5px;color:#3c62a0;margin-top:4px;min-height:18px;font-weight:700;}
   .goTag{display:inline-block;font-size:12.5px;font-weight:800;padding:6px 15px;
@@ -1734,24 +1736,41 @@ const T = {
   stockText:  '#12244f',
   hint:       'rgba(70,110,170,0.62)',
   danger:     '250,110,110',
-  boss:       ['#ff9ec1','#e11d63'],
+  boss:       ['#ff8ec4','#b3145a'],   // 고정색 - 체력 단계 색을 쓰지 않는다
   curse:      ['#4b5563','#05070b'],
   bossEdge:   '#f6b93b',
   curseEdge:  '#cbd5e1',
   itemBg:     '#ffffff',
 };
 
+// 색은 '판에 지금 깔린 것들 중에 센 편인가'로 정한다.
+// 절대 체력으로 끊으면 체력이 계속 커지는 게임 특성상 12라운드부터 전부 마지막
+// 색으로 뭉갠다. 그렇다고 '그 라운드 기준 체력 대비'로 끊어도, 후반에 성장이
+// 느려지면 판 위 블록들이 다 비슷해져서 역시 한 색이 된다.
+// 판 안에서의 상대 순위로 칠하면 성장 속도와 무관하게 늘 알록달록하고,
+// 색이 그대로 '어느 걸 먼저 깰까'의 답이 된다.
 const HP_TIERS = [
-  { max: 2,   base:'#38bdf8', light:'#7dd3fc' },
-  { max: 5,   base:'#4ade80', light:'#86efac' },
-  { max: 9,   base:'#facc15', light:'#fde047' },
-  { max: 15,  base:'#fb923c', light:'#fdba74' },
-  { max: 25,  base:'#f87171', light:'#fca5a5' },
-  { max: 1e9, base:'#c084fc', light:'#d8b4fe' },
+  { base:'#38bdf8', light:'#7dd3fc' },   // 하늘 - 가장 약함
+  { base:'#22d3ee', light:'#67e8f9' },   // 청록
+  { base:'#34d399', light:'#6ee7b7' },   // 민트
+  { base:'#4ade80', light:'#86efac' },   // 초록
+  { base:'#facc15', light:'#fde047' },   // 노랑
+  { base:'#fb923c', light:'#fdba74' },   // 주황
+  { base:'#fb7185', light:'#fda4af' },   // 로즈
+  { base:'#a78bfa', light:'#c4b5fd' },   // 보라 - 가장 셈
 ];
-function hpTier(hp){
-  for (const t of HP_TIERS) if (hp <= t.max) return t;
-  return HP_TIERS[HP_TIERS.length-1];
+
+// 색은 체력의 '자릿수'로 정한다. 체력이 2배가 될 때마다 다음 색.
+//  - 절대 구간으로 끊으면(2/5/9/15/25...) 체력이 계속 커지는 게임이라 금방 마지막 색으로 뭉갠다
+//  - 판 위 최소~최대에 펼치면 블록 하나 깰 때마다 범위가 바뀌어 판 전체 색이 다시 칠해진다
+// 자기 체력만 보면 남의 상태와 무관하니 색이 안 흔들리고, 화면에 같이 뜨는 블록들은
+// 보통 수십 배 안에 퍼져 있어 대여섯 색이 자연스럽게 나온다.
+// 맞아서 체력이 줄면 색도 한 단계 내려간다 - 얼마나 깎였는지가 그대로 보인다.
+function hpTier(hp, tier){
+  const n = HP_TIERS.length;
+  if (tier != null) return HP_TIERS[clamp(Math.round(tier), 0, n - 1)];
+  const step = Math.floor(Math.log2(Math.max(1, hp)));
+  return HP_TIERS[((step % n) + n) % n];
 }
 
 const S = {
@@ -2317,6 +2336,7 @@ function finishTurn(){
   // 물리 공은 최대 150개, 초과분은 공들에 고르게 나눠지는 추가 공격력으로 보존한다.
   // 천장은 여기 한 곳에서만 건다 - 공 개수·보너스 공격력·블록 체력·점수가 전부
   // 이 값에서 파생되므로, 여기만 막으면 아래로 다 따라온다.
+  const tierBefore = ballTier();
   const totalPower = clamp(Math.max(1, S.collectedForNextTurn - S.pendingPenalty),
                            1, powerCap(S.round + 1));
   S.ballCount = Math.min(CONFIG.MAX_BALLS, totalPower);
@@ -2325,6 +2345,8 @@ function finishTurn(){
   S.collectedForNextTurn = 0;
   S.pendingPenalty = 0;
   S.landedThisTurn = false;
+  // 색만 슬쩍 바뀌면 대부분 눈치를 못 챈다 - 올라간 순간만 짚어준다
+  if (ballTier() !== tierBefore) showBuffBanner('공이 한 단계 강해졌어요!');
   S.round++;
   shiftRowsAndSpawnNewRow();
   S.shiftAnim = 1;
@@ -2340,6 +2362,35 @@ function updateShift(dt){
     S.state = 'aiming';
     saveGame();               // 매 턴 경계마다 자동 저장 - 이게 '이어하기'의 체크포인트다
   }
+}
+
+// 점수는 자릿수 제한이 없다. 글자 수로 크기를 깎으면 더 크게 들어갈 수 있는데도
+// 작게 나온다 - 실제 폭을 재서 카드에 들어가는 만큼만 줄인다.
+function fitFinalScore(){
+  const span = document.getElementById('finalScore');
+  const box = span.parentElement;
+  box.style.fontSize = '';
+  const avail = box.clientWidth, w = span.getBoundingClientRect().width;
+  if (!avail || w <= avail) return;
+  const base = parseFloat(box.style.fontSize) || 47;
+  box.style.fontSize = Math.max(20, Math.floor(base * avail / w)) + 'px';
+}
+
+// 0 에서 최종 점수까지 굴러 올라간다. 큰 숫자가 그냥 찍히는 것보다 훨씬 잘 남는다.
+function countUpScore(target){
+  const span = document.getElementById('finalScore');
+  if (target <= 0) return;
+  const DUR = 900;
+  let t0 = null;
+  const step = now => {
+    if (t0 === null) t0 = now;
+    const t = Math.min(1, (now - t0) / DUR);
+    const eased = 1 - Math.pow(1 - t, 3);
+    span.textContent = Math.round(target * eased).toLocaleString();
+    if (t < 1) requestAnimationFrame(step);
+    else span.textContent = target.toLocaleString();
+  };
+  requestAnimationFrame(step);
 }
 
 function enterGameOver(){
@@ -2359,12 +2410,7 @@ function enterGameOver(){
   tag.classList.toggle('record', isRecord);
 
   const finalEl = document.getElementById('finalScore');
-  const finalText = S.score.toLocaleString();
-  finalEl.textContent = finalText;
-  // 억 단위가 되면 47px 로는 카드 폭(300px)을 넘는다
-  finalEl.parentElement.style.fontSize = finalText.length > 12 ? '30px'
-                                       : finalText.length > 9  ? '36px'
-                                       : finalText.length > 6  ? '42px' : '';
+  finalEl.textContent = S.score.toLocaleString();
   document.getElementById('goRound').textContent = S.round;
   document.getElementById('goBalls').textContent = S.maxBalls;
   document.getElementById('goBoss').textContent = S.bossKills || 0;
@@ -2377,6 +2423,8 @@ function enterGameOver(){
   else                   feed.innerHTML = `공을 <span class="hi">${S.maxBalls}개</span>까지 모았어요`;
 
   document.getElementById('overlay').classList.add('show');
+  // 창이 뜬 뒤에 재야 폭이 잡힌다. rAF 안에서만 DOM 을 측정한다.
+  requestAnimationFrame(() => { fitFinalScore(); countUpScore(S.score); });
   submitScore(S.score, S.round);
 }
 
@@ -2665,8 +2713,8 @@ function showTitle(){
 // 실제 화면이 어긋났다. 이제 drawBrick() 하나에서 둘 다 나온다.
 const GUIDE = [
   ['기본', [
-    ['#5b8def', '7',  '숫자 블록', '적힌 숫자만큼 맞아야 깨져요.', '숫자가 클수록 색이 진해져요',
-      null, {type:'hp', hp:7, maxHp:7}],
+    ['#5b8def', '7',  '숫자 블록', '적힌 숫자만큼 맞아야 깨져요.', '지금 내 화력에 비해 셀수록 색이 진해져요',
+      null, {type:'hp', hp:7, maxHp:7, tier:4}],
     ['#e11d63', '👑', '보스',      '체력이 3배인 대형 블록. 잡으면 공 4개를 줘요.', '4라운드부터 등장',
       null, {type:'hp', hp:24, maxHp:24, boss:true}],
     ['#111827', '▲',  '증식',      '때릴 때마다 주변 8칸의 숫자가 1씩 올라가요.', '한 번에 깨거나, 아예 건드리지 마세요',
@@ -3238,17 +3286,42 @@ window.addEventListener('resize', resizeCanvas);
 if (window.visualViewport) window.visualViewport.addEventListener('resize', resizeCanvas);
 
 // 눈 결정이 비치는 유리구슬. 빛은 왼쪽 위에서 온다.
+// 공 색은 지금까지 키운 총 공격력(공 개수 + 보너스 공격력)에 따라 올라간다.
+// 블록 색과 달리 이건 '내가 얼마나 컸나'를 보여주는 눈금이라 절대 수치로 끊는다.
+// 150 은 물리 공 최대치라 여기까지가 한 단계, 그 뒤로는 보너스 공격력 구간이다.
+const BALL_TIERS = [
+  { at: 0,     core:'#eaf7ff', mid:'#6dc4fb', deep:'#1c76dd', edge:'#053d95', glow:' 70,175,255' },
+  { at: 150,   core:'#e8fdff', mid:'#5fe3f0', deep:'#0e9fbe', edge:'#064a72', glow:' 80,225,245' },
+  { at: 500,   core:'#eafff3', mid:'#59e2a4', deep:'#12a566', edge:'#065239', glow:' 90,235,175' },
+  { at: 1000,  core:'#f6f0ff', mid:'#b18bfa', deep:'#6d31d6', edge:'#331276', glow:'165,130,255' },
+  { at: 3000,  core:'#fff2e4', mid:'#ffa45c', deep:'#e0680b', edge:'#7a3400', glow:'255,150,70' },
+  { at: 4000,  core:'#fff8e6', mid:'#ffd166', deep:'#e08a0b', edge:'#7a4300', glow:'255,190,80' },
+  { at: 5000,  core:'#ffeded', mid:'#ff7a6b', deep:'#d81f1f', edge:'#6b0505', glow:'255,100,90' },
+  // 흑요석. 밝은 판 위에서 묻히지 않게 후광만 반대로 푸른 흰빛으로 준다.
+  { at: 10000, core:'#c9d3e6', mid:'#5a6478', deep:'#1b2030', edge:'#05070c', glow:'170,195,255' },
+  // 마지막은 백금. 흰 구슬이라 아래쪽 테두리를 확실히 눌러야 판과 안 붙는다.
+  { at: 15000, core:'#ffffff', mid:'#f4f8ff', deep:'#c3d3ea', edge:'#7f97bb', glow:'225,240,255' },
+];
+function ballTier(){
+  const p = totalOwnedPower();
+  let t = BALL_TIERS[0];
+  for (const x of BALL_TIERS) if (p >= x.at) t = x;
+  return t;
+}
+
 function iceBall(cx, cy, r, dim, flake){
+  const t = ballTier();
   ctx.save();
-  ctx.shadowColor = dim ? 'rgba(115,175,225,.58)' : 'rgba(70,175,255,.95)';
+  ctx.shadowColor = dim ? `rgba(${t.glow},.5)` : `rgba(${t.glow},.95)`;
   ctx.shadowBlur = r*2.4;
-  // 시안의 구슬은 속이 꽤 진한 파랑이라 흰 눈 결정이 또렷하게 뜬다.
-  // 예전엔 가운데까지 하얘서 그냥 물방울처럼 보였다.
+  // 속이 꽤 진해야 흰 눈 결정이 또렷하게 뜬다. 예전엔 가운데까지 하얘서
+  // 그냥 물방울처럼 보였다. dim(회수 중)은 같은 색을 옅게 깐다.
   const g = ctx.createRadialGradient(cx-r*0.35, cy-r*0.4, r*0.10, cx, cy, r);
-  g.addColorStop(0, dim ? '#dff0ff' : '#eaf7ff');
-  g.addColorStop(0.30, dim ? '#9ed0f8' : '#6dc4fb');
-  g.addColorStop(0.66, dim ? '#5795cf' : '#1c76dd');
-  g.addColorStop(1, dim ? '#315f9d' : '#053d95');
+  const fade = c => dim ? shade(c, .42) : c;
+  g.addColorStop(0, fade(t.core));
+  g.addColorStop(0.30, fade(t.mid));
+  g.addColorStop(0.66, fade(t.deep));
+  g.addColorStop(1, fade(t.edge));
   ctx.fillStyle = g;
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
   ctx.shadowBlur = 0;
@@ -3447,6 +3520,31 @@ function renderBoardSurface(){
 
 // 아이템 아이콘은 이모지 대신 직접 그린다. 이모지는 안드로이드·iOS·PC 가 다 다르게
 // 그리고 헤드리스에서는 아예 두부 문자로 빠진다.
+// 보스 왕관. 블록 윗변에 반쯤 걸치게 그린다.
+function drawCrown(g, cx, cy, w){
+  const h = w * 0.66;
+  g.save();
+  g.beginPath();
+  g.moveTo(cx - w/2,     cy + h*0.42);
+  g.lineTo(cx - w*0.44,  cy - h*0.34);
+  g.lineTo(cx - w*0.17,  cy + h*0.06);
+  g.lineTo(cx,           cy - h*0.58);
+  g.lineTo(cx + w*0.17,  cy + h*0.06);
+  g.lineTo(cx + w*0.44,  cy - h*0.34);
+  g.lineTo(cx + w/2,     cy + h*0.42);
+  g.closePath();
+  g.lineJoin = 'round';
+  g.strokeStyle = 'rgba(74,36,0,.9)';
+  g.lineWidth = Math.max(1, w*0.13);
+  g.stroke();
+  const gr = g.createLinearGradient(0, cy - h*0.58, 0, cy + h*0.42);
+  gr.addColorStop(0, '#fff2c0');
+  gr.addColorStop(1, '#f0a92c');
+  g.fillStyle = gr;
+  g.fill();
+  g.restore();
+}
+
 function drawItemIcon(g, kind, cx, cy, r){
   g.save();
   g.fillStyle = '#fff';
@@ -3471,11 +3569,16 @@ function drawItemIcon(g, kind, cx, cy, r){
     g.lineTo(cx + r*0.06, cy - r*0.20);
     g.closePath(); g.fill();
   } else {
-    g.beginPath(); g.arc(cx, cy, r*0.92, 0, Math.PI*2); g.fill();   // 동전
-    g.globalCompositeOperation = 'destination-out';
-    g.lineWidth = r*0.16;
-    g.beginPath(); g.arc(cx, cy, r*0.58, 0, Math.PI*2); g.stroke();
-    g.globalCompositeOperation = 'source-over';
+    // 점수 2배. 동전(원+안쪽 링)으로 그렸더니 11px 크기에선 그냥 도넛으로 보여서
+    // 무슨 아이템인지 아무도 못 알아봤다. 점수 = 별이 훨씬 즉각적이다.
+    g.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const rad = (i % 2 ? r*0.44 : r*1.02);
+      const a = -Math.PI/2 + i * Math.PI/5;
+      const px = cx + Math.cos(a)*rad, py = cy + Math.sin(a)*rad;
+      i ? g.lineTo(px, py) : g.moveTo(px, py);
+    }
+    g.closePath(); g.fill();
   }
   g.restore();
 }
@@ -3495,7 +3598,7 @@ function roundRect(ctx,x,y,w,h,r){
 function drawBrick(g, brick, x, y){
   const pad = 3;
   if (brick.type === 'hp') {
-    const tier = hpTier(brick.hp);
+    const tier = hpTier(brick.hp, brick.tier);
     const bw = CONFIG.CELL-pad*2, bh = CONFIG.CELL-pad*2;
     const grad = g.createLinearGradient(x, y, x, y+CONFIG.CELL);
     if (brick.boss)       { grad.addColorStop(0,T.boss[0]); grad.addColorStop(1,T.boss[1]); }
@@ -3511,17 +3614,30 @@ function drawBrick(g, brick, x, y){
 
     if (brick.boss || brick.curse) {
       const puls = 0.5 + Math.sin(Date.now()/300 + x*0.5)*0.5;
+      // 보스는 판에서 제일 먼저 눈에 띄어야 한다: 바깥에 어두운 테를 한 겹 둘러
+      // 실루엣을 만들고, 그 위에 두꺼운 금테를 맥동시킨다.
+      if (brick.boss) {
+        g.strokeStyle = 'rgba(90,10,45,.55)';
+        g.lineWidth = 3.4;
+        roundRect(g, x+pad-1, y+pad-1, bw+2, bh+2, 8);
+        g.stroke();
+      }
       g.save();
       g.shadowColor = brick.boss ? T.bossEdge : T.curseEdge;
-      g.shadowBlur = 4 + puls*8;
+      g.shadowBlur = brick.boss ? 7 + puls*11 : 4 + puls*8;
       g.strokeStyle = brick.boss ? T.bossEdge : T.curseEdge;
-      g.lineWidth = 2 + puls*1.2;
+      g.lineWidth = brick.boss ? 2.6 + puls*1.4 : 2 + puls*1.2;
       roundRect(g, x+pad, y+pad, bw, bh, 7);
       g.stroke();
       g.restore();
-      g.font = (CONFIG.CELL*0.28)+'px sans-serif';
-      g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.fillText(brick.boss ? '👑' : '▲', x+CONFIG.CELL/2, y+pad+CONFIG.CELL*0.18);
+      if (brick.boss) {
+        // 왕관은 윗변에 걸터앉힌다. 이모지는 기기마다 모양이 달라 직접 그린다.
+        drawCrown(g, x+CONFIG.CELL/2, y+pad, CONFIG.CELL*0.42);
+      } else {
+        g.font = (CONFIG.CELL*0.28)+'px sans-serif';
+        g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.fillText('▲', x+CONFIG.CELL/2, y+pad+CONFIG.CELL*0.18);
+      }
     }
 
     if (brick.flash > 0) {

@@ -84,10 +84,17 @@ def bake_button():
     c = im.crop(BTN).convert('RGBA')
     w, h = c.size
     px = c.load()
-    src = BTN_CLEAN_X - x0
+    # 가운데는 글자를 지워야 하는데, 예전엔 '깨끗한 세로줄' 하나를 그대로 복사해 채웠다.
+    # 그 줄이 좌우 캡 끝보다 5~7 밝아서 9-슬라이스 이음매가 세로선으로 보였다.
+    # 캡 바로 안쪽 두 줄(왼쪽 끝 / 오른쪽 시작)을 좌우로 보간해 채우면 양쪽 이음매가
+    # 정확히 이어지고 가운데는 원본의 세로 결(윗 광택·아랫 그림자)을 그대로 유지한다.
+    left, right = BTN_SLICE - 1, w - BTN_SLICE
+    span = right - left
     for x in range(BTN_SLICE, w - BTN_SLICE):
+        t = (x - left) / span
         for y in range(h):
-            px[x, y] = px[src, y]
+            a, b = px[left, y], px[right, y]
+            px[x, y] = tuple(round(a[i] + (b[i] - a[i]) * t) for i in range(4))
 
     # 버튼 모양 밖(눈 덮인 바닥 배경)은 잘라낸다. 위쪽 눈 모자는 살린다.
     mask = rrect_mask((w, h), (2, 14, w - 3, h - 3), BTN_R)
