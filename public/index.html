@@ -1358,6 +1358,7 @@
         <input id="regId" maxlength="20" placeholder="아이디" autocomplete="username">
       </div>
       <div class="checkMsg" id="regIdMsg"></div>
+      <p class="fieldHint">5~20자, 영문 소문자·숫자·특수기호(_,-)만 사용 가능해요</p>
       <div class="field">
         <svg class="solid" viewBox="0 0 24 24"><path class="bar" d="M8.2 10.6V7.8a3.8 3.8 0 0 1 7.6 0v2.8"/><rect x="4.6" y="10.4" width="14.8" height="9.8" rx="2.8"/></svg>
         <input id="regPw" type="password" maxlength="32" placeholder="비밀번호" autocomplete="new-password">
@@ -2384,8 +2385,8 @@ function applyItem(kind, rr, cc){
     spawnIceStorm();
     vibrate(PATTERN.itemIce);
     showBuffBanner(hit
-      ? `❄️ 전체 숫자 -${Math.round(CONFIG.ICE_CUT*100)}%`
-      : '❄️ 얼릴 블록이 없어요');
+      ? `❄ 전체 숫자 -${Math.round(CONFIG.ICE_CUT*100)}%`
+      : '❄ 얼릴 블록이 없어요');
   }
 }
 
@@ -2501,7 +2502,9 @@ function substep(subDt){
                   addHitstop(Math.min(0.15, 0.06+freed*0.015));
                   addShake(Math.min(8, 3+freed));
                   vibrate(PATTERN.trapRelease);
-                  showBuffBanner(`🔓 갇혔던 공 ${freed}개 풀림!`);
+                  // 자물쇠 이모지(🔓)는 기기마다 그림이 다르고 눈덩이 게임의 얼음
+                  // 톤과도 안 어울려서, 다른 배너들과 같은 눈꽃(❄) 표시로 통일한다.
+                  showBuffBanner(`❄ 갇혔던 공 ${freed}개 풀림!`);
                 }
                 // Ration shake to cascades, not every break (Holedown principle).
                 if (S.combo >= 4) addShake(1.2 + Math.min(3, S.combo*0.12));
@@ -3137,7 +3140,7 @@ const HOWTO = [
     ['#22c55e', '공', '공이 곧 자원', '공 4개로 시작해서 계속 불려나가요. 공이 많을수록 한 턴에 많이 부숴요.', '', 'ball'],
     ['#e11d63', 'HP', '같이 강해져요', '공이 늘면 블록 체력도 같이 올라가요. 그래서 끝없이 쉬워지지 않아요.', '', 'hp'],
     ['#f59e0b', '순서', '순서가 실력', '−30을 먼저 맞고 ×2를 맞으면 손해예요. 순서를 뒤집으면 대박이고요.', '', 'order'],
-    ['#38bdf8', '❄', '눈덩이 굴리기', '공이 벽돌을 깰 때마다 그 자리에서 커지고 세져요. 착지하면 다시 기본 크기로 녹아요.', '커진 공은 좁은 틈은 못 지나가요', null],
+    ['#38bdf8', '❄', '눈덩이 굴리기', '공이 벽돌을 깰 때마다 그 자리에서 커지고 세져요. 착지하면 다시 기본 크기로 녹아요.', '커진 공은 좁은 틈은 못 지나가요', 'grow-balls'],
   ]],
 ];
 
@@ -3167,6 +3170,24 @@ function brickChip(brick){
   return cv;
 }
 
+// 눈덩이 굴리기 항목 전용 그림. 새 뱃지 그림을 만드는 대신 실제 공을 그리는
+// iceBall()을 그대로 재사용해서 커지는 공 세 개를 그린다 - 다른 항목들과 같은
+// 원칙("도감의 그림은 게임판이 실제로 그리는 것 그대로")을 이 항목에도 지킨다.
+function growthChip(){
+  const px = 54, dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const cv = document.createElement('canvas');
+  cv.className = 'gChip brick';
+  cv.width = Math.round(px * dpr); cv.height = Math.round(px * dpr);
+  cv.style.width = px + 'px'; cv.style.height = px + 'px';
+  const g = cv.getContext('2d');
+  if (!g) return cv;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  iceBall(12, 44, 5, false, false, g);
+  iceBall(26, 28, 8, false, false, g);
+  iceBall(40, 14, 12, false, false, g);
+  return cv;
+}
+
 function renderGuide(data, title, art, sub){
   const t = document.getElementById('guideTitle');
   t.src = art; t.alt = title;
@@ -3185,6 +3206,8 @@ function renderGuide(data, title, art, sub){
       let chip;
       if (brick){                                // 게임판과 같은 코드로 그린 진짜 블록
         chip = brickChip(brick);
+      } else if (art === 'grow-balls'){          // 눈덩이 굴리기 전용 - iceBall() 재사용
+        chip = growthChip();
       } else if (art){                           // 시안에서 오려낸 얼음 블록 그림
         chip = document.createElement('span');
         chip.className = 'gChip art';
@@ -3346,10 +3369,10 @@ function enterChallenge(ch){
   const saved = loadSavedGame('challenge');
   if (saved && saved.challenge && saved.seed === ch.seed) {
     resumeGame(saved);
-    showBuffBanner(`❄️ ${challengerName(ch)}의 판 이어하기`);
+    showBuffBanner(`❄ ${challengerName(ch)}의 판 이어하기`);
   } else {
     startFreshGame(ch.seed, ch);
-    showBuffBanner(`❄️ ${challengerName(ch)}의 도전장 · ${ch.round}R 넘기`);
+    showBuffBanner(`❄ ${challengerName(ch)}의 도전장 · ${ch.round}R 넘기`);
   }
   updateHud();
 }
@@ -3746,33 +3769,36 @@ function ballTier(){
   return t;
 }
 
-function iceBall(cx, cy, r, dim, flake){
+// gctx 를 받는 이유: 게임판(전역 ctx)뿐 아니라 도감 칩의 작은 canvas에도 이
+// 함수를 그대로 재사용하려고(눈덩이 굴리기 항목 - growthChip() 참고). 인자를
+// 안 주면 지금까지처럼 전역 ctx에 그린다.
+function iceBall(cx, cy, r, dim, flake, gctx = ctx){
   const t = ballTier();
-  ctx.save();
-  ctx.shadowColor = dim ? `rgba(${t.glow},.5)` : `rgba(${t.glow},.95)`;
-  ctx.shadowBlur = r*2.4;
+  gctx.save();
+  gctx.shadowColor = dim ? `rgba(${t.glow},.5)` : `rgba(${t.glow},.95)`;
+  gctx.shadowBlur = r*2.4;
   // 속이 꽤 진해야 흰 눈 결정이 또렷하게 뜬다. 예전엔 가운데까지 하얘서
   // 그냥 물방울처럼 보였다. dim(회수 중)은 같은 색을 옅게 깐다.
-  const g = ctx.createRadialGradient(cx-r*0.35, cy-r*0.4, r*0.10, cx, cy, r);
+  const g = gctx.createRadialGradient(cx-r*0.35, cy-r*0.4, r*0.10, cx, cy, r);
   const fade = c => dim ? shade(c, .42) : c;
   g.addColorStop(0, fade(t.core));
   g.addColorStop(0.30, fade(t.mid));
   g.addColorStop(0.66, fade(t.deep));
   g.addColorStop(1, fade(t.edge));
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
-  ctx.shadowBlur = 0;
+  gctx.fillStyle = g;
+  gctx.beginPath(); gctx.arc(cx, cy, r, 0, Math.PI*2); gctx.fill();
+  gctx.shadowBlur = 0;
   // 테두리는 얇게. 굵게 두르면 유리구슬이 아니라 아이콘 버튼처럼 보인다.
-  ctx.strokeStyle = dim ? 'rgba(225,244,255,.40)' : 'rgba(255,255,255,.42)';
-  ctx.lineWidth = Math.max(.8, r*.06);
-  ctx.beginPath(); ctx.arc(cx, cy, r-.5, 0, Math.PI*2); ctx.stroke();
-  ctx.restore();
+  gctx.strokeStyle = dim ? 'rgba(225,244,255,.40)' : 'rgba(255,255,255,.42)';
+  gctx.lineWidth = Math.max(.8, r*.06);
+  gctx.beginPath(); gctx.arc(cx, cy, r-.5, 0, Math.PI*2); gctx.stroke();
+  gctx.restore();
   // 시안의 발사구 구슬은 속 오른쪽 아래에 눈 결정이 비친다. 날아다니는 공까지
   // 이걸 넣으면 화면이 지저분해지므로 발사구 하나만 켠다.
-  if (flake) drawFlake(ctx, cx + r*0.22, cy + r*0.20, r*0.50, .45, Math.max(.7, r*0.055));
+  if (flake) drawFlake(gctx, cx + r*0.22, cy + r*0.20, r*0.50, .45, Math.max(.7, r*0.055));
   // 왼쪽 위 반사광
-  ctx.fillStyle = 'rgba(255,255,255,.9)';
-  ctx.beginPath(); ctx.ellipse(cx-r*0.34, cy-r*0.40, r*0.28, r*0.17, -0.55, 0, Math.PI*2); ctx.fill();
+  gctx.fillStyle = 'rgba(255,255,255,.9)';
+  gctx.beginPath(); gctx.ellipse(cx-r*0.34, cy-r*0.40, r*0.28, r*0.17, -0.55, 0, Math.PI*2); gctx.fill();
 }
 
 // ---- 얼음판 바닥 ----
