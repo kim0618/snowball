@@ -37,6 +37,12 @@ function load(extraExports = '') {
     },
     window: { devicePixelRatio: 1, addEventListener: noop },
     navigator: {}, localStorage: { getItem: () => null, setItem: noop, removeItem: noop },
+    // 도전장 링크(?s=시드)를 읽는 코드가 로드 시점에 돈다. 이 셋이 없으면
+    // 게임 로직과 상관없는 이유로 테스트 전체가 죽는다.
+    sessionStorage: { getItem: () => null, setItem: noop, removeItem: noop },
+    location: { origin: 'http://localhost', pathname: '/', search: '' },
+    history: { replaceState: noop },
+    URLSearchParams,
     requestAnimationFrame: () => 0, setTimeout: () => 0, clearTimeout: noop,
     performance: { now: () => 0 },
     Math, Date, JSON, Set, Map, Array, Object, Number, String, Boolean, isNaN, console

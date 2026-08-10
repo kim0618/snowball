@@ -15,6 +15,7 @@ const ctxStub = new Proxy({}, {
   get(t, k) {
     if (k === 'measureText') return () => ({ width: 10 });
     if (k === 'createLinearGradient') return () => ({ addColorStop: noop });
+    if (k === 'createRadialGradient') return () => ({ addColorStop: noop });
     return typeof t[k] === 'undefined' ? noop : t[k];
   },
   set(t, k, v) { t[k] = v; return true; }
@@ -35,11 +36,20 @@ function mkNode(id) {
     fire(ev, arg) { (this._handlers[ev] || []).forEach(f => f(arg || {})); },
     setPointerCapture: noop, focus: noop,
     getContext: () => ctxStub,
-    querySelector: () => mkNode('tmp'), querySelectorAll: () => [],
+    // getGender(rowId)는 document.getElementById(rowId).querySelector('.genderBtn.active')로
+    // 실제 선택된 성별 버튼을 찾는다. 이 가짜 DOM은 진짜 CSS 선택자 엔진이 없어서
+    // '어느 버튼이 active인지'를 흉내 낼 수 없다 - 이 특정 패턴만 알아채서
+    // 항상 남(m)을 고른 것처럼 응답한다(회원가입 검증을 통과시키는 게 목적이지
+    // 성별 로직 자체를 검증하는 테스트는 아니다).
+    querySelector: sel => (sel && sel.includes('genderBtn.active'))
+      ? { dataset: { gender: 'm' } } : mkNode('tmp'),
+    querySelectorAll: () => [],
     getBoundingClientRect: () => ({ left: 0, top: 0, width: 360, height: 630 }),
     append: noop, appendChild: noop, remove: noop,
     clientWidth: 360, clientHeight: 700, width: 360, height: 630,
     offsetWidth: 360,
+    // 게으르게 만든다 - 즉시 mkNode()를 넣으면 무한 재귀(harness.js와 같은 이유)
+    get parentElement() { return mkNode('tmp'); },
   };
 }
 for (const id of ids) nodes[id] = mkNode(id);
@@ -64,10 +74,18 @@ const sandbox = {
     setItem: (k, v) => { store[k] = String(v); },
     removeItem: k => { delete store[k]; },
   },
+  // 도전장 링크(?s=시드)를 읽는 코드가 로드 시점에 돈다 - 없으면 로드 자체가 죽는다
+  sessionStorage: { getItem: () => null, setItem: noop, removeItem: noop },
+  location: { origin: 'http://localhost', pathname: '/', search: '' },
+  history: { replaceState: noop },
+  URLSearchParams,
   requestAnimationFrame: () => 0,
   setTimeout: (fn) => { try { fn(); } catch (e) {} return 0; },
   clearTimeout: noop,
   performance: { now: () => 0 },
+  // resizeCanvas()가 여백을 재는 데 쓴다 - 실제 값은 안 중요하고(레이아웃을
+  // 검증하는 테스트가 아니다), 호출 자체가 안 죽는 게 중요하다.
+  getComputedStyle: () => ({ marginBottom: '0px' }),
   fetch: (...a) => fetch(...a),
   Math, Date, JSON, Set, Map, Array, Object, Number, String, Boolean, isNaN, console, Promise,
 };
@@ -126,8 +144,13 @@ function zOf(id){
         nodes.titleScreen.classList.contains('show'));
   check('화면 전환에 display 토글을 쓰지 않음',
         !/\.screen\{[^}]*display:none/.test(html.replace(/\s+/g,'')) );
-  check('아이디가 가입창으로 넘어옴', nodes.regId.value === uid, `"${nodes.regId.value}"`);
-  nodes.regPw.value = 'pw1234';
+  // 회원가입 칸은 로그인 칸 값을 물려받지 않는다 - 사용자 지시로 확정된 동작
+  // (index.html의 showRegister(): "회원가입은 로그인 칸과 무관하게 항상 빈 칸에서
+  // 시작한다"). 예전엔 반대로 넘어오는 걸 기대하는 검증이 남아 있었다.
+  check('아이디가 가입창으로 안 넘어옴(항상 빈 칸에서 시작)', nodes.regId.value === '', `"${nodes.regId.value}"`);
+  nodes.regId.value = uid;
+  nodes.regPw.value = 'Pw1234!!';
+  nodes.regPwConfirm.value = 'Pw1234!!';   // 회원가입 확장(비번 확인란) 이후 추가된 칸 - 옛 테스트엔 없었다
   nodes.regNick.value = '테스터';
   nodes.btnAuthOk.fire('click');
   await sleep(400);
@@ -143,7 +166,7 @@ function zOf(id){
   nodes.titleScreen.classList.add('show');
   S.paused = true;
   nodes.idInput.value = uid;
-  nodes.pwInput.value = 'pw1234';
+  nodes.pwInput.value = 'Pw1234!!';
   nodes.authErr.textContent = '';
   nodes.btnGoLogin.fire('click');
   await sleep(400);

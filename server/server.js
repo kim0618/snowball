@@ -35,7 +35,7 @@ const MIME = {
 const ADMIN_ID = process.env.ADMIN_ID || 'admin';
 const ADMIN_PW = process.env.ADMIN_PW || '1234';
 
-const MAX_ID = 16;
+const MAX_ID = 20;
 const MAX_NICK = 12;
 const MAX_PW = 32;
 // 점수는 라운드가 갈수록 커진다(공격력 천장이 라운드의 제곱이라 점수는 그 이상으로 자란다).
@@ -44,8 +44,10 @@ const MAX_PW = 32;
 const MAX_SCORE = 1_000_000_000;
 const MAX_ENTRIES = 500;
 const USER_SESSION_MS = 60 * 60 * 1000;
-// 8자 이상, 영문/숫자/특수문자를 모두 포함
-const PW_RE = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$/;
+// 아이디: 네이버와 같은 규칙. 5~20자, 영문 소문자·숫자·(_)·(-)만, 첫 글자는 영문 소문자나 숫자
+const ID_RE = /^[a-z0-9][a-z0-9_-]{4,19}$/;
+// 8~16자, 영문/숫자/특수문자를 모두 포함
+const PW_RE = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,16}$/;
 const GENDERS = ['m', 'f'];
 
 // ---- 저장소: JSON 파일 하나 ----
@@ -159,10 +161,14 @@ const server = http.createServer((req, res) => {
     return readBody(req, body => {
       if (!body) return send(res, 400, { ok: false, error: '잘못된 형식' });
       const provider = body.provider === 'naver' ? 'naver' : 'local';
-      const id = clean(body.id, MAX_ID);
+      // 길이는 ID_RE 가 잡는다. 여기서 20자로 자르면 21자짜리가 조용히 통과한다.
+      const id = clean(body.id, 100);
       const nick = clean(body.nick, MAX_NICK) || id;
       const gender = GENDERS.includes(body.gender) ? body.gender : '';
       if (!id) return send(res, 400, { ok: false, error: '아이디를 입력해주세요' });
+      if (!ID_RE.test(id)) {
+        return send(res, 400, { ok: false, error: '아이디는 5~20자의 영문 소문자, 숫자, 특수기호(_),(-)만 쓸 수 있어요' });
+      }
       if (!nick) return send(res, 400, { ok: false, error: '닉네임을 입력해주세요' });
       if (!gender) return send(res, 400, { ok: false, error: '성별을 선택해주세요' });
       if (users[id]) return send(res, 409, { ok: false, error: '이미 있는 아이디예요' });
@@ -170,13 +176,11 @@ const server = http.createServer((req, res) => {
         return send(res, 409, { ok: false, error: '이미 있는 닉네임이에요' });
       }
 
+      // 비밀번호 규칙은 일반 가입과 네이버 가입이 똑같다.
       let pw = String(body.pw || '').slice(0, MAX_PW);
-      if (provider === 'local') {
-        if (!PW_RE.test(pw)) {
-          return send(res, 400, { ok: false, error: '비밀번호는 8자 이상, 영문·숫자·특수문자를 모두 포함해야 해요' });
-        }
-      } else if (!pw) {
-        return send(res, 400, { ok: false, error: '비밀번호를 입력해주세요' });
+      if (!pw) return send(res, 400, { ok: false, error: '비밀번호를 입력해주세요' });
+      if (!PW_RE.test(pw)) {
+        return send(res, 400, { ok: false, error: '비밀번호는 8~16자, 영문·숫자·특수문자를 모두 포함해야 해요' });
       }
 
       const token = makeToken();

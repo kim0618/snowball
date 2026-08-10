@@ -6,8 +6,11 @@ function runOnce(overrides, seed) {
                   traceTrajectory, startFreshGame, createRng`);
   const { S, CONFIG, startFiring, stepPhysics, updateShift, FIXED_DT, traceTrajectory, startFreshGame } = X;
   Object.assign(CONFIG, overrides);
-  startFreshGame();
-  S.rng = X.createRng(seed);
+  // startFreshGame(seed) 로 바로 넘겨야 한다. ()로 불러 놓고 뒤에서 S.rng 를
+  // 덮어쓰면 이미 그 안에서 generateRow(1행)가 Date.now() 기반 임의 시드로
+  // 한 번 뽑힌 뒤라 - 첫 줄만 매번 다른 판이 되고 그 차이가 게임 내내 번진다.
+  // (sweep.js 를 반복 실행할 때마다 결과가 흔들리던 원인이 이거였다.)
+  startFreshGame(seed);
 
   const maxA = CONFIG.MAX_ANGLE_FROM_VERTICAL;
   let rnd = seed;

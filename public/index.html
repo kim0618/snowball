@@ -138,6 +138,16 @@
     font-size:27px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1;
     color:#fff;text-shadow:0 0 5px rgba(255,255,255,.9), 0 0 15px rgba(110,200,255,.85),
                            0 2px 6px rgba(4,20,60,.85);}
+  /* 도전장 판일 때만 라운드 밑에 붙는 목표 표시. 라운드 숫자보다 작아야
+     '지금 몇 라운드'가 여전히 주인공으로 읽힌다. */
+  /* inline-block 이어야 글자 폭만큼만 차지한다. block 이면 헤더 왼쪽 칸을
+     통째로 채워서 알약이 아니라 띠처럼 보인다(실제로 그렇게 나왔다). */
+  header .hudSide .chalTag{display:inline-block;margin-top:3px;font-style:normal;
+    font-size:10.5px;font-weight:800;letter-spacing:-.01em;color:#0b2f5e;
+    background:linear-gradient(180deg,#dff2ff,#a9dcff);
+    border-radius:9px;padding:2px 7px;white-space:nowrap;
+    box-shadow:0 2px 6px rgba(4,30,80,.45), inset 0 1px 0 rgba(255,255,255,.85);}
+  header .hudSide .chalTag[hidden]{display:none;}
   /* 시안처럼 점수 양옆에 눈꽃과 점을 달아 가운데를 잡아준다 */
   header .hudMid{text-align:center;position:relative;}
   header .hudMid::before,header .hudMid::after{position:absolute;top:14px;white-space:nowrap;
@@ -172,15 +182,6 @@
     box-shadow:0 0 14px rgba(120,200,255,.5), inset 0 2px 5px rgba(255,255,255,.95),
                inset 0 -5px 9px rgba(60,130,205,.28), 0 4px 10px rgba(4,20,60,.45);}
   header #btnPause svg{fill:#2a5cbe;}
-  /* 임시 테스트용: 게임오버 화면 확인용 - 배포 전에 지울 것.
-     시안에선 속이 비치는 파란 유리 구슬이라 멈춤 버튼과 색이 반대다. */
-  header #btnDebugDie{border-radius:50%;
-    border:1.5px solid rgba(190,228,255,.85);
-    background:
-      radial-gradient(58% 48% at 30% 24%, rgba(255,255,255,.62) 0%, rgba(255,255,255,0) 62%),
-      radial-gradient(120% 110% at 50% 42%, #3d7ce0 0%, #1c53bb 45%, #0c317f 100%);
-    box-shadow:0 0 16px rgba(95,185,255,.65), inset 0 2px 7px rgba(190,230,255,.55),
-               inset 0 -6px 12px rgba(4,26,80,.55), 0 4px 10px rgba(4,20,60,.5);}
 
   #stage{position:relative;flex:1 1 auto;display:flex;align-items:center;
     justify-content:center;min-height:0;padding:4px 10px;overflow:hidden;}
@@ -304,6 +305,17 @@
     background:var(--flake-b) center/contain no-repeat;}
   .goStats span{display:block;font-size:11px;color:#5b83b8;font-weight:800;margin-bottom:2px;}
   .goStats b{font-size:19px;font-variant-numeric:tabular-nums;color:#123a86;letter-spacing:-.02em;}
+  /* 도전 결과 한 줄. 성공/실패가 색으로 먼저 읽히게 한다 */
+  .goChal{margin:0 0 8px;font-size:12.5px;font-weight:800;line-height:1.5;
+    border-radius:12px;padding:7px 12px;
+    background:rgba(226,242,255,.92);color:#0b2f5e;
+    box-shadow:inset 0 0 0 1px rgba(120,185,255,.55);}
+  .goChal[hidden]{display:none;}
+  .goChal.win{background:linear-gradient(180deg,#dcfce7,#bbf7d0);color:#14532d;
+    box-shadow:inset 0 0 0 1px rgba(34,197,94,.45);}
+  .goChal.lose{background:rgba(255,238,238,.95);color:#7f1d1d;
+    box-shadow:inset 0 0 0 1px rgba(248,113,113,.45);}
+  .goChal b{font-weight:900;}
   .goFeed{margin-top:12px;font-size:12.5px;color:var(--ink2);font-weight:600;
     line-height:1.6;min-height:20px;}
   .goFeed .hi{color:#1b4fd6;font-weight:900;}
@@ -615,6 +627,16 @@
   .rank li.apart{margin-top:8px;border-top:1.5px dashed rgba(120,170,225,.5);padding-top:10px;}
   .emptyRank{padding:14px 8px;font-size:12.5px;color:var(--ink3);text-align:center;}
 
+  /* 로비의 '받은 도전장' 버튼. 메인 시작 버튼(그림 테두리)보다 한 급 낮게 보여야
+     '이게 기본 흐름은 아니다'가 읽힌다. */
+  .title .chalResume{width:100%;margin:-6px 0 14px;padding:11px 14px;
+    display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+    border:0;border-radius:16px;cursor:pointer;text-align:left;
+    background:linear-gradient(180deg,rgba(233,247,255,.96),rgba(186,224,255,.94));
+    box-shadow:0 6px 16px rgba(6,30,80,.28), inset 0 1px 0 rgba(255,255,255,.9);}
+  .title .chalResume[hidden]{display:none;}
+  .title .chalResume .cTop{font-size:13px;font-weight:900;color:#0b3a76;letter-spacing:-.02em;}
+  .title .chalResume .cSub{font-size:11.5px;font-weight:700;color:#2f5f9c;}
   .twoBtn{display:flex;gap:9px;}
   .title .twoBtn button{flex:1;width:auto;margin:0;padding:12px 0;font-size:14px;
     display:flex;flex-direction:column;align-items:center;gap:5px;}
@@ -766,6 +788,15 @@
       0 10px 18px rgba(5,20,55,.55);}
   .title .tag{margin:12px 0 26px;font-size:14px;color:#d7ecff;font-weight:700;
     text-shadow:0 2px 6px rgba(5,20,55,.6);}
+
+  /* 도전장 안내. 로고와 로그인 카드 사이에 끼워 '이것 때문에 왔다'를 붙잡아 둔다 */
+  .chalNotice{margin:-14px 0 18px;padding:10px 14px;border-radius:14px;
+    display:flex;flex-direction:column;gap:2px;text-align:center;
+    background:linear-gradient(180deg,rgba(226,244,255,.95),rgba(180,222,255,.92));
+    box-shadow:0 8px 20px rgba(4,24,70,.35), inset 0 1px 0 rgba(255,255,255,.9);}
+  .chalNotice[hidden]{display:none;}
+  .chalNotice b{font-size:13.5px;font-weight:900;color:#0b3a76;letter-spacing:-.02em;}
+  .chalNotice span{font-size:11.5px;font-weight:700;color:#2f5f9c;}
 
   /* ---- 브랜드(그림 로고) ----
      아이콘·글자 그림에는 파란 네온이 이미 들어 있다. 그림자를 겹치면 탁해지므로
@@ -1118,13 +1149,13 @@
     <div class="hudSide">
       <span class="lbl">라운드</span>
       <b id="hudRound">1</b>
+      <em id="hudChal" class="chalTag" hidden></em>
     </div>
     <div class="hudMid">
       <div class="score" id="hudScore">0</div>
       <div class="hudFx" id="hudFx"></div>
     </div>
     <div class="hudBtns">
-      <button id="btnDebugDie" aria-label="죽기(테스트용)" title="테스트용: 즉시 게임오버"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.7c-4.5 0-7.9 3.3-7.9 7.6 0 2.6 1.2 4.7 3.2 6 .4.3.6.7.6 1.1v.8c0 .9.7 1.6 1.6 1.6h5c.9 0 1.6-.7 1.6-1.6v-.8c0-.4.2-.8.6-1.1 2-1.3 3.2-3.4 3.2-6 0-4.3-3.4-7.6-7.9-7.6z" fill="#fdfbff"/><ellipse cx="8.9" cy="10.7" rx="2.15" ry="2.5" fill="#3b2d55"/><ellipse cx="15.1" cy="10.7" rx="2.15" ry="2.5" fill="#3b2d55"/><path d="M12 13.6c.5 0 .85.42.85.94s-.35.94-.85.94-.85-.42-.85-.94.35-.94.85-.94z" fill="#3b2d55"/><path d="M10.1 17.6v2.1M12 17.6v2.1M13.9 17.6v2.1" stroke="#3b2d55" stroke-width="1.05" stroke-linecap="round"/></svg></button>
       <button id="btnPause" aria-label="멈춤"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7.1" y="5.4" width="3.9" height="13.2" rx="1.5"/><rect x="13" y="5.4" width="3.9" height="13.2" rx="1.5"/></svg></button>
     </div>
   </header>
@@ -1178,6 +1209,7 @@
           <span class="goFacets" aria-hidden="true"><i class="l"></i><i class="r"></i></span>
           <span class="gFlakes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
           <div class="goTag" id="goTag">게임 오버</div>
+          <div class="goChal" id="goChal" hidden></div>
           <div class="final"><span id="finalScore">0</span></div>
           <div class="best" id="finalBest"></div>
           <div class="goStats">
@@ -1223,6 +1255,13 @@
       <span class="sub" id="playSub">기록에 도전하기</span>
     </button>
 
+    <!-- 받은 도전장을 중간에 나갔을 때만 뜬다. 일반 판 이어하기와 저장 슬롯이 달라서
+         둘 중 아무거나 눌러도 서로를 지우지 않는다. -->
+    <button id="btnChalResume" class="chalResume" hidden>
+      <span class="cTop">❄ 받은 도전장</span>
+      <span class="cSub" id="chalResumeSub"></span>
+    </button>
+
     <div class="statRow">
       <div><span>최고 점수</span><b id="stBest">0</b></div>
       <div><span>최고 라운드</span><b id="stRound">0</b></div>
@@ -1265,13 +1304,20 @@
     <div class="brand">
       <img class="markImg" src="img/logo-icon.webp" alt="" width="420" height="380">
       <img class="wordImg" src="img/logo-word.webp" alt="눈덩이" width="760" height="438">
-      <p class="tag">쏠수록 불어나는 블록 파괴 게임</p>
+      <p class="tag" id="titleTag">쏠수록 불어나는 블록 파괴 게임</p>
+    </div>
+
+    <!-- 도전장 링크로 들어온 사람에게만. 로그인 화면에 아무 표시가 없으면
+         왜 가입하는지가 화면에서 사라진다(가입 이탈 지점). -->
+    <div class="chalNotice" id="chalNotice" hidden>
+      <b id="chalNoticeTop"></b>
+      <span>로그인하면 바로 그 판으로 들어가요</span>
     </div>
 
     <div class="glassCard">
       <div class="field">
         <svg class="solid" viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.9"/><path d="M4.4 20.2c.9-4.2 3.8-6.4 7.6-6.4s6.7 2.2 7.6 6.4z"/></svg>
-        <input id="idInput" maxlength="16" placeholder="아이디" autocomplete="username">
+        <input id="idInput" maxlength="20" placeholder="아이디" autocomplete="username">
       </div>
       <div class="field">
         <svg class="solid" viewBox="0 0 24 24"><path class="bar" d="M8.2 10.6V7.8a3.8 3.8 0 0 1 7.6 0v2.8"/><rect x="4.6" y="10.4" width="14.8" height="9.8" rx="2.8"/></svg>
@@ -1304,19 +1350,19 @@
   <div class="title">
     <img class="markImg" src="img/logo-icon.webp" alt="" width="420" height="380">
     <img class="gTitleImg regTitle" src="img/t-register.webp" alt="회원가입">
-    <p class="tag">친구들과 순위를 겨뤄보세요</p>
+    <p class="tag" id="regTag">친구들과 순위를 겨뤄보세요</p>
 
     <div class="glassCard">
       <div class="field">
         <svg class="solid" viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.9"/><path d="M4.4 20.2c.9-4.2 3.8-6.4 7.6-6.4s6.7 2.2 7.6 6.4z"/></svg>
-        <input id="regId" maxlength="16" placeholder="아이디" autocomplete="username">
+        <input id="regId" maxlength="20" placeholder="아이디" autocomplete="username">
       </div>
       <div class="checkMsg" id="regIdMsg"></div>
       <div class="field">
         <svg class="solid" viewBox="0 0 24 24"><path class="bar" d="M8.2 10.6V7.8a3.8 3.8 0 0 1 7.6 0v2.8"/><rect x="4.6" y="10.4" width="14.8" height="9.8" rx="2.8"/></svg>
         <input id="regPw" type="password" maxlength="32" placeholder="비밀번호" autocomplete="new-password">
       </div>
-      <p class="fieldHint">8자 이상, 영문·숫자·특수문자를 모두 포함해주세요</p>
+      <p class="fieldHint">8~16자, 영문·숫자·특수문자를 모두 포함해주세요</p>
       <div class="field">
         <svg class="solid" viewBox="0 0 24 24"><path class="bar" d="M8.2 10.6V7.8a3.8 3.8 0 0 1 7.6 0v2.8"/><rect x="4.6" y="10.4" width="14.8" height="9.8" rx="2.8"/></svg>
         <input id="regPwConfirm" type="password" maxlength="32" placeholder="비밀번호 확인" autocomplete="new-password">
@@ -1349,7 +1395,7 @@
       <p class="naverTitle">네이버 로그인</p>
       <p class="naverTag">눈덩이 서비스에서<br>네이버 아이디로 로그인해요</p>
       <div class="field naverField">
-        <input id="naverIdMock" placeholder="아이디" autocomplete="off">
+        <input id="naverIdMock" maxlength="20" placeholder="아이디" autocomplete="off">
       </div>
       <div class="field naverField">
         <input id="naverPwMock" type="password" placeholder="비밀번호" autocomplete="off">
@@ -1510,6 +1556,21 @@ const CONFIG = {
   LAUNCH_ZONE_H: 70,
   START_BALLS: 4,
   BALL_RADIUS: 6,
+  // 눈덩이 굴리기: 공이 벽돌을 깰 때마다 이번 비행 동안만 커진다(착지하면 녹아
+  // 원래 크기로 돌아옴 - 다음 턴 새로 발사되는 공은 항상 기본 크기다).
+  // 상한은 CELL(40)의 절반보다 확실히 작게 잡아야 한 칸짜리 통로를 완전히
+  // 막지는 않는다(지름 30 vs 통로 40, 여유 5px) - 그래도 두 벽돌 사이 대각선
+  // 틈처럼 좁은 자리는 큰 공이 못 낀다. 이게 '커질수록 좁은 곳은 못 지나간다'는
+  // 견제 축이다.
+  BALL_MAX_RADIUS: 15,
+  BALL_GROWTH_PER_KILL: 1.15,
+  // 공격력 보너스는 일부러 낮은 정수 캡을 둔다. 여기 상한이 없으면 한 공이 턴 안에서
+  // 죽일수록 세지고 세질수록 더 빨리 죽여서(피드백 루프) 라운드 밸런스(체력이
+  // 화력에 연동되는 이 게임의 핵심 설계)를 초반부터 깨버린다. +3은 초반 라운드
+  // (벽돌 체력이 한 자릿수~수십)엔 체감되지만 후반(수천~수억)엔 무의미해져서
+  // 안전하다.
+  BALL_GROWTH_POWER_PER_KILL: 1,
+  BALL_GROWTH_POWER_CAP: 3,
   BALL_SPEED: 480,
   FIRE_INTERVAL: 0.035,
   FIRE_TOTAL_TARGET: 1.8,
@@ -1538,6 +1599,14 @@ const CONFIG = {
   SUB_CHANCE_MAX: 0.34,
   ITEM_CHANCE: 0.045,
   BOMB_RADIUS: 1,
+  // 얼음: 판 위 모든 숫자 블록의 체력을 비율로 깎는다. 고정값(-30 같은)으로 두면
+  // 체력이 라운드 제곱으로 자라는 게임이라 10라운드만 지나도 아무 의미가 없다.
+  // 비율이면 몇 라운드든 똑같이 '한 숨 돌리는' 카드가 된다.
+  ICE_CUT: 0.30,
+  // 깎아서 0이 되게 하지는 않는다. 얼음은 부수는 카드가 아니라 약하게 만드는 카드다.
+  // (부수는 건 폭탄 몫이고, 전판 삭제가 되면 아이템 하나로 라운드가 끝나버린다)
+  ICE_MIN_HP: 1,
+  ICE_SHARDS: 34,
   BOSS_CHANCE: 0.055,
   BOSS_FROM_ROUND: 4,
   BOSS_HP_MULT: 3.2,
@@ -1547,6 +1616,23 @@ const CONFIG = {
   CURSE_HP_MULT: 0.6,
   // 증식 블록은 공의 합산 공격력과 관계없이 충돌 1회마다 주변 HP를 1만 올린다.
   CURSE_SPREAD: 1,
+  // 도둑 블록: 증식이 '건드리지 마라'면 도둑은 정반대로 '빨리 깨라'는 압박이다.
+  // 맞은 공을 그 자리에 가둬 두고, 블록이 죽는 순간 갇혀 있던 공을 전부 위쪽으로
+  // 흩뿌려 돌려준다. 잠깐 화력을 걸어 두는 대신 나중에 몰아 받는 카드.
+  TRAP_CHANCE: 0.04,
+  TRAP_FROM_ROUND: 5,
+  // 한 방에 죽으면 가두는 재미가 없다 - 최소 몇 번은 버텨야 '가둬지는 공'이
+  // 실제로 쌓인다. 보스(3.2배)보다는 약하게, 일반 블록보다는 확실히 세게.
+  // 1.8배로 처음 넣었더니 (측정: 같은 시드 12개, 순진한 AI로 A/B) 평균 생존
+  // 라운드가 -30%까지 떨어졌다 - 이미 나가 있는 증식 블록(같은 방식으로 재보면
+  // 거의 영향 없음, +3%)보다 훨씬 가혹했다. 1.4배로 낮추고 나서야 비슷한 수준으로
+  // 왔다. AI가 '갇힌 공 배지'를 보고 우선 깨는 인간처럼 못 굴어서 최악 시나리오에
+  // 가깝다는 걸 감안해도, 등장 확률(TRAP_CHANCE)도 같이 낮췄다.
+  TRAP_HP_MULT: 1.4,
+  // 풀려나는 공들은 위쪽 반원으로 부채꼴로 흩어진다 - 조준 각도 상한과 같은 값을
+  // 써서 '쏘아 올린 공'과 같은 규칙 안에서 움직이게 한다(수평으로 튀어나가 벽만
+  // 왕복하는 이상한 각도가 안 나오게).
+  TRAP_RELEASE_SPREAD: 80 * Math.PI/180,
   FRENZY_BOUNCE_CHANCE: 0.08,
   X2_SHARE: 0.08,
   // ×2 는 곱하기라 상한이 없으면 라운드마다 총 공격력이 배가 된다(실측: 86라운드에 20억).
@@ -1608,6 +1694,9 @@ const PATTERN = {
   itemBomb: [20,20,20,20],
   itemFrenzy: [10,50,10,50,10],
   itemGold: 25,
+  itemIce: [30,40,30,40,60],
+  trapCapture: [12,12],
+  trapRelease: [20,20,20,40],
   gameOver: [40,30,40],
 };
 
@@ -1647,11 +1736,16 @@ function generateHpBrick(rng, round, power, variant){
   const base = brickBaseHp(round, power);
   const variance = Math.floor(rng.next() * (1 + base*0.25));
   let hp = base + variance;
-  // Boss and curse reuse the plain HP brick's damage and destruction path; only
-  // their size of health, their look and their side effect differ.
+  // Boss, curse, trap 모두 일반 HP 블록의 피해·파괴 경로를 그대로 쓴다.
+  // 체력 배율·외형·부가 효과만 다르다.
   if (variant === 'boss')  hp = Math.round(hp * CONFIG.BOSS_HP_MULT);
   if (variant === 'curse') hp = Math.max(1, Math.round(hp * CONFIG.CURSE_HP_MULT));
-  return { type:'hp', hp, maxHp:hp, boss: variant==='boss', curse: variant==='curse' };
+  if (variant === 'trap')  hp = Math.round(hp * CONFIG.TRAP_HP_MULT);
+  return {
+    type:'hp', hp, maxHp:hp,
+    boss: variant==='boss', curse: variant==='curse',
+    trap: variant==='trap', trapped: [],   // trapped: 이 블록에 갇힌 공 스냅샷들
+  };
 }
 // 라운드 r 에서 가질 수 있는 총 공격력(공 개수 + 보너스 공격력)의 천장
 function powerCap(round){
@@ -1672,9 +1766,10 @@ function generateOpBrick(rng, round){
 }
 function generateItemBrick(rng){
   const r = rng.next();
-  if (r < 0.38) return { type:'item', kind:'bomb' };
-  if (r < 0.68) return { type:'item', kind:'frenzy' };
-  return { type:'item', kind:'gold' };
+  if (r < 0.30) return { type:'item', kind:'bomb' };
+  if (r < 0.55) return { type:'item', kind:'frenzy' };
+  if (r < 0.78) return { type:'item', kind:'gold' };
+  return { type:'item', kind:'ice' };
 }
 function generateRow(rng, round, power){
   const row = new Array(CONFIG.COLS).fill(null);
@@ -1694,6 +1789,7 @@ function generateRow(rng, round, power){
         let variant = null;
         if (round >= CONFIG.BOSS_FROM_ROUND && v < CONFIG.BOSS_CHANCE) variant = 'boss';
         else if (round >= CONFIG.CURSE_FROM_ROUND && v < CONFIG.BOSS_CHANCE + CONFIG.CURSE_CHANCE) variant = 'curse';
+        else if (round >= CONFIG.TRAP_FROM_ROUND && v < CONFIG.BOSS_CHANCE + CONFIG.CURSE_CHANCE + CONFIG.TRAP_CHANCE) variant = 'trap';
         row[c] = generateHpBrick(rng, round, power, variant);
       }
       const b = row[c];
@@ -1713,6 +1809,9 @@ function opColor(op){
 function itemVisual(kind){
   if (kind==='bomb')   return { color:'#ff6b35', light:'#ffb08a', soft:'#fff1e8', icon:'💥' };
   if (kind==='frenzy') return { color:'#8b5cf6', light:'#c4aaff', soft:'#f3edff', icon:'⚡' };
+  // 얼음은 파랑 계열이라 가장 약한 체력 색(하늘 #38bdf8)과 붙어 보이기 쉽다.
+  // 한 단계 더 진한 파랑에 밝은 하늘빛 윗면을 얹어 체력 블록과 갈라 놓는다.
+  if (kind==='ice')    return { color:'#0284c7', light:'#a5e8ff', soft:'#e8f8ff', icon:'❄' };
   return                      { color:'#f59e0b', light:'#ffd77a', soft:'#fff7e6', icon:'💰' };
 }
 // 캔버스에 그리는 모든 색은 여기 한 곳에서. 흩어져 있으면 테마를 못 바꾼다.
@@ -1738,8 +1837,10 @@ const T = {
   danger:     '250,110,110',
   boss:       ['#ff8ec4','#b3145a'],   // 고정색 - 체력 단계 색을 쓰지 않는다
   curse:      ['#4b5563','#05070b'],
+  trap:       ['#a78bfa','#3b1f8a'],   // 보라(가둠) - 얼음 우리 느낌으로 시안 청록 테두리와 짝
   bossEdge:   '#f6b93b',
   curseEdge:  '#cbd5e1',
+  trapEdge:   '#67e8f9',
   itemBg:     '#ffffff',
 };
 
@@ -1792,11 +1893,15 @@ const S = {
   popups: [],
   returning: [],
   waves: [], flash: null, hitstop: 0,
+  iceShards: [],
   turnTime: 0,
   turnWallTime: 0,
   paused: false,
   combo: 0,
   bossKills: 0,
+  // 받은 도전장. null 이면 평소 무한 모드다.
+  // { seed, nick, round, score } - seed 는 판을 만드는 값이고 나머지는 넘어야 할 상대 기록.
+  challenge: null,
 };
 
 // Passing a seed makes the whole run reproducible, which is what lets a daily
@@ -1809,6 +1914,7 @@ function resetTransientState(){
   S.activeBalls = []; S.particles = []; S.popups = []; S.returning = [];
   S.shake = 0; S.shiftAnim = 0;
   S.waves = []; S.flash = null; S.hitstop = 0;
+  S.iceShards = [];
   S.launcherX = WIDTH/2;
   S.collectedForNextTurn = 0; S.pendingPenalty = 0; S.landedThisTurn = false;
   S.fireQueueRemaining = 0; S.firePowerQueue = [];
@@ -1818,7 +1924,11 @@ function resetTransientState(){
   document.getElementById('overlay').classList.remove('show');
 }
 
-function startFreshGame(seed){
+// challenge 를 넘기면 그 판은 '받은 도전장' 판이 된다(저장 슬롯도 따로 쓴다).
+// 인자 없이 부르면 평소 무한 모드로 돌아온다 - 도전이 끝난 뒤 새 판이 도전으로
+// 남지 않게 하려면 이 초기화가 startFreshGame 안에 있어야 한다.
+function startFreshGame(seed, challenge){
+  S.challenge = challenge || null;
   S.seed = (seed === undefined) ? ((Date.now() ^ (Math.random()*1e9)) >>> 0) : (seed >>> 0);
   S.rng = createRng(S.seed);
   S.round = 1; S.score = 0;
@@ -1832,33 +1942,42 @@ function startFreshGame(seed){
 
 // ---- 이어하기: 끝이 없는 게임이라 중간에 꺼도 되돌아왔을 때 그대로 이어져야 한다 ----
 const SAVE_VERSION = 1;
-function saveKey(){ return 'opbricks.save.' + (LB.id || 'guest'); }
+// 슬롯이 둘이다. 무한 모드 판과 받은 도전장 판은 서로를 덮어쓰면 안 된다 -
+// 친구 링크를 눌렀다고 며칠 쌓은 판이 날아가면 그건 버그로 읽힌다.
+function saveKey(mode){
+  return 'opbricks.save.' + (LB.id || 'guest') + (mode === 'challenge' ? '.ch' : '');
+}
+function currentMode(){ return S.challenge ? 'challenge' : 'normal'; }
 
 function saveGame(){
   if (!lbSignedIn() || S.state !== 'aiming') return;   // 턴 경계에서만 저장한다
   try {
-    localStorage.setItem(saveKey(), JSON.stringify({
+    localStorage.setItem(saveKey(currentMode()), JSON.stringify({
       v: SAVE_VERSION, seed: S.seed, rngState: S.rng.state,
       round: S.round, score: S.score, ballCount: S.ballCount, bonusPower: S.bonusPower,
       maxBalls: S.maxBalls,
       bossKills: S.bossKills, grid: S.grid,
+      challenge: S.challenge,
     }));
   } catch(e){}
 }
-function loadSavedGame(){
+function loadSavedGame(mode){
   if (!lbSignedIn()) return null;
   try {
-    const data = JSON.parse(localStorage.getItem(saveKey()));
+    const data = JSON.parse(localStorage.getItem(saveKey(mode)));
     if (!data || data.v !== SAVE_VERSION) return null;
     if (!Array.isArray(data.grid) || data.grid.length !== CONFIG.GRID_ROWS) return null;
+    // 슬롯과 내용이 어긋나면(도전 슬롯인데 도전 정보가 없다든가) 버린다
+    if ((mode === 'challenge') !== !!data.challenge) return null;
     return data;
   } catch(e){ return null; }
 }
-function clearSavedGame(){
+function clearSavedGame(mode){
   if (!lbSignedIn()) return;
-  try { localStorage.removeItem(saveKey()); } catch(e){}
+  try { localStorage.removeItem(saveKey(mode === undefined ? currentMode() : mode)); } catch(e){}
 }
 function resumeGame(data){
+  S.challenge = data.challenge || null;
   S.seed = data.seed;
   S.rng = createRng(0); S.rng.state = data.rngState >>> 0;
   S.round = data.round; S.score = data.score;
@@ -1925,6 +2044,18 @@ function updateHud(){
   scoreEl.style.color = S.scoreMult > 1 ? '#e8a33d' : '';
   document.getElementById('hudRound').textContent = S.round;
 
+  // 도전장 판이면 넘어야 할 라운드를 라운드 숫자 밑에 붙여 둔다.
+  // 목표가 화면에 안 보이면 '몇까지 가야 이기는지'를 기억하고 있어야 한다.
+  const chalTag = document.getElementById('hudChal');
+  if (S.challenge) {
+    chalTag.textContent = S.round > S.challenge.round
+      ? `❄ ${S.challenge.round}R 넘음!`
+      : `❄ 목표 ${S.challenge.round}R`;
+    chalTag.hidden = false;
+  } else {
+    chalTag.hidden = true;
+  }
+
   // 지금 켜져 있는 효과를 배지로. 배너는 1초면 사라지지만 효과는 턴 내내 간다.
   const fx = document.getElementById('hudFx');
   const want = [];
@@ -1977,13 +2108,74 @@ function burstRing(x, y, color, count, speed){
 }
 function itemFanfare(x, y, kind){
   const vis = itemVisual(kind);
-  addShockwave(x, y, vis.color, kind === 'bomb' ? 190 : 150, kind === 'bomb' ? 6 : 4);
+  const big = kind === 'bomb' || kind === 'ice';   // 판을 흔드는 두 아이템은 연출도 한 급 위
+  addShockwave(x, y, vis.color, big ? 190 : 150, big ? 6 : 4);
   addShockwave(x, y, '#ffffff', 90, 2);
-  burstRing(x, y, vis.color, kind === 'bomb' ? 26 : 20, kind === 'bomb' ? 300 : 230);
-  addFlash(vis.color, kind === 'bomb' ? 0.42 : 0.30);
-  addHitstop(kind === 'bomb' ? 0.13 : 0.09);
-  addShake(kind === 'bomb' ? 6.5 : 4.5);
+  burstRing(x, y, vis.color, big ? 26 : 20, big ? 300 : 230);
+  addFlash(kind === 'ice' ? '#bae6fd' : vis.color, big ? 0.42 : 0.30);
+  addHitstop(big ? 0.13 : 0.09);
+  addShake(big ? 6.5 : 4.5);
   spawnPopup(x, y - 22, vis.icon, vis.color);
+}
+
+// 얼음 아이템: 화면 위에서 얼음 덩어리가 쏟아져 내린다.
+// 판정(체력 감소)은 터지는 순간 이미 끝나 있고 이건 순수 연출이다. 떨어지는 걸
+// 기다렸다가 깎으면 그 사이에 공이 지나가 버려서 무엇이 언제 약해졌는지 안 보인다.
+function spawnIceStorm(){
+  for (let i=0;i<CONFIG.ICE_SHARDS;i++){
+    S.iceShards.push({
+      // 세로로 넓게 흩어 놓고 같이 떨어뜨린다. 한 줄로 출발하면 커튼처럼 내려와서
+      // '쏟아진다'가 아니라 '가림막이 지나간다'로 보인다.
+      x: Math.random()*WIDTH,
+      // 세로 흩뿌림을 좁게, 속도를 빠르게. 넓게 뿌리면 조각이 1.5초씩 판 위에 남아
+      // 블록 숫자를 가린다 - 숫자를 읽으라고 쓰는 아이템이 숫자를 가리면 안 된다.
+      y: -14 - Math.random()*GRID_H*0.62,
+      vy: 620 + Math.random()*380,
+      rot: Math.random()*Math.PI*2,
+      spin: (Math.random()-0.5)*5,
+      size: 4 + Math.random()*7,
+      alpha: 0.72 + Math.random()*0.28,
+    });
+  }
+}
+function updateIceShards(dt){
+  for (let i=S.iceShards.length-1;i>=0;i--){
+    const s = S.iceShards[i];
+    s.y += s.vy*dt;
+    s.rot += s.spin*dt;
+    if (s.y > HEIGHT + 20) S.iceShards.splice(i,1);
+  }
+}
+function drawIceShard(g, s){
+  g.save();
+  g.translate(s.x, s.y);
+  g.rotate(s.rot);
+  g.globalAlpha = s.alpha;
+  // 각진 얼음 조각. 눈송이(둥근 눈꽃)로 그리면 배경 눈 연출과 섞여 안 보인다.
+  const w = s.size, h = s.size*1.45;
+  const grad = g.createLinearGradient(-w, -h, w, h);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(0.55, '#bae6fd');
+  grad.addColorStop(1, '#38bdf8');
+  g.fillStyle = grad;
+  // 노란 블록 위에 흰 조각을 얹으면 테두리가 사라져 얼룩처럼 보인다.
+  // 짙은 파랑 그림자를 깔아야 판 위에 '떠 있는 덩어리'로 읽힌다.
+  g.shadowColor = 'rgba(2,64,110,0.45)';
+  g.shadowBlur = 5;
+  g.shadowOffsetY = 2;
+  g.beginPath();
+  g.moveTo(0, -h);
+  g.lineTo(w*0.78, -h*0.20);
+  g.lineTo(w*0.42, h);
+  g.lineTo(-w*0.52, h*0.72);
+  g.lineTo(-w*0.80, -h*0.34);
+  g.closePath();
+  g.fill();
+  g.shadowColor = 'transparent';
+  g.strokeStyle = 'rgba(255,255,255,0.95)';
+  g.lineWidth = 1.2;
+  g.stroke();
+  g.restore();
 }
 function spawnPopup(x, y, text, color){
   if (S.popups.length > 24) return;
@@ -2012,6 +2204,7 @@ function updateParticles(dt){
     S.flash.life -= dt * 2.6;
     if (S.flash.life <= 0) S.flash = null;
   }
+  updateIceShards(dt);
   S.shake *= 0.86;
   if (S.shake < 0.2) S.shake = 0;
 }
@@ -2025,8 +2218,10 @@ function physicsSubsteps(){
   return Math.max(1, Math.ceil((CONFIG.BALL_SPEED*FIXED_DT) / (CONFIG.BALL_RADIUS*0.7)));
 }
 
-function brickHitInfo(x, y, vx, vy, x0, y0){
-  const R = CONFIG.BALL_RADIUS;
+// R은 기본 반지름을 기본값으로 둔다 - 조준 미리보기(traceTrajectory)는 아직 쏘지도
+// 않은 공의 경로라 커질 일이 없으므로 인자 없이 불러도 맞는다. 실제 물리(substep)는
+// 자란 공의 반지름을 넘겨준다.
+function brickHitInfo(x, y, vx, vy, x0, y0, R = CONFIG.BALL_RADIUS){
   const x1 = x0+CONFIG.CELL, y1 = y0+CONFIG.CELL;
   const insideX = x > x0 && x < x1;
   const insideY = y > y0 && y < y1;
@@ -2069,12 +2264,54 @@ function cloneBallJitter(src){
   const r = rotate2D(src.vx, src.vy, jitter);
   // Inherit age/lastHit: a clone born at age 0 that can itself spawn clones
   // makes a frenzy turn immortal and the round never resolves.
+  // 크기·성장 보너스도 부모 것을 그대로 물려받는다 - x2로 갈라진 두 공이 갑자기
+  // 기본 크기로 쪼그라들면 방금 커진 게 눈속임처럼 보인다. (총 화력이 배가 되는
+  // ×2 자체가 이미 그런 설계라 새로운 불일치는 아니다.)
   return { x: src.x, y: src.y, vx: r.vx, vy: r.vy,
            age: src.age, lastHit: src.lastHit || 0, dmgLock: src.dmgLock,
-           power: Math.max(1, Math.floor(src.power || 1)) };
+           power: Math.max(1, Math.floor(src.power || 1)),
+           radius: src.radius || CONFIG.BALL_RADIUS, growPower: src.growPower || 0 };
 }
 
-const ballPower = b => Math.max(1, Math.floor(Number(b && b.power) || 1));
+// 성장 보너스(growPower)는 기본 화력(power)과 별개 필드로 둔다. 발사 시점 화력은
+// 라운드 밸런스의 근거(다음 줄 체력이 여기 맞춰 뽑힘)라 건드리지 않고, 성장은
+// '이번 비행에서 번' 임시 웃돈으로만 얹는다.
+const ballPower = b => {
+  const base = Math.floor(Number(b && b.power) || 1);
+  const grow = Math.floor(Number(b && b.growPower) || 0);
+  return Math.max(1, base + grow);
+};
+// 벽돌을 깰 때마다 이 공을 부른다. 크기는 상한까지 계속 자라고, 공격력 웃돈은
+// BALL_GROWTH_POWER_CAP에서 멈춘다(위 CONFIG 주석 참고 - 무제한으로 두면 죽일수록
+// 세지고 세질수록 더 빨리 죽이는 되먹임으로 라운드 밸런스가 초반부터 무너진다).
+function growBall(b){
+  b.radius = Math.min(CONFIG.BALL_MAX_RADIUS, (b.radius || CONFIG.BALL_RADIUS) + CONFIG.BALL_GROWTH_PER_KILL);
+  if ((b.growPower || 0) < CONFIG.BALL_GROWTH_POWER_CAP) {
+    b.growPower = Math.min(CONFIG.BALL_GROWTH_POWER_CAP, (b.growPower || 0) + CONFIG.BALL_GROWTH_POWER_PER_KILL);
+  }
+}
+
+// 도둑 블록이 죽을 때 그동안 가둬 뒀던 공을 한꺼번에 위쪽 부채꼴로 풀어준다.
+// 갇힐 때의 원래 속도는 의미가 없다(그때그때 다른 각도로 날아와 갇혔다) - 대신
+// 골고루 펼친 새 부채꼴로 쏴야 한 줄로 겹쳐 나가 서로 가리는 일이 없다.
+// 각도 규칙은 조준 발사와 동일하게 '수직에서 몇 도'로 잰다(clampAngleFromVertical과
+// 같은 convention) - 그래야 벽만 왕복하는 이상한 수평 각도가 안 나온다.
+function releaseTrap(brick, x0, y0, spawnList){
+  const trapped = brick.trapped;
+  if (!trapped || !trapped.length) return;
+  const cx = x0 + CONFIG.CELL/2, cy = y0 + CONFIG.CELL/2;
+  const n = trapped.length;
+  const spread = CONFIG.TRAP_RELEASE_SPREAD;
+  trapped.forEach((t, idx) => {
+    const a = clamp((n === 1 ? 0 : -spread + (2*spread) * (idx/(n-1))) + (S.rng.next()-0.5)*0.15, -spread, spread);
+    spawnList.push({
+      x: cx, y: cy,
+      vx: Math.sin(a)*CONFIG.BALL_SPEED, vy: -Math.cos(a)*CONFIG.BALL_SPEED,
+      age: 0, power: t.power, radius: t.radius, growPower: t.growPower,
+    });
+  });
+  trapped.length = 0;
+}
 const queuedPower = () => S.firePowerQueue.reduce((sum, power) => sum + power, 0);
 const totalOwnedPower = () => S.ballCount + S.bonusPower;
 
@@ -2086,7 +2323,10 @@ function applyOperator(brick, selfIndex, removeSet, spawnList){
     let room = CONFIG.ACTIVE_BALL_CAP - currentTotal;
     for (const srcBall of alive) {
       if (room > 0) { spawnList.push(cloneBallJitter(srcBall)); room--; }
-      else srcBall.power = ballPower(srcBall) * 2;
+      // ballPower()는 기본 power + 성장 웃돈을 합쳐서 돌려준다. 그 합을 새 power로
+      // 접어 넣으면서 growPower를 비우지 않으면 다음 ballPower() 호출에서 성장분이
+      // 또 한 번 더해져 웃돈이 이중으로 계산된다.
+      else { srcBall.power = ballPower(srcBall) * 2; srcBall.growPower = 0; }
     }
     vibrate(PATTERN.opX2);
   } else if (brick.op === 'add') {
@@ -2125,6 +2365,27 @@ function applyItem(kind, rr, cc){
     S.scoreMult = CONFIG.GOLD_MULT;
     vibrate(PATTERN.itemGold);
     showBuffBanner('💰 점수 2배!');
+  } else if (kind === 'ice') {
+    // 판 위 모든 숫자 블록을 한 번에 깎는다. maxHp 는 건드리지 않는다 -
+    // 점수는 '원래 얼마짜리였나'로 주는 게 맞고, 공에 맞아 깎일 때도 그렇게 돈다.
+    let hit = 0;
+    for (let r=0;r<CONFIG.GRID_ROWS;r++){
+      for (let c=0;c<CONFIG.COLS;c++){
+        const t = S.grid[r][c];
+        if (!t || t.type !== 'hp') continue;
+        if (t.hp <= CONFIG.ICE_MIN_HP) continue;
+        // 체력이 작을 때도 반드시 1은 줄도록 올림. 비율만 쓰면 3짜리는 3에서 안 움직인다.
+        const cut = Math.max(1, Math.ceil(t.hp * CONFIG.ICE_CUT));
+        t.hp = Math.max(CONFIG.ICE_MIN_HP, t.hp - cut);
+        t.flash = 1;
+        hit++;
+      }
+    }
+    spawnIceStorm();
+    vibrate(PATTERN.itemIce);
+    showBuffBanner(hit
+      ? `❄️ 전체 숫자 -${Math.round(CONFIG.ICE_CUT*100)}%`
+      : '❄️ 얼릴 블록이 없어요');
   }
 }
 
@@ -2155,9 +2416,12 @@ function substep(subDt){
     // Only silence (no collision of any kind) for IDLE_GRAVITY_AFTER should
     // trigger the downward bend - otherwise a flat shot gets bent into the
     // floor mid-bounce, before it ever reaches a brick.
-    if (b.x - CONFIG.BALL_RADIUS < 0) { b.x = CONFIG.BALL_RADIUS; b.vx = Math.abs(b.vx); b.lastHit = 0; tryFrenzyClone(b, spawnList); }
-    else if (b.x + CONFIG.BALL_RADIUS > WIDTH) { b.x = WIDTH-CONFIG.BALL_RADIUS; b.vx = -Math.abs(b.vx); b.lastHit = 0; tryFrenzyClone(b, spawnList); }
-    if (b.y - CONFIG.BALL_RADIUS < 0) { b.y = CONFIG.BALL_RADIUS; b.vy = Math.abs(b.vy); b.lastHit = 0; tryFrenzyClone(b, spawnList); }
+    // 커진 공은 자기 반지름 기준으로 벽에 튕겨야 한다 - 기본 반지름을 쓰면 자란
+    // 만큼 벽 안으로 파고든 것처럼 보인다.
+    const bR = b.radius || CONFIG.BALL_RADIUS;
+    if (b.x - bR < 0) { b.x = bR; b.vx = Math.abs(b.vx); b.lastHit = 0; tryFrenzyClone(b, spawnList); }
+    else if (b.x + bR > WIDTH) { b.x = WIDTH-bR; b.vx = -Math.abs(b.vx); b.lastHit = 0; tryFrenzyClone(b, spawnList); }
+    if (b.y - bR < 0) { b.y = bR; b.vy = Math.abs(b.vy); b.lastHit = 0; tryFrenzyClone(b, spawnList); }
 
     if (b.y < DANGER_Y + CONFIG.CELL) {
       const col = Math.floor(b.x / CONFIG.CELL);
@@ -2173,7 +2437,7 @@ function substep(subDt){
           const brick = S.grid[rr][cc];
           if (!brick) continue;
           const x0=cc*CONFIG.CELL, y0=rr*CONFIG.CELL;
-          const h = brickHitInfo(b.x, b.y, b.vx, b.vy, x0, y0);
+          const h = brickHitInfo(b.x, b.y, b.vx, b.vy, x0, y0, bR);
           if (h && (!deepest || h.push > deepest.hit.push)) {
             deepest = { hit:h, brick, rr, cc, x0, y0 };
           }
@@ -2191,7 +2455,7 @@ function substep(subDt){
               b.dmgLock = true;
               brick.hp -= ballPower(b);
               brick.flash = 1;
-              const hitColor = brick.boss ? T.boss[1] : brick.curse ? T.curse[1] : T.hitSpark;
+              const hitColor = brick.boss ? T.boss[1] : brick.curse ? T.curse[1] : brick.trap ? T.trap[0] : T.hitSpark;
               spawnHitParticle(b.x, b.y, hitColor);
               // Curse brick: every hit it survives pumps its neighbours. Killing it
               // fast, or leaving it alone, are both real choices.
@@ -2207,6 +2471,7 @@ function substep(subDt){
               }
               if (brick.hp <= 0) {
                 S.grid[rr][cc] = null;
+                growBall(b);
                 S.combo++;
                 const gain = brick.maxHp * CONFIG.SCORE_PER_HP + (S.combo-1)*CONFIG.COMBO_STEP;
                 addScore(gain);
@@ -2223,10 +2488,36 @@ function substep(subDt){
                   addHitstop(0.15);
                   addShake(8);
                   showBuffBanner('👑 보스 격파! 공 +'+CONFIG.BOSS_REWARD_BALLS);
+                } else if (brick.trap && brick.trapped.length) {
+                  // 갇혀 있던 공 수만큼 연출 크기를 키운다 - 하나만 풀리면
+                  // 작은 팡, 여럿이면 보스급 팡으로.
+                  const freed = brick.trapped.length;
+                  releaseTrap(brick, x0, y0, spawnList);
+                  spawnPopup(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2-16, '공 +'+freed, '#67e8f9');
+                  addShockwave(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, T.trap[0], 130+freed*18, 6);
+                  addShockwave(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, T.trapEdge, 80+freed*10, 3);
+                  burstRing(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, T.trapEdge, 16+freed*3, 260);
+                  addFlash(T.trap[0], Math.min(0.45, 0.22+freed*0.04));
+                  addHitstop(Math.min(0.15, 0.06+freed*0.015));
+                  addShake(Math.min(8, 3+freed));
+                  vibrate(PATTERN.trapRelease);
+                  showBuffBanner(`🔓 갇혔던 공 ${freed}개 풀림!`);
                 }
                 // Ration shake to cascades, not every break (Holedown principle).
                 if (S.combo >= 4) addShake(1.2 + Math.min(3, S.combo*0.12));
                 vibrate(PATTERN.brickBreak);
+              } else if (brick.trap) {
+                // 안 죽었으면 이 공은 튕겨 나가는 대신 여기 갇힌다 - 위에서 이미
+                // 적용한 반사 속도(hit.vx/vy)는 이 공이 곧 제거되니 그냥 버려진다.
+                // 공중에서 조용히 지우면 '버그인가' 싶으니, 캡처 전용 색·진동·
+                // 작은 파열로 '갇혔다'는 걸 분명히 알린다.
+                brick.trapped.push({
+                  power: b.power, radius: b.radius || CONFIG.BALL_RADIUS, growPower: b.growPower || 0,
+                });
+                removeSet.add(i);
+                spawnBreakParticle(b.x, b.y, T.trap[0]);
+                addShockwave(b.x, b.y, T.trapEdge, 26, 2);
+                vibrate(PATTERN.trapCapture);
               }
               }
             } else if (brick.type === 'op') {
@@ -2255,7 +2546,7 @@ function substep(subDt){
 
     if (removeSet.has(i)) continue;
 
-    if (b.y + CONFIG.BALL_RADIUS >= LAND_Y) {
+    if (b.y + (b.radius || CONFIG.BALL_RADIUS) >= LAND_Y) {
       removeSet.add(i);
       S.collectedForNextTurn += ballPower(b);
       if (!S.landedThisTurn) {
@@ -2301,7 +2592,8 @@ function spawnBall(power = 1){
     vx: S.aimDir.x * CONFIG.BALL_SPEED,
     vy: S.aimDir.y * CONFIG.BALL_SPEED,
     age: 0,
-    power: Math.max(1, Math.floor(power))
+    power: Math.max(1, Math.floor(power)),
+    radius: CONFIG.BALL_RADIUS, growPower: 0,
   });
 }
 
@@ -2409,6 +2701,23 @@ function enterGameOver(){
   tag.textContent = isRecord ? '최고 기록 갱신!' : '게임 오버';
   tag.classList.toggle('record', isRecord);
 
+  // 도전장 판이면 상대 기록과의 비교가 점수보다 먼저 읽혀야 한다.
+  // 승패 기준은 라운드다(얼마나 버텼나). 같은 라운드면 점수로 가른다.
+  const chal = document.getElementById('goChal');
+  if (S.challenge) {
+    const c = S.challenge;
+    const won = S.round > c.round || (S.round === c.round && S.score > c.score);
+    chal.classList.toggle('win', won);
+    chal.classList.toggle('lose', !won);
+    const who = challengerName(c);
+    chal.innerHTML = won
+      ? `${who}의 <b>${c.round}라운드</b>를 넘었어요 (내 <b>${S.round}라운드</b>)`
+      : `${who}은 <b>${c.round}라운드</b>까지 갔어요 (내 <b>${S.round}라운드</b>)`;
+    chal.hidden = false;
+  } else {
+    chal.hidden = true;
+  }
+
   const finalEl = document.getElementById('finalScore');
   finalEl.textContent = S.score.toLocaleString();
   document.getElementById('goRound').textContent = S.round;
@@ -2428,13 +2737,74 @@ function enterGameOver(){
   submitScore(S.score, S.round);
 }
 
+// ---- 도전장 ----
+// 이 게임은 완전 결정론이라 시드 하나면 판이 재현된다. 그래서 결과를 공유할 때
+// 시드를 같이 실어 보내면 받은 사람이 '내가 돈 그 판'을 그대로 돌 수 있다.
+// 주의: 같은 시드라도 블록 체력은 각자의 화력에 맞춰 뽑힌다(이 게임의 기본 설계).
+// 그래서 같아지는 건 배치·아이템·연산자이고, 난이도는 각자 수준으로 정규화된다.
+// 실측으로 확인함: 화력 10과 400으로 같은 시드를 돌리면 배치·종류는 완전히 같고 숫자만 다르다.
+const CHAL_PENDING_KEY = 'snowball.challenge.pending';
+// 서버가 받아주는 점수 상한(functions/_shared.js MAX_SCORE)과 같은 값.
+// 여기에 없는 상수를 쓰면 clamp 가 NaN 을 만들어 점수가 조용히 사라진다(실제로 겪음).
+const CHAL_MAX_SCORE = 1000000000;
+
+function challengeLink(){
+  const base = location.origin + location.pathname;
+  const q = 's=' + (S.seed >>> 0).toString(36)
+          + '&r=' + S.round
+          + '&p=' + Math.round(S.score)
+          + '&n=' + encodeURIComponent(LB.nick || LB.id || '');
+  return base + '?' + q;
+}
+
+// 주소창 값은 남이 만들어 보낸 것이다. 길이·형식·범위를 전부 자르고 받는다.
+function readChallengeFromUrl(){
+  try {
+    if (typeof location === 'undefined' || !location.search) return null;
+    const q = new URLSearchParams(location.search);
+    const raw = q.get('s');
+    if (!raw || !/^[0-9a-z]{1,8}$/i.test(raw)) return null;
+    const seed = parseInt(raw, 36);
+    if (!Number.isFinite(seed) || seed < 0) return null;
+    return {
+      seed: seed >>> 0,
+      round: clamp(Math.floor(Number(q.get('r')) || 0), 0, 99999),
+      score: clamp(Math.floor(Number(q.get('p')) || 0), 0, CHAL_MAX_SCORE),
+      nick: String(q.get('n') || '').replace(/[\s<>"'&\\/]/g, '').slice(0, 12),
+    };
+  } catch(e){ return null; }
+}
+function setPendingChallenge(ch){
+  try { sessionStorage.setItem(CHAL_PENDING_KEY, JSON.stringify(ch)); } catch(e){}
+}
+function peekPendingChallenge(){
+  try { return JSON.parse(sessionStorage.getItem(CHAL_PENDING_KEY)); } catch(e){ return null; }
+}
+function takePendingChallenge(){
+  try {
+    const raw = sessionStorage.getItem(CHAL_PENDING_KEY);
+    if (!raw) return null;
+    sessionStorage.removeItem(CHAL_PENDING_KEY);
+    return JSON.parse(raw);
+  } catch(e){ return null; }
+}
+function challengerName(ch){
+  return (ch && ch.nick) ? ch.nick + '님' : '친구';
+}
+
 // 결과 공유: 폰 기본 공유 시트가 있으면 그걸 띄우고, 없는 환경(주로 PC 브라우저)이면
 // 클립보드 복사로 대신한다. 사용자가 공유 창을 그냥 닫은 경우(취소)는 에러로 취급하지 않는다.
 // 복사 완료 안내는 버튼 자기 자신의 글자를 잠깐 바꿔서 보여준다 - 전역 토스트(showBuffBanner)는
 // 이 모달보다 z-index 가 낮아 게임오버 창 뒤에 가려 안 보인다.
 async function doShareResult(){
-  const text = `눈덩이에서 ${S.score.toLocaleString()}점 냈어요! 라운드 ${S.round} · 최고 공 ${S.maxBalls}개\n너도 도전해볼래?`;
-  const url = location.origin + location.pathname;
+  // 링크에 시드가 실리므로 이 문구는 곧 도전장이다. 받은 도전을 이기고 보내는
+  // 경우(되받아치기)는 문구를 바꿔서 주고받는 맥락이 이어지게 한다.
+  const beat = S.challenge && S.round > S.challenge.round;
+  const head = beat
+    ? `${challengerName(S.challenge)}의 ${S.challenge.round}라운드를 넘었어요! 라운드 ${S.round} · ${S.score.toLocaleString()}점`
+    : `눈덩이에서 ${S.score.toLocaleString()}점 냈어요! 라운드 ${S.round} · 최고 공 ${S.maxBalls}개`;
+  const text = `${head}\n같은 판으로 붙어볼래? 링크를 열면 내가 돈 판 그대로 시작돼요.`;
+  const url = challengeLink();
   try {
     if (navigator.share) {
       await navigator.share({ title: '눈덩이 - 쏠수록 불어나는 블록 파괴 게임', text, url });
@@ -2519,8 +2889,12 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('pageshow', enforceSessionExpiry);
 if (typeof setInterval === 'function') setInterval(enforceSessionExpiry, 30 * 1000);
 
-// 비밀번호: 8자 이상, 영문/숫자/특수문자를 모두 포함
-const PW_RE = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$/;
+// 아이디: 네이버와 같은 규칙. 5~20자, 영문 소문자·숫자·(_)·(-)만, 첫 글자는 영문 소문자나 숫자
+const ID_RE = /^[a-z0-9][a-z0-9_-]{4,19}$/;
+const ID_RULE_MSG = '아이디는 5~20자의 영문 소문자, 숫자, 특수기호(_),(-)만 쓸 수 있어요';
+// 비밀번호: 8~16자, 영문/숫자/특수문자를 모두 포함
+const PW_RE = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,16}$/;
+const PW_RULE_MSG = '비밀번호는 8~16자, 영문·숫자·특수문자를 모두 포함해주세요';
 
 // 성별 토글: 버튼 하나를 누르면 같은 줄의 다른 버튼은 꺼진다
 function initGenderRow(rowId){
@@ -2704,6 +3078,17 @@ function showTitle(){
   document.getElementById('keepId').checked = keep;
   document.getElementById('idInput').value = keep ? (remembered.id || LB.id || '') : '';
   document.getElementById('pwInput').value = keep ? remembered.pw : '';
+
+  // 도전장을 들고 온 사람이면 로고 밑에 누구의 어떤 도전인지 붙인다
+  const pending = peekPendingChallenge();
+  const notice = document.getElementById('chalNotice');
+  notice.hidden = !pending;
+  if (pending) {
+    document.getElementById('chalNoticeTop').textContent =
+      `❄ ${challengerName(pending)}의 도전장 · ${pending.round}라운드 넘기`;
+    document.getElementById('titleTag').textContent = '같은 판으로 붙어보세요';
+  }
+
   document.getElementById('titleScreen').classList.add('show');
 }
 
@@ -2719,6 +3104,8 @@ const GUIDE = [
       null, {type:'hp', hp:24, maxHp:24, boss:true}],
     ['#111827', '▲',  '증식',      '때릴 때마다 주변 8칸의 숫자가 1씩 올라가요.', '한 번에 깨거나, 아예 건드리지 마세요',
       null, {type:'hp', hp:9, maxHp:9, curse:true}],
+    ['#7c3aed', '🔒', '도둑',      '이 블록에 맞은 공은 갇혀요. 블록을 깨면 갇혀 있던 공이 한꺼번에 풀려나요.', '5라운드부터 등장. 빨리 깰수록 이득',
+      null, {type:'hp', hp:16, maxHp:16, trap:true, trapped:[]}],
   ]],
   ['공 개수', [
     ['#f5c518', '×2', '두 배',     '날아가는 공이 그 자리에서 2배로 늘어나요.', '공이 많을 때 맞히면 이득이 커요',
@@ -2735,6 +3122,8 @@ const GUIDE = [
       null, {type:'item', kind:'frenzy'}],
     ['#f59e0b', '점수', '점수 2배', '이번 턴에 얻는 점수가 2배가 돼요.', '많이 깰 수 있는 턴에',
       null, {type:'item', kind:'gold'}],
+    ['#0284c7', '❄', '얼음',    `얼음 덩어리가 쏟아져 판 위 모든 숫자가 ${Math.round(CONFIG.ICE_CUT*100)}% 줄어요.`, '숫자가 커져서 버거울 때',
+      null, {type:'item', kind:'ice'}],
   ]],
 ];
 
@@ -2748,6 +3137,7 @@ const HOWTO = [
     ['#22c55e', '공', '공이 곧 자원', '공 4개로 시작해서 계속 불려나가요. 공이 많을수록 한 턴에 많이 부숴요.', '', 'ball'],
     ['#e11d63', 'HP', '같이 강해져요', '공이 늘면 블록 체력도 같이 올라가요. 그래서 끝없이 쉬워지지 않아요.', '', 'hp'],
     ['#f59e0b', '순서', '순서가 실력', '−30을 먼저 맞고 ×2를 맞으면 손해예요. 순서를 뒤집으면 대박이고요.', '', 'order'],
+    ['#38bdf8', '❄', '눈덩이 굴리기', '공이 벽돌을 깰 때마다 그 자리에서 커지고 세져요. 착지하면 다시 기본 크기로 녹아요.', '커진 공은 좁은 틈은 못 지나가요', null],
   ]],
 ];
 
@@ -2852,11 +3242,22 @@ function showLobby(){
   document.getElementById('stRound').textContent = LB.stats.bestRound || 0;
   // 이어할 판이 있으면 '게임 시작' 대신 '이어하기'로 - 끝이 없는 게임이라
   // 닫았다 다시 들어와도 라운드가 그대로 이어져야 한다.
-  const saved = loadSavedGame();
+  const saved = loadSavedGame('normal');
   document.getElementById('playBig').textContent = saved ? '이어하기' : '게임 시작';
   document.getElementById('playSub').textContent = saved
     ? `${saved.round}라운드 · 공 ${saved.ballCount.toLocaleString()}개부터`
     : (LB.stats.plays ? `${LB.stats.plays}번째 도전` : '첫 판을 시작해보세요');
+
+  // 도전장 판을 중간에 나갔으면 로비에서 다시 들어갈 길을 준다.
+  // 링크를 다시 찾아 열게 만들면 대부분 그냥 안 돌아온다.
+  const chalSaved = loadSavedGame('challenge');
+  const chalBtn = document.getElementById('btnChalResume');
+  chalBtn.hidden = !chalSaved;
+  if (chalSaved) {
+    const c = chalSaved.challenge;
+    document.getElementById('chalResumeSub').textContent =
+      `${challengerName(c)}의 판 · ${chalSaved.round}라운드 (목표 ${c.round}R)`;
+  }
   document.getElementById('titleScreen').classList.remove('show');
   document.getElementById('namePanel').classList.remove('show');
   document.getElementById('naverScreen').classList.remove('show');
@@ -2910,9 +3311,13 @@ function rankRow(r, i){
   return li;
 }
 
-function enterGame(){
+// 화면만 게임으로 넘긴다. 어떤 판을 올릴지는 부르는 쪽이 정한다
+// (무한 모드 이어하기냐, 받은 도전장이냐).
+function showGameScreen(){
   document.getElementById('namePanel').classList.remove('show');
   document.getElementById('titleScreen').classList.remove('show');
+  document.getElementById('naverScreen').classList.remove('show');
+  document.getElementById('naverNickPanel').classList.remove('show');
   document.getElementById('lobby').classList.remove('show');
   document.getElementById('overlay').classList.remove('show');
   document.body.classList.add('playing');      // 이때 비로소 게임판이 보인다
@@ -2926,8 +3331,27 @@ function enterGame(){
   setMascot(false);
   setAmbient('bg-play');   // 게임 본편은 밤 배경(시안 기준)
   S.paused = false;
-  const saved = loadSavedGame();
+}
+
+function enterGame(){
+  showGameScreen();
+  const saved = loadSavedGame('normal');
   if (saved) resumeGame(saved); else startFreshGame();
+}
+
+// 받은 도전장으로 들어간다. 무한 모드 저장은 손대지 않는다(슬롯이 다름).
+// 같은 도전장을 중간까지 돌다 나갔던 기록이 있으면 그걸 이어서 연다.
+function enterChallenge(ch){
+  showGameScreen();
+  const saved = loadSavedGame('challenge');
+  if (saved && saved.challenge && saved.seed === ch.seed) {
+    resumeGame(saved);
+    showBuffBanner(`❄️ ${challengerName(ch)}의 판 이어하기`);
+  } else {
+    startFreshGame(ch.seed, ch);
+    showBuffBanner(`❄️ ${challengerName(ch)}의 도전장 · ${ch.round}R 넘기`);
+  }
+  updateHud();
 }
 
 function applyAuth(data, rememberedPw){
@@ -2940,15 +3364,19 @@ function applyAuth(data, rememberedPw){
   if (data.stats) LB.stats = data.stats;
   lbSaveLocal();
   renderRank(data.scores, '');
-  showLobby();                       // 바로 게임이 아니라 로비로
   if (LB.pending > 0) submitScore(LB.pending, 0);
+  // 친구 도전장 링크로 들어온 사람은 로그인/가입이 목적이 아니라 그 판이 목적이다.
+  // 로비를 한 번 거치게 하면 무엇 때문에 가입했는지 화면에서 사라진다.
+  const pending = takePendingChallenge();
+  if (pending) { enterChallenge(pending); return; }
+  showLobby();                       // 평소에는 바로 게임이 아니라 로비로
 }
 
 // 타이틀에서 바로 로그인
 async function doLogin(){
   const errEl = document.getElementById('authErr');
   const btn = document.getElementById('btnGoLogin');
-  const id = cleanField(document.getElementById('idInput').value, 16);
+  const id = cleanField(document.getElementById('idInput').value, 20);
   const pw = document.getElementById('pwInput').value;
 
   if (!id) { errEl.textContent = '아이디를 입력해주세요'; return; }
@@ -2994,6 +3422,12 @@ function showRegister(){
   document.getElementById('regNickMsg').textContent = ''; document.getElementById('regNickMsg').className = 'checkMsg';
   resetGenderRow('genderRow');
   regIdAvailable = null; regNickAvailable = null;
+  // 가입 화면은 타이틀을 통째로 덮는다. 도전장 안내가 여기서 사라지면
+  // 정작 가입을 결정하는 순간에 이유가 안 보인다.
+  const pending = peekPendingChallenge();
+  document.getElementById('regTag').textContent = pending
+    ? `❄ ${challengerName(pending)}의 도전장 · 가입하면 바로 그 판으로`
+    : '친구들과 순위를 겨뤄보세요';
   document.getElementById('namePanel').classList.add('show');
   setTimeout(() => document.getElementById('regId').focus(), 80);
 }
@@ -3001,15 +3435,16 @@ function showRegister(){
 async function doRegister(){
   const errEl = document.getElementById('regErr');
   const btn = document.getElementById('btnAuthOk');
-  const id = cleanField(document.getElementById('regId').value, 16);
+  const id = cleanField(document.getElementById('regId').value, 20);
   const pw = document.getElementById('regPw').value;
   const pwConfirm = document.getElementById('regPwConfirm').value;
   const nick = cleanField(document.getElementById('regNick').value, 12);
   const gender = getGender('genderRow');
 
   if (!id) { errEl.textContent = '아이디를 입력해주세요'; return; }
+  if (!ID_RE.test(id)) { errEl.textContent = ID_RULE_MSG; return; }
   if (regIdAvailable === false) { errEl.textContent = '이미 있는 아이디예요'; return; }
-  if (!PW_RE.test(pw)) { errEl.textContent = '비밀번호는 8자 이상, 영문·숫자·특수문자를 모두 포함해주세요'; return; }
+  if (!PW_RE.test(pw)) { errEl.textContent = PW_RULE_MSG; return; }
   if (pw !== pwConfirm) { errEl.textContent = '비밀번호 확인이 서로 달라요'; return; }
   if (!nick) { errEl.textContent = '닉네임을 입력해주세요'; return; }
   if (regNickAvailable === false) { errEl.textContent = '이미 있는 닉네임이에요'; return; }
@@ -3047,10 +3482,12 @@ function showNaverLogin(){
 async function doNaverSubmit(){
   const btn = document.getElementById('btnNaverSubmit');
   const errEl = document.getElementById('naverAuthErr');
-  const id = cleanField(document.getElementById('naverIdMock').value, 16);
+  const id = cleanField(document.getElementById('naverIdMock').value, 20);
   const pw = document.getElementById('naverPwMock').value.slice(0, 32);
   if (!id) { errEl.textContent = '아이디를 입력해주세요'; return; }
+  if (!ID_RE.test(id)) { errEl.textContent = ID_RULE_MSG; return; }
   if (!pw) { errEl.textContent = '비밀번호를 입력해주세요'; return; }
+  if (!PW_RE.test(pw)) { errEl.textContent = PW_RULE_MSG; return; }
   errEl.textContent = '';
   btn.disabled = true;
   btn.textContent = '로그인 중...';
@@ -3521,6 +3958,36 @@ function renderBoardSurface(){
 // 아이템 아이콘은 이모지 대신 직접 그린다. 이모지는 안드로이드·iOS·PC 가 다 다르게
 // 그리고 헤드리스에서는 아예 두부 문자로 빠진다.
 // 보스 왕관. 블록 윗변에 반쯤 걸치게 그린다.
+// 잠긴 자물쇠. 크라운과 마찬가지로 이모지를 안 쓰고 직접 그린다(기기마다 그림이
+// 다르면 '이게 무슨 블록이지'가 기기별로 또 갈린다).
+function drawLock(g, cx, cy, w){
+  const h = w * 0.9;
+  const bodyW = w*0.78, bodyH = h*0.56;
+  const bodyY = cy + h*0.06;
+  g.save();
+  g.beginPath();
+  g.arc(cx, cy - h*0.06, w*0.30, Math.PI, 0, false);
+  g.lineWidth = Math.max(1.4, w*0.16);
+  g.strokeStyle = 'rgba(240,245,255,.95)';
+  g.lineCap = 'round';
+  g.stroke();
+  roundRect(g, cx-bodyW/2, bodyY, bodyW, bodyH, bodyH*0.22);
+  const gr = g.createLinearGradient(0, bodyY, 0, bodyY+bodyH);
+  gr.addColorStop(0, '#f5f0ff');
+  gr.addColorStop(1, '#c4b5fd');
+  g.fillStyle = gr;
+  g.fill();
+  g.strokeStyle = 'rgba(60,20,120,.55)';
+  g.lineWidth = Math.max(1, w*0.05);
+  g.stroke();
+  g.fillStyle = 'rgba(60,20,120,.65)';
+  g.beginPath();
+  g.arc(cx, bodyY+bodyH*0.42, w*0.07, 0, Math.PI*2);
+  g.fill();
+  g.fillRect(cx-w*0.025, bodyY+bodyH*0.42, w*0.05, bodyH*0.32);
+  g.restore();
+}
+
 function drawCrown(g, cx, cy, w){
   const h = w * 0.66;
   g.save();
@@ -3568,6 +4035,27 @@ function drawItemIcon(g, kind, cx, cy, r){
     g.lineTo(cx + r*0.66, cy - r*0.20);
     g.lineTo(cx + r*0.06, cy - r*0.20);
     g.closePath(); g.fill();
+  } else if (kind === 'ice') {
+    // 눈꽃. 판 전체에 걸리는 효과라 11px 에서도 '얼음'으로 읽혀야 해서 가지를
+    // 두 쌍만 남기고 굵게 그린다. 시안의 drawFlake 는 선이 얇아 이 크기에선 뭉갠다.
+    g.lineWidth = r*0.26;
+    for (let i=0;i<3;i++){
+      const a = i*Math.PI/3;
+      const dx = Math.cos(a)*r*1.06, dy = Math.sin(a)*r*1.06;
+      g.beginPath(); g.moveTo(cx-dx, cy-dy); g.lineTo(cx+dx, cy+dy); g.stroke();
+    }
+    g.lineWidth = r*0.20;
+    for (let i=0;i<6;i++){
+      const a = i*Math.PI/3;
+      const bx = cx + Math.cos(a)*r*0.60, by = cy + Math.sin(a)*r*0.60;
+      for (const s of [-1, 1]) {
+        const a2 = a + s*0.75;
+        g.beginPath();
+        g.moveTo(bx, by);
+        g.lineTo(bx + Math.cos(a2)*r*0.38, by + Math.sin(a2)*r*0.38);
+        g.stroke();
+      }
+    }
   } else {
     // 점수 2배. 동전(원+안쪽 링)으로 그렸더니 11px 크기에선 그냥 도넛으로 보여서
     // 무슨 아이템인지 아무도 못 알아봤다. 점수 = 별이 훨씬 즉각적이다.
@@ -3603,6 +4091,7 @@ function drawBrick(g, brick, x, y){
     const grad = g.createLinearGradient(x, y, x, y+CONFIG.CELL);
     if (brick.boss)       { grad.addColorStop(0,T.boss[0]); grad.addColorStop(1,T.boss[1]); }
     else if (brick.curse) { grad.addColorStop(0,T.curse[0]); grad.addColorStop(1,T.curse[1]); }
+    else if (brick.trap)  { grad.addColorStop(0,T.trap[0]); grad.addColorStop(1,T.trap[1]); }
     else                  { grad.addColorStop(0, tier.light); grad.addColorStop(1, tier.base); }
     g.fillStyle = grad;
     roundRect(g, x+pad, y+pad, bw, bh, 7);
@@ -3612,7 +4101,7 @@ function drawBrick(g, brick, x, y){
     roundRect(g, x+pad+2, y+pad+2, bw-4, bh*0.38, 5);
     g.fill();
 
-    if (brick.boss || brick.curse) {
+    if (brick.boss || brick.curse || brick.trap) {
       const puls = 0.5 + Math.sin(Date.now()/300 + x*0.5)*0.5;
       // 보스는 판에서 제일 먼저 눈에 띄어야 한다: 바깥에 어두운 테를 한 겹 둘러
       // 실루엣을 만들고, 그 위에 두꺼운 금테를 맥동시킨다.
@@ -3622,10 +4111,11 @@ function drawBrick(g, brick, x, y){
         roundRect(g, x+pad-1, y+pad-1, bw+2, bh+2, 8);
         g.stroke();
       }
+      const edge = brick.boss ? T.bossEdge : brick.curse ? T.curseEdge : T.trapEdge;
       g.save();
-      g.shadowColor = brick.boss ? T.bossEdge : T.curseEdge;
+      g.shadowColor = edge;
       g.shadowBlur = brick.boss ? 7 + puls*11 : 4 + puls*8;
-      g.strokeStyle = brick.boss ? T.bossEdge : T.curseEdge;
+      g.strokeStyle = edge;
       g.lineWidth = brick.boss ? 2.6 + puls*1.4 : 2 + puls*1.2;
       roundRect(g, x+pad, y+pad, bw, bh, 7);
       g.stroke();
@@ -3633,11 +4123,30 @@ function drawBrick(g, brick, x, y){
       if (brick.boss) {
         // 왕관은 윗변에 걸터앉힌다. 이모지는 기기마다 모양이 달라 직접 그린다.
         drawCrown(g, x+CONFIG.CELL/2, y+pad, CONFIG.CELL*0.42);
-      } else {
+      } else if (brick.curse) {
         g.font = (CONFIG.CELL*0.28)+'px sans-serif';
         g.textAlign = 'center'; g.textBaseline = 'middle';
         g.fillText('▲', x+CONFIG.CELL/2, y+pad+CONFIG.CELL*0.18);
+      } else {
+        drawLock(g, x+CONFIG.CELL/2, y+pad, CONFIG.CELL*0.34);
       }
+    }
+
+    // 갇힌 공 수를 오른쪽 아래에 작은 배지로 - 공중에서 사라진 공이 어디 있는지
+    // 판만 보고도 알 수 있어야 한다(숫자만으론 '이 블록이 몇 개 먹었는지' 안 보임).
+    if (brick.trap && brick.trapped && brick.trapped.length) {
+      const n = brick.trapped.length;
+      const bx = x+CONFIG.CELL-9, by = y+CONFIG.CELL-9;
+      g.beginPath(); g.arc(bx, by, 8, 0, Math.PI*2);
+      g.fillStyle = T.trapEdge;
+      g.fill();
+      g.strokeStyle = 'rgba(59,31,138,.9)';
+      g.lineWidth = 1.4;
+      g.stroke();
+      g.fillStyle = '#3b1f8a';
+      g.font = 'bold 10px sans-serif';
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(String(Math.min(n,9)) + (n>9?'+':''), bx, by+0.5);
     }
 
     if (brick.flash > 0) {
@@ -3751,36 +4260,46 @@ function render(){
   ctx.globalAlpha = 1;
 
   for (const b of S.activeBalls) {
+    const bR = b.radius || CONFIG.BALL_RADIUS;
     if (b.trail) {
       for (let t=0;t<b.trail.length;t++){
         const tp = b.trail[t];
         ctx.globalAlpha = 0.12 + (t/b.trail.length)*0.22;
         ctx.fillStyle = T.trail;
-        ctx.beginPath(); ctx.arc(tp.x, tp.y, CONFIG.BALL_RADIUS*0.75, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(tp.x, tp.y, bR*0.75, 0, Math.PI*2); ctx.fill();
       }
       ctx.globalAlpha = 1;
     }
   }
   for (const b of S.activeBalls) {
-    iceBall(b.x, b.y, CONFIG.BALL_RADIUS, false);
+    const bR = b.radius || CONFIG.BALL_RADIUS;
+    iceBall(b.x, b.y, bR, false);
     if (ballPower(b) > 1) {
       // 강화 공은 외곽선을 두르지 않는다. 공이 겹칠 때 노란 선처럼 이어져 보이므로
       // 얼음구슬 안쪽의 작은 금빛 코어만 밝혀 구분한다.
+      // 코어 크기·번짐은 반지름 비례로 키운다 - 공이 2~3배 커졌는데 코어가
+      // 그대로면 눈덩이 속에 파묻혀 안 보인다.
       const power = ballPower(b);
+      const scale = bR / CONFIG.BALL_RADIUS;
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
       ctx.shadowColor = 'rgba(120,210,255,.9)';
-      ctx.shadowBlur = 5;
-      const core = ctx.createRadialGradient(b.x-1, b.y-1, .2, b.x, b.y, 3.2);
+      ctx.shadowBlur = 5*scale;
+      const coreR = 3.2*scale;
+      const core = ctx.createRadialGradient(b.x-scale, b.y-scale, .2*scale, b.x, b.y, coreR);
       core.addColorStop(0, '#ffffff');
       core.addColorStop(.38, '#fff4b0');
       core.addColorStop(1, 'rgba(84,177,255,0)');
       ctx.fillStyle = core;
-      ctx.beginPath(); ctx.arc(b.x, b.y, Math.min(3.6, 2.2+Math.log2(power)*.35), 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(b.x, b.y, Math.min(3.6*scale, (2.2+Math.log2(power)*.35)*scale), 0, Math.PI*2); ctx.fill();
       ctx.restore();
     }
   }
   for (const r of S.returning)   iceBall(r.x, r.y, CONFIG.BALL_RADIUS*0.8, true);
+
+  // 얼음 조각은 공보다 앞, 글자보다 뒤. 앞에 다 깔면 점수 팝업을 가린다.
+  for (const s of S.iceShards) drawIceShard(ctx, s);
+  ctx.globalAlpha = 1;
 
   for (const p of S.popups) {
     const t = p.life/p.maxLife;
@@ -4030,7 +4549,11 @@ document.getElementById('btnRetry').addEventListener('click', () => {
   document.getElementById('overlay').classList.remove('show');
   document.getElementById('mascot').classList.remove('front');
   setMascot(false);
-  startFreshGame();
+  // 도전장 판에서 '다시 도전'은 같은 판을 다시 도는 것이다.
+  // 여기서 랜덤 판을 주면 상대와 비교하려고 들어온 사람의 목적이 사라진다.
+  if (S.challenge) startFreshGame(S.challenge.seed, S.challenge);
+  else startFreshGame();
+  updateHud();
 });
 document.getElementById('btnShare').addEventListener('click', doShareResult);
 document.getElementById('btnToLobby').addEventListener('click', () => {
@@ -4056,9 +4579,13 @@ function setPaused(on){
   }
 }
 document.getElementById('btnPause').addEventListener('click', () => setPaused(true));
-document.getElementById('btnDebugDie').addEventListener('click', () => enterGameOver());   // 임시 테스트 버튼
 document.getElementById('btnResume').addEventListener('click', () => setPaused(false));
-document.getElementById('btnRestart').addEventListener('click', () => { setPaused(false); startFreshGame(); });
+document.getElementById('btnRestart').addEventListener('click', () => {
+  setPaused(false);
+  if (S.challenge) startFreshGame(S.challenge.seed, S.challenge);   // 도전장은 같은 판으로 다시
+  else startFreshGame();
+  updateHud();
+});
 document.getElementById('btnPauseHow').addEventListener('click', () =>
   renderGuide(HOWTO, '게임 방법', 'img/t-howto.webp'));
 document.getElementById('btnPauseGuide').addEventListener('click', () =>
@@ -4093,6 +4620,10 @@ function frame(){
 }
 
 document.getElementById('btnPlay').addEventListener('click', enterGame);
+document.getElementById('btnChalResume').addEventListener('click', () => {
+  const saved = loadSavedGame('challenge');
+  if (saved && saved.challenge) enterChallenge(saved.challenge);
+});
 document.getElementById('btnGuide').addEventListener('click', () => renderGuide(GUIDE, '블록 도감', 'img/t-guide.webp',
     '게임에 등장하는 블록과 아이템을 확인해 보세요!'));
 document.getElementById('btnHow').addEventListener('click', () => renderGuide(HOWTO, '게임 방법', 'img/t-howto.webp'));
@@ -4120,7 +4651,7 @@ document.getElementById('btnAuthBack').addEventListener('click', () => {
   document.getElementById('namePanel').classList.remove('show');   // 아래 타이틀이 그대로 드러난다
 });
 document.getElementById('regId').addEventListener('blur', async () => {
-  const v = cleanField(document.getElementById('regId').value, 16);
+  const v = cleanField(document.getElementById('regId').value, 20);
   regIdAvailable = await checkAvailability('id', v, document.getElementById('regIdMsg'));
 });
 document.getElementById('regNick').addEventListener('blur', async () => {
@@ -4165,7 +4696,23 @@ requestAnimationFrame(frame);
 // 이미 로그인돼 있으면 곧장 게임, 아니면 타이틀부터.
 lbLoad();
 setAmbient('bg-lobby');           // 첫 화면이 뜨기 전에 미리 깔아둔다
-if (lbSignedIn()) { refreshRank(); showLobby(); } else showTitle();
+
+// 친구가 보낸 도전장 링크로 들어왔나. 주소창의 시드는 바로 챙겨서 치우고
+// (새로고침 때마다 판이 다시 시작되면 안 되고, 주소도 지저분해진다)
+// 로그인 여부에 따라 지금 들어가거나 로그인 뒤에 들어간다.
+const urlChallenge = readChallengeFromUrl();
+if (urlChallenge) {
+  setPendingChallenge(urlChallenge);
+  try { history.replaceState(null, '', location.origin + location.pathname); } catch(e){}
+}
+
+if (lbSignedIn()) {
+  refreshRank();
+  const pending = takePendingChallenge();
+  if (pending) enterChallenge(pending); else showLobby();
+} else {
+  showTitle();
+}
 </script>
 </body>
 </html>

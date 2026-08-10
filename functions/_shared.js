@@ -9,7 +9,7 @@
 // 로컬 server.js 와 규칙(길이 제한·비밀번호 정책·응답 모양)을 똑같이 맞춰야
 // 같은 index.html 이 양쪽에서 다 돈다.
 
-export const MAX_ID = 16;
+export const MAX_ID = 20;
 export const MAX_NICK = 12;
 export const MAX_PW = 32;
 // 점수는 라운드가 갈수록 커진다(공격력 천장이 라운드의 제곱이라 점수는 그 이상으로 자란다).
@@ -18,7 +18,9 @@ export const MAX_PW = 32;
 export const MAX_SCORE = 1_000_000_000;
 export const MAX_ENTRIES = 500;
 export const USER_SESSION_MS = 60 * 60 * 1000;
-export const PW_RE = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$/;
+// 아이디: 네이버와 같은 규칙. 5~20자, 영문 소문자·숫자·(_)·(-)만, 첫 글자는 영문 소문자나 숫자
+export const ID_RE = /^[a-z0-9][a-z0-9_-]{4,19}$/;
+export const PW_RE = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,16}$/;
 export const GENDERS = ['m', 'f'];
 
 const ADMIN_TTL = 60 * 60 * 12;
