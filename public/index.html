@@ -1604,14 +1604,19 @@ const CONFIG = {
   SUB_CHANCE_MAX: 0.34,
   ITEM_CHANCE: 0.045,
   BOMB_RADIUS: 1,
-  // 얼음: 판 위 모든 숫자 블록의 체력을 비율로 깎는다. 고정값(-30 같은)으로 두면
-  // 체력이 라운드 제곱으로 자라는 게임이라 10라운드만 지나도 아무 의미가 없다.
-  // 비율이면 몇 라운드든 똑같이 '한 숨 돌리는' 카드가 된다.
-  ICE_CUT: 0.30,
+  // 얼음: 판 위 제일 센 블록 체력의 이 비율만큼을 고정 데미지로 뽑아 모든 숫자
+  // 블록에 똑같이 먹인다(그래서 진짜 하드코딩 -30 같은 것과 다르다 - 기준이
+  // maxHp라 라운드가 올라가도 계속 의미 있게 아프다). 처음 30%로 넣었더니
+  // (실측: 25라운드 기준 블록 96개 중 71개가 한 방에 1까지 떨어짐) 너무 세서
+  // 20%로 낮췄다 - 등장 확률도 같이 낮춤(generateItemBrick 참고).
+  ICE_CUT: 0.20,
   // 깎아서 0이 되게 하지는 않는다. 얼음은 부수는 카드가 아니라 약하게 만드는 카드다.
   // (부수는 건 폭탄 몫이고, 전판 삭제가 되면 아이템 하나로 라운드가 끝나버린다)
   ICE_MIN_HP: 1,
   ICE_SHARDS: 34,
+  // 데미지를 한 프레임에 다 넣으면 순식간에 지나가 버려 "이팩트가 없다"는 소리를
+  // 들었다. 판을 위→아래로 훑으면서 이 시간(초) 동안 나눠 맞힌다.
+  ICE_EFFECT_DURATION: 2.0,
   BOSS_CHANCE: 0.055,
   BOSS_FROM_ROUND: 4,
   BOSS_HP_MULT: 3.2,
@@ -1630,10 +1635,21 @@ const CONFIG = {
   // 실제로 쌓인다. 보스(3.2배)보다는 약하게, 일반 블록보다는 확실히 세게.
   // 1.8배로 처음 넣었더니 (측정: 같은 시드 12개, 순진한 AI로 A/B) 평균 생존
   // 라운드가 -30%까지 떨어졌다 - 이미 나가 있는 증식 블록(같은 방식으로 재보면
-  // 거의 영향 없음, +3%)보다 훨씬 가혹했다. 1.4배로 낮추고 나서야 비슷한 수준으로
-  // 왔다. AI가 '갇힌 공 배지'를 보고 우선 깨는 인간처럼 못 굴어서 최악 시나리오에
-  // 가깝다는 걸 감안해도, 등장 확률(TRAP_CHANCE)도 같이 낮췄다.
-  TRAP_HP_MULT: 1.4,
+  // 거의 영향 없음, +3%)보다 훨씬 가혹했다. 1.4배로 낮췄었는데, 그 뒤 TRAP_MAX_HOLD
+  // 안전판(공을 몇 개 넘게 가두면 체력과 무관하게 강제로 터짐)이 생기면서 체력이
+  // 최악의 경우를 더는 좌우하지 않게 됐다. 재측정(2026-08-11, 시드 12개)해보니
+  // 2.0배(기본 블록의 2배)로 올려도 중앙값 그대로·평균 +0.9%로 사실상 영향 없음 -
+  // 그래서 사용자 요청대로 2.0배로 올림.
+  TRAP_HP_MULT: 2.0,
+  // 실제 플레이에서 발견된 문제(2026-08-11): 공 하나가 스치듯 맞을 때마다 그
+  // 공만큼만 체력이 깎이고 사라지길 반복하면, 죽이지도 못하고 공만 계속
+  // 빨아들이는 블록이 될 수 있다. 라운드 기반 난이도는 그동안 계속 올라가는데
+  // 공은 줄어드니 회복 불가능한 악순환(데스 스파이럴)이 생긴다 - 실측 사례:
+  // 11라운드에 공 9개 넘게 갇히고 정작 남은 공은 1개.
+  // 그래서 우리에 담을 수 있는 공 수에 상한을 둔다. 다 차면 체력과 무관하게
+  // 우리가 터져서 강제로 풀려난다 - '죽인 것'과는 구분해서 점수는 안 준다
+  // (일부러 채워서 씹어먹는 전략을 만들면 안 되니까).
+  TRAP_MAX_HOLD: 4,
   // 풀려나는 공들은 위쪽 반원으로 부채꼴로 흩어진다 - 조준 각도 상한과 같은 값을
   // 써서 '쏘아 올린 공'과 같은 규칙 안에서 움직이게 한다(수평으로 튀어나가 벽만
   // 왕복하는 이상한 각도가 안 나오게).
@@ -1769,11 +1785,14 @@ function generateOpBrick(rng, round){
     return { type:'op', op:'add', val };
   }
 }
+// 얼음이 판 최고값 기준 고정 데미지로 세진 만큼(ICE_CUT 주석 참고), 등장 자체를
+// 줄인다 - 원래 22%였던 몫을 12%로 낮추고, 빠진 10%p는 나머지 셋에 원래
+// 비중대로 나눠 돌려줬다(폭탄 30→34, 분열 25→28, 점수2배 23→26).
 function generateItemBrick(rng){
   const r = rng.next();
-  if (r < 0.30) return { type:'item', kind:'bomb' };
-  if (r < 0.55) return { type:'item', kind:'frenzy' };
-  if (r < 0.78) return { type:'item', kind:'gold' };
+  if (r < 0.34) return { type:'item', kind:'bomb' };
+  if (r < 0.62) return { type:'item', kind:'frenzy' };
+  if (r < 0.88) return { type:'item', kind:'gold' };
   return { type:'item', kind:'ice' };
 }
 function generateRow(rng, round, power){
@@ -1790,11 +1809,15 @@ function generateRow(rng, round, power){
       if (roll < CONFIG.ITEM_CHANCE) row[c] = generateItemBrick(rng);
       else if (roll < CONFIG.ITEM_CHANCE + CONFIG.OP_CHANCE) row[c] = generateOpBrick(rng, round);
       else {
+        // 누적 문턱값을 그때그때 라운드에서 실제로 열려 있는 변형만 더해서 쌓는다.
+        // 예전엔 trap 문턱이 'BOSS+CURSE+TRAP'로 고정돼 있어서, curse가 아직 안 열린
+        // 라운드(TRAP_FROM_ROUND~CURSE_FROM_ROUND 사이, 지금 값으론 5라운드 딱 한
+        // 칸)엔 curse 몫까지 trap이 대신 삼켜버려 trap 확률이 의도보다 부풀었다.
         const v = rng.next();
-        let variant = null;
-        if (round >= CONFIG.BOSS_FROM_ROUND && v < CONFIG.BOSS_CHANCE) variant = 'boss';
-        else if (round >= CONFIG.CURSE_FROM_ROUND && v < CONFIG.BOSS_CHANCE + CONFIG.CURSE_CHANCE) variant = 'curse';
-        else if (round >= CONFIG.TRAP_FROM_ROUND && v < CONFIG.BOSS_CHANCE + CONFIG.CURSE_CHANCE + CONFIG.TRAP_CHANCE) variant = 'trap';
+        let variant = null, cum = 0;
+        if (round >= CONFIG.BOSS_FROM_ROUND)  { cum += CONFIG.BOSS_CHANCE;  if (v < cum) variant = 'boss'; }
+        if (!variant && round >= CONFIG.CURSE_FROM_ROUND) { cum += CONFIG.CURSE_CHANCE; if (v < cum) variant = 'curse'; }
+        if (!variant && round >= CONFIG.TRAP_FROM_ROUND)  { cum += CONFIG.TRAP_CHANCE;  if (v < cum) variant = 'trap'; }
         row[c] = generateHpBrick(rng, round, power, variant);
       }
       const b = row[c];
@@ -1811,13 +1834,15 @@ function generateRow(rng, round, power){
 function opColor(op){
   return op==='x2' ? '#ffd54a' : op==='add' ? '#4ade80' : '#f87171';
 }
+// 2026-08-11 참고 시안(다운로드 폴더 블록.png)에 맞춰 더 진하고 광택 있는 톤으로
+// 다시 뽑았다 - 실제 시안 픽셀을 크롭해서 샘플링한 값 기준.
 function itemVisual(kind){
-  if (kind==='bomb')   return { color:'#ff6b35', light:'#ffb08a', soft:'#fff1e8', icon:'💥' };
-  if (kind==='frenzy') return { color:'#8b5cf6', light:'#c4aaff', soft:'#f3edff', icon:'⚡' };
+  if (kind==='bomb')   return { color:'#e2470a', light:'#ffc98a', soft:'#fff1e8', icon:'💥' };
+  if (kind==='frenzy') return { color:'#6f3ad1', light:'#c9a0fb', soft:'#f3edff', icon:'⚡' };
   // 얼음은 파랑 계열이라 가장 약한 체력 색(하늘 #38bdf8)과 붙어 보이기 쉽다.
   // 한 단계 더 진한 파랑에 밝은 하늘빛 윗면을 얹어 체력 블록과 갈라 놓는다.
-  if (kind==='ice')    return { color:'#0284c7', light:'#a5e8ff', soft:'#e8f8ff', icon:'❄' };
-  return                      { color:'#f59e0b', light:'#ffd77a', soft:'#fff7e6', icon:'💰' };
+  if (kind==='ice')    return { color:'#0284c7', light:'#bdf0ff', soft:'#e8f8ff', icon:'❄' };
+  return                      { color:'#d17f0a', light:'#ffe9ad', soft:'#fff7e6', icon:'💰' };
 }
 // 캔버스에 그리는 모든 색은 여기 한 곳에서. 흩어져 있으면 테마를 못 바꾼다.
 const T = {
@@ -1840,14 +1865,36 @@ const T = {
   stockText:  '#12244f',
   hint:       'rgba(70,110,170,0.62)',
   danger:     '250,110,110',
-  boss:       ['#ff8ec4','#b3145a'],   // 고정색 - 체력 단계 색을 쓰지 않는다
-  curse:      ['#4b5563','#05070b'],
-  trap:       ['#a78bfa','#3b1f8a'],   // 보라(가둠) - 얼음 우리 느낌으로 시안 청록 테두리와 짝
+  // 2026-08-11 참고 시안(블록.png) 픽셀 샘플링 기준으로 더 진하고 광택 있게 다시 뽑음
+  boss:       ['#ff8fb0','#c81f52'],   // 고정색 - 체력 단계 색을 쓰지 않는다
+  curse:      ['#453d5c','#0d0a1a'],
+  trap:       ['#b48ee8','#5b1ea8'],   // 보라(가둠) - 얼음 우리 느낌으로 시안 청록 테두리와 짝
+  trapNum:    ['#7a2fd6','#4a1690'],   // 도둑 전용: 숫자 밴드는 자물쇠 밴드보다 한 단계 더 진하다
   bossEdge:   '#f6b93b',
-  curseEdge:  '#cbd5e1',
+  curseEdge:  '#c4b5e0',
   trapEdge:   '#67e8f9',
   itemBg:     '#ffffff',
 };
+
+// 2026-08-11: 참고 시안(다운로드 폴더 블록.png)의 실제 아이콘을 오려서 쓴다.
+// 손으로 다시 그리면 티가 난다 - "시안에 그려진 건 오려 쓰는 게 정답"이 이 프로젝트의
+// 기존 원칙(로고·게임오버 액자 때도 같은 이유로 오려 썼다). 보스·증식·도둑은 시안에
+// 박혀 있던 예시 숫자(24/9/16)를 지우고 그 자리에 실제 체력을 새로 그린다 - 그래서
+// 배경+아이콘만 이미지고, 숫자는 여전히 canvas 텍스트(라운드마다 값이 바뀌니까).
+const BADGE_IMG = {};
+['boss','curse','trap'].forEach(k => {
+  const img = new Image();
+  img.src = `img/badge-${k}-block.webp`;
+  BADGE_IMG[k] = img;
+});
+['bomb','frenzy','gold','ice'].forEach(k => {
+  const img = new Image();
+  img.src = `img/badge-item-${k}.webp`;
+  BADGE_IMG['item_'+k] = img;
+});
+// 로딩 전(첫 프레임 근처)이거나 어떤 이유로든 못 불러왔으면 손으로 그린 예전 코드로
+// 대체한다 - 게임이 이미지 하나 때문에 깨지면 안 된다.
+function badgeReady(img){ return !!img && img.complete && img.naturalWidth > 0; }
 
 // 색은 '판에 지금 깔린 것들 중에 센 편인가'로 정한다.
 // 절대 체력으로 끊으면 체력이 계속 커지는 게임 특성상 12라운드부터 전부 마지막
@@ -1899,8 +1946,9 @@ const S = {
   returning: [],
   waves: [], flash: null, hitstop: 0,
   iceShards: [],
-  turnTime: 0,
+  iceQueue: [], iceQueueTime: 0,   // 얼음 효과가 순차 적용되는 동안의 대기열·경과시간
   turnWallTime: 0,
+  turnHadHit: false,
   paused: false,
   combo: 0,
   bossKills: 0,
@@ -1920,6 +1968,7 @@ function resetTransientState(){
   S.shake = 0; S.shiftAnim = 0;
   S.waves = []; S.flash = null; S.hitstop = 0;
   S.iceShards = [];
+  S.iceQueue = []; S.iceQueueTime = 0;
   S.launcherX = WIDTH/2;
   S.collectedForNextTurn = 0; S.pendingPenalty = 0; S.landedThisTurn = false;
   S.fireQueueRemaining = 0; S.firePowerQueue = [];
@@ -2143,11 +2192,34 @@ function spawnIceStorm(){
     });
   }
 }
+// 대기열이 블록 하나를 터뜨릴 때마다 그 자리에서 작게 튀는 파편 - 화면 위에서
+// 쏟아지는 큰 눈보라(spawnIceStorm)와 달리 블록 자신에서 터져 나오는 것처럼
+// 짧게 튄다. 이게 있어야 2초 내내 뭔가 계속 벌어지는 느낌이 난다.
+function spawnIceShardBurst(cx, cy, count){
+  for (let i=0;i<count;i++){
+    const a = Math.random()*Math.PI*2;
+    const sp = 40 + Math.random()*90;
+    const baseAlpha = 0.8 + Math.random()*0.2;
+    S.iceShards.push({
+      x: cx, y: cy, vy: Math.sin(a)*sp - 30,
+      vx: Math.cos(a)*sp,
+      rot: Math.random()*Math.PI*2, spin: (Math.random()-0.5)*6,
+      size: 3 + Math.random()*4, alpha: baseAlpha, baseAlpha,
+      life: 0.4, maxLife: 0.4,
+    });
+  }
+}
 function updateIceShards(dt){
   for (let i=S.iceShards.length-1;i>=0;i--){
     const s = S.iceShards[i];
+    if (s.vx) s.x += s.vx*dt;
     s.y += s.vy*dt;
     s.rot += s.spin*dt;
+    if (s.maxLife !== undefined) {
+      s.life -= dt;
+      if (s.life <= 0) { S.iceShards.splice(i,1); continue; }
+      s.alpha = s.baseAlpha * Math.max(0, s.life/s.maxLife);
+    }
     if (s.y > HEIGHT + 20) S.iceShards.splice(i,1);
   }
 }
@@ -2210,6 +2282,7 @@ function updateParticles(dt){
     if (S.flash.life <= 0) S.flash = null;
   }
   updateIceShards(dt);
+  updateIceQueue(dt);
   S.shake *= 0.86;
   if (S.shake < 0.2) S.shake = 0;
 }
@@ -2346,7 +2419,7 @@ function applyOperator(brick, selfIndex, removeSet, spawnList){
   }
 }
 
-function applyItem(kind, rr, cc){
+function applyItem(kind, rr, cc, spawnList){
   if (kind === 'bomb') {
     for (let dr=-CONFIG.BOMB_RADIUS; dr<=CONFIG.BOMB_RADIUS; dr++){
       for (let dc=-CONFIG.BOMB_RADIUS; dc<=CONFIG.BOMB_RADIUS; dc++){
@@ -2357,6 +2430,13 @@ function applyItem(kind, rr, cc){
           S.grid[r2][c2] = null;
           addScore(t.maxHp * CONFIG.SCORE_PER_HP);
           spawnBreakParticle(c2*CONFIG.CELL+CONFIG.CELL/2, r2*CONFIG.CELL+CONFIG.CELL/2, '#ff6b35');
+          // 도둑 블록이 폭탄 반경에 걸려 체력과 무관하게 즉사할 수 있다 - 이때
+          // 갇혀 있던 공을 그냥 지워버리면 조용히 증발한다(사용자 리포트: 도둑
+          // 블록이 한 번에 깨지는 게 버그 같다 - 실은 폭탄이 죽인 거였다).
+          // 다른 실제 격파 경로(releaseTrap)와 똑같이 위로 날려 보낸다.
+          if (t.trap && t.trapped.length && spawnList) {
+            releaseTrap(t, c2*CONFIG.CELL, r2*CONFIG.CELL, spawnList);
+          }
         }
       }
     }
@@ -2371,27 +2451,79 @@ function applyItem(kind, rr, cc){
     vibrate(PATTERN.itemGold);
     showBuffBanner('💰 점수 2배!');
   } else if (kind === 'ice') {
-    // 판 위 모든 숫자 블록을 한 번에 깎는다. maxHp 는 건드리지 않는다 -
-    // 점수는 '원래 얼마짜리였나'로 주는 게 맞고, 공에 맞아 깎일 때도 그렇게 돈다.
-    let hit = 0;
+    // 2026-08-11 재설계: 예전엔 블록마다 '자기 체력의 30%'를 비례로 깎아서, 약한
+    // 블록은 원래 약하니 깎여도 티가 안 났다(사용자 피드백: "이팩트가 없는 것
+    // 같다"). 이제는 판 위에서 제일 센 블록 하나를 기준으로 고정 데미지를 뽑아
+    // 모두에게 똑같이 먹인다 - 약한 블록일수록 상대적으로 훨씬 크게 다치고
+    // (심하면 1까지 떨어짐), 제일 센 블록 자신은 정확히 30%만 깎인다.
+    // maxHp는 안 건드린다 - 점수는 '원래 얼마짜리였나'로 주는 게 맞고, 공에
+    // 맞아 깎일 때도 그렇게 돈다.
+    // + 데미지를 한 프레임에 다 넣으면 순식간에 지나가 "이팩트가 없다"는 소리를
+    // 들었다. 실제 적용은 여기서 안 하고 대기열에 넣기만 한다 - updateIceQueue()가
+    // 매 프레임 ICE_EFFECT_DURATION에 걸쳐 위→아래로 순서대로 터뜨린다.
+    let maxHp = 0;
+    const targets = [];
     for (let r=0;r<CONFIG.GRID_ROWS;r++){
       for (let c=0;c<CONFIG.COLS;c++){
         const t = S.grid[r][c];
         if (!t || t.type !== 'hp') continue;
-        if (t.hp <= CONFIG.ICE_MIN_HP) continue;
-        // 체력이 작을 때도 반드시 1은 줄도록 올림. 비율만 쓰면 3짜리는 3에서 안 움직인다.
-        const cut = Math.max(1, Math.ceil(t.hp * CONFIG.ICE_CUT));
-        t.hp = Math.max(CONFIG.ICE_MIN_HP, t.hp - cut);
-        t.flash = 1;
-        hit++;
+        maxHp = Math.max(maxHp, t.hp);
+        if (t.hp > CONFIG.ICE_MIN_HP) targets.push({r, c});
       }
     }
+    if (targets.length) {
+      const dmg = Math.max(1, Math.ceil(maxHp * CONFIG.ICE_CUT));
+      const n = targets.length;
+      // 위쪽 줄부터 순서대로, 살짝 지터를 줘서 기계적으로 안 보이게 한다.
+      S.iceQueue.push(...targets.map((pos, i) => ({
+        r: pos.r, c: pos.c, dmg,
+        t: (n>1 ? i/(n-1) : 0) * CONFIG.ICE_EFFECT_DURATION + (S.rng.next()-0.5)*0.12,
+      })));
+      S.iceQueueTime = 0;
+    }
     spawnIceStorm();
+    // 판 전체에 걸리는 효과라 폭탄(3×3 국소)보다 화면 흔들림·정지·플래시를
+    // 한 단계 더 세게 준다 - 지금까지는 폭탄과 같은 크기였어서 상대적으로 약해 보였다.
+    addShockwave(WIDTH/2, GRID_H*0.4, '#bae6fd', 260, 8);
+    addFlash('#e0f7ff', 0.5);
+    addHitstop(0.16);
+    addShake(9);
     vibrate(PATTERN.itemIce);
-    showBuffBanner(hit
-      ? `❄ 전체 숫자 -${Math.round(CONFIG.ICE_CUT*100)}%`
+    showBuffBanner(targets.length
+      ? `❄ 전체 블록 -${shortNum(Math.max(1, Math.ceil(maxHp * CONFIG.ICE_CUT)))}`
       : '❄ 얼릴 블록이 없어요');
   }
+}
+
+// 대기열에 쌓인 얼음 데미지를 시간 되는 대로 하나씩 터뜨린다 - spawnIceStorm이
+// 뿌린 눈보라가 실제로 쏟아지는 동안 블록들이 순서대로 맞는 것처럼 보이게 한다.
+function updateIceQueue(dt){
+  if (!S.iceQueue.length) return;
+  S.iceQueueTime += dt;
+  for (let i=S.iceQueue.length-1; i>=0; i--){
+    const q = S.iceQueue[i];
+    if (q.t > S.iceQueueTime) continue;
+    const t = S.grid[q.r] && S.grid[q.r][q.c];
+    // 그 사이에 공에 맞아 이미 깨졌거나 없어졌을 수 있다 - 있을 때만 적용한다.
+    if (t && t.type === 'hp' && t.hp > CONFIG.ICE_MIN_HP) {
+      t.hp = Math.max(CONFIG.ICE_MIN_HP, t.hp - q.dmg);
+      t.flash = 1;
+      const cx = q.c*CONFIG.CELL+CONFIG.CELL/2, cy = q.r*CONFIG.CELL+CONFIG.CELL/2;
+      spawnHitParticle(cx, cy, '#bae6fd');
+      spawnHitParticle(cx+3, cy-2, '#7dd3fc');
+      spawnPopup(cx, cy-14, '-'+shortNum(q.dmg), '#0ea5e9');
+      spawnIceShardBurst(cx, cy, 4);
+    }
+    S.iceQueue.splice(i, 1);
+  }
+}
+// 턴이 끝나야 하는데(수동 스킵·시간 초과 등) 아직 대기 중인 얼음 데미지가 있으면
+// 남은 걸 한꺼번에 즉시 적용한다 - 안 그러면 줄이 밀리면서 r,c가 어긋나 엉뚱한
+// 블록이 맞거나, 데미지가 조용히 증발한다.
+function flushIceQueue(){
+  if (!S.iceQueue.length) return;
+  S.iceQueueTime = Infinity;
+  updateIceQueue(0);
 }
 
 function tryFrenzyClone(b, spawnList){
@@ -2454,6 +2586,7 @@ function substep(subDt){
             b.x += hit.nx*hit.push;
             b.y += hit.ny*hit.push;
             b.lastHit = 0;
+            S.turnHadHit = true;   // 자동 배속 유예기간 판단용 - autoSpeedFor 참고
             if (brick.type === 'hp') {
               b.vx = hit.vx; b.vy = hit.vy;
               if (b.dmgLock) { /* 이번 프레임 몫은 이미 썼다: 튕기기만 한다 */ } else {
@@ -2522,9 +2655,28 @@ function substep(subDt){
                   power: b.power, radius: b.radius || CONFIG.BALL_RADIUS, growPower: b.growPower || 0,
                 });
                 removeSet.add(i);
-                spawnBreakParticle(b.x, b.y, T.trap[0]);
-                addShockwave(b.x, b.y, T.trapEdge, 26, 2);
-                vibrate(PATTERN.trapCapture);
+                if (brick.trapped.length >= CONFIG.TRAP_MAX_HOLD) {
+                  // 우리가 다 찼다 - 체력이 남았어도 강제로 터진다. 스치듯 한 발씩만
+                  // 맞고 안 죽는 블록이 공을 몇 턴이고 계속 빨아들이는 걸 막는 안전판
+                  // (TRAP_MAX_HOLD 주석 참고). 격파가 아니라 넘쳐서 터진 거라 점수는
+                  // 안 준다 - 안 그러면 일부러 살살 채워서 우려먹는 전략이 생긴다.
+                  S.grid[rr][cc] = null;
+                  const freed = brick.trapped.length;
+                  releaseTrap(brick, x0, y0, spawnList);
+                  spawnPopup(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2-16, '공 +'+freed, '#67e8f9');
+                  addShockwave(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, T.trap[0], 130+freed*18, 6);
+                  addShockwave(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, T.trapEdge, 80+freed*10, 3);
+                  burstRing(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, T.trapEdge, 16+freed*3, 260);
+                  addFlash(T.trap[0], Math.min(0.45, 0.22+freed*0.04));
+                  addHitstop(Math.min(0.15, 0.06+freed*0.015));
+                  addShake(Math.min(8, 3+freed));
+                  vibrate(PATTERN.trapRelease);
+                  showBuffBanner(`❄ 우리가 다 차서 터졌어요! 공 ${freed}개 풀림`);
+                } else {
+                  spawnBreakParticle(b.x, b.y, T.trap[0]);
+                  addShockwave(b.x, b.y, T.trapEdge, 26, 2);
+                  vibrate(PATTERN.trapCapture);
+                }
               }
               }
             } else if (brick.type === 'op') {
@@ -2545,7 +2697,7 @@ function substep(subDt){
               const cxp = x0+CONFIG.CELL/2, cyp = y0+CONFIG.CELL/2;
               spawnBreakParticle(cxp, cyp, itemVisual(brick.kind).color);
               itemFanfare(cxp, cyp, brick.kind);
-              applyItem(brick.kind, rr, cc);
+              applyItem(brick.kind, rr, cc, spawnList);
             }
         }
       }
@@ -2631,7 +2783,34 @@ function checkGameOver(){
   return S.grid[CONFIG.GRID_ROWS-1].some(c => c !== null);
 }
 
+// 턴이 끝나는데 아직 살아있는 도둑 블록에 공이 갇혀 있으면 전부 돌려준다.
+// 이 턴 안에 못 깼다고 다음 턴까지 계속 들고 있게 두면, 여러 턴에 걸쳐 한 발씩만
+// 스치듯 맞고 안 죽는 블록이 공을 꾸준히 까먹다가 회복 못 하는 악순환이 생긴다
+// (실측: 11라운드에 9개 넘게 갇히고 정작 남은 공은 1개 - TRAP_MAX_HOLD 주석도 참고).
+// 날아다니는 연출은 안 준다 - 여기는 이미 다음 조준 단계로 넘어가는 길목이라
+// 공이 하늘을 날 자리가 없다. 대신 다음 턴 공 수에 조용히 더해준다.
+function releaseExpiredTraps(){
+  let freed = 0, gained = 0;
+  for (let r=0;r<CONFIG.GRID_ROWS;r++){
+    for (let c=0;c<CONFIG.COLS;c++){
+      const brick = S.grid[r][c];
+      if (!brick || !brick.trap || !brick.trapped.length) continue;
+      for (const t of brick.trapped) {
+        gained += Math.max(1, Math.floor(t.power||1) + Math.floor(t.growPower||0));
+        freed++;
+      }
+      brick.trapped.length = 0;
+    }
+  }
+  if (freed) {
+    S.collectedForNextTurn += gained;
+    showBuffBanner(`❄ 갇혀 있던 공 ${freed}개 돌려받음`);
+  }
+}
+
 function finishTurn(){
+  flushIceQueue();
+  releaseExpiredTraps();
   // 물리 공은 최대 150개, 초과분은 공들에 고르게 나눠지는 추가 공격력으로 보존한다.
   // 천장은 여기 한 곳에서만 건다 - 공 개수·보너스 공격력·블록 체력·점수가 전부
   // 이 값에서 파생되므로, 여기만 막으면 아래로 다 따라온다.
@@ -2719,7 +2898,7 @@ function enterGameOver(){
     const who = challengerName(c);
     chal.innerHTML = won
       ? `${who}의 <b>${c.round}라운드</b>를 넘었어요 (내 <b>${S.round}라운드</b>)`
-      : `${who}은 <b>${c.round}라운드</b>까지 갔어요 (내 <b>${S.round}라운드</b>)`;
+      : `${who}은 <b>${c.round}라운드</b>까지 갔어요 (내 <b>${S.round}라운드</b>)<br>${randomTaunt()}`;
     chal.hidden = false;
   } else {
     chal.hidden = true;
@@ -2797,6 +2976,19 @@ function takePendingChallenge(){
 }
 function challengerName(ch){
   return (ch && ch.nick) ? ch.nick + '님' : '친구';
+}
+// 도전장 받고 못 넘었을 때 약올리는 한 줄 - 매번 같은 문구면 두 번째부턴 안 웃기니
+// 여러 개 중 무작위로. 게임 결과에 영향 없는 순수 문구라 Math.random 사용.
+const TAUNT_LINES = [
+  '킹받으셨습니까? 이것밖에못합니까?',
+  '화가 나셨습니까? 정신력이 부족하십니다!',
+  '실망스럽습니다! 재도전 실시하십시오!',
+  '이 정도로 되겠습니까? 다시!',
+  '한심하지 않습니까? 다시 하십시오!',
+  '눈물 나십니까? 그럼 다시 하십시오!',
+];
+function randomTaunt(){
+  return TAUNT_LINES[Math.floor(Math.random() * TAUNT_LINES.length)];
 }
 
 // 결과 공유: 폰 기본 공유 시트가 있으면 그걸 띄우고, 없는 환경(주로 PC 브라우저)이면
@@ -3111,7 +3303,7 @@ const GUIDE = [
       null, {type:'hp', hp:24, maxHp:24, boss:true}],
     ['#111827', '▲',  '증식',      '때릴 때마다 주변 8칸의 숫자가 1씩 올라가요.', '한 번에 깨거나, 아예 건드리지 마세요',
       null, {type:'hp', hp:9, maxHp:9, curse:true}],
-    ['#7c3aed', '🔒', '도둑',      '이 블록에 맞은 공은 갇혀요. 블록을 깨면 갇혀 있던 공이 한꺼번에 풀려나요.', '5라운드부터 등장. 빨리 깰수록 이득',
+    ['#7c3aed', '🔒', '도둑',      `이 블록에 맞은 공은 갇혀요. 이 턴 안에 블록을 깨면 갇힌 공이 바로 풀려나 계속 날아가요. 못 깨도 다음 턴엔 자동으로 돌려받고, 공을 ${CONFIG.TRAP_MAX_HOLD}개 넘게 가두면 우리가 넘쳐서 저절로 터져요.`, '5라운드부터 등장. 이 턴에 깰수록 이득',
       null, {type:'hp', hp:16, maxHp:16, trap:true, trapped:[]}],
   ]],
   ['공 개수', [
@@ -3129,7 +3321,7 @@ const GUIDE = [
       null, {type:'item', kind:'frenzy'}],
     ['#f59e0b', '점수', '점수 2배', '이번 턴에 얻는 점수가 2배가 돼요.', '많이 깰 수 있는 턴에',
       null, {type:'item', kind:'gold'}],
-    ['#0284c7', '❄', '얼음',    `얼음 덩어리가 쏟아져 판 위 모든 숫자가 ${Math.round(CONFIG.ICE_CUT*100)}% 줄어요.`, '숫자가 커져서 버거울 때',
+    ['#0284c7', '❄', '얼음',    `얼음 덩어리가 쏟아져 판 위 제일 센 블록의 ${Math.round(CONFIG.ICE_CUT*100)}%만큼 모든 블록이 똑같이 다쳐요.`, '약한 블록일수록 상대적으로 크게 다쳐요',
       null, {type:'item', kind:'ice'}],
   ]],
 ];
@@ -3582,9 +3774,13 @@ function updateReturning(dt){
   }
 }
 
-// Keep the first couple of seconds at normal speed - the ball spray is the
-// payoff - then compress hard so a big volley never becomes a wait.
-function autoSpeedFor(wallTime){
+// 처음 몇 초는 정상 속도를 유지한다 - 공이 블록에 맞아 터지는 걸 보여주는 게
+// 재미라서. 근데 이 턴에 여태 하나도 안 맞았으면 보여줄 게 없으니 그 유예를
+// 건너뛰고 바로 빠르게 돌린다. 실측(2026-08-11): 빈 판에 공 30개를 쐈더니 턴이
+// 3.08초만에 끝났는데, 배속은 2.37초가 지나서야 겨우 2배로 올라갔다 - 사실상
+// 턴 내내 1배속이었다.
+function autoSpeedFor(wallTime, hadHit){
+  if (!hadHit) return wallTime > 2.5 ? 8 : wallTime > 1.2 ? 4 : wallTime > 0.5 ? 2 : 1;
   return wallTime > 6 ? 8 : wallTime > 4 ? 4 : wallTime > 2 ? 2 : 1;
 }
 
@@ -3600,8 +3796,11 @@ function stepPhysics(dt){
   updateReturning(dt);
 
   // Hard backstop: no turn may outlive this, whatever the balls are doing.
-  S.turnTime += dt;
-  if (S.turnTime > CONFIG.TURN_HARD_CAP) {
+  // turnWallTime(실제 경과 시간) 기준이어야 한다 - 예전엔 substep 배속으로
+  // 당겨지는 시뮬레이션 시간(turnTime)을 썼는데, 배속이 8배로 오르면 22초
+  // 캡이 실제로는 2.75초 만에 걸려서 공이 정상적으로 튀는 중에도 통째로
+  // 회수돼버렸다.
+  if (S.turnWallTime > CONFIG.TURN_HARD_CAP) {
     S.frenzyActive = false;
     S.collectedForNextTurn += queuedPower();
     S.fireQueueRemaining = 0;
@@ -3614,7 +3813,11 @@ function stepPhysics(dt){
   }
 
   updateHud();
-  if (S.fireQueueRemaining <= 0 && S.activeBalls.length === 0 && S.returning.length === 0) finishTurn();
+  // 얼음 효과가 아직 순서대로 터지는 중이면 기다린다 - 안 그러면 다 보여주기도
+  // 전에 줄이 밀려서 2초짜리 연출이 끊겨 보인다(flushIceQueue는 수동 스킵 같은
+  // 다른 경로용 안전판이지, 정상 진행에선 여기서 자연스럽게 다 비워지고 넘어간다).
+  if (S.fireQueueRemaining <= 0 && S.activeBalls.length === 0 && S.returning.length === 0
+      && S.iceQueue.length === 0) finishTurn();
 }
 
 function startFiring(dir){
@@ -3627,8 +3830,8 @@ function startFiring(dir){
     basePower + (i < strongerBalls ? 1 : 0));
   S.fireQueueRemaining = S.firePowerQueue.length;
   S.fireTimer = 0;
-  S.turnTime = 0;
   S.turnWallTime = 0;
+  S.turnHadHit = false;
   S.combo = 0;
   S.frenzyActive = false;
   S.scoreMult = 1;
@@ -4007,6 +4210,16 @@ function drawLock(g, cx, cy, w){
   gr.addColorStop(1, '#c4b5fd');
   g.fillStyle = gr;
   g.fill();
+  // 왼쪽 위 하이라이트 방울 - 다른 뱃지들과 같은 광택 어휘를 여기도 맞춘다
+  g.save();
+  roundRect(g, cx-bodyW/2, bodyY, bodyW, bodyH, bodyH*0.22);
+  g.clip();
+  const hl = g.createRadialGradient(cx-bodyW*0.22, bodyY+bodyH*0.18, 0, cx-bodyW*0.22, bodyY+bodyH*0.18, bodyW*0.5);
+  hl.addColorStop(0, 'rgba(255,255,255,.85)');
+  hl.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = hl;
+  g.fillRect(cx-bodyW/2, bodyY, bodyW, bodyH);
+  g.restore();
   g.strokeStyle = 'rgba(60,20,120,.55)';
   g.lineWidth = Math.max(1, w*0.05);
   g.stroke();
@@ -4049,22 +4262,47 @@ function drawItemIcon(g, kind, cx, cy, r){
   g.lineCap = 'round';
   g.lineJoin = 'round';
   if (kind === 'bomb') {
-    g.beginPath(); g.arc(cx, cy + r*0.22, r*0.82, 0, Math.PI*2); g.fill();
-    g.lineWidth = r*0.24;                       // 심지
+    // 시안처럼 검게 반짝이는 몸통(방사형 그라데이션) + 크림색 심지 + 노란 불꽃.
+    // 흰 실루엣 하나였던 예전보다 폭탄임을 훨씬 즉각적으로 알아본다.
+    const bx = cx, by = cy + r*0.22, br = r*0.82;
+    const bodyGrad = g.createRadialGradient(bx-br*0.35, by-br*0.4, br*0.12, bx, by, br*1.05);
+    bodyGrad.addColorStop(0, '#5b5568');
+    bodyGrad.addColorStop(0.45, '#2c2836');
+    bodyGrad.addColorStop(1, '#0c0a12');
+    g.fillStyle = bodyGrad;
+    g.beginPath(); g.arc(bx, by, br, 0, Math.PI*2); g.fill();
+    g.fillStyle = 'rgba(255,255,255,.55)';
+    g.beginPath(); g.ellipse(bx-br*0.32, by-br*0.38, br*0.26, br*0.16, -0.6, 0, Math.PI*2); g.fill();
+    g.strokeStyle = '#f3d9a8';
+    g.lineWidth = r*0.22;                       // 심지
     g.beginPath();
     g.moveTo(cx + r*0.42, cy - r*0.42);
     g.quadraticCurveTo(cx + r*0.95, cy - r*0.95, cx + r*0.72, cy - r*1.25);
     g.stroke();
-    g.beginPath(); g.arc(cx + r*0.66, cy - r*1.42, r*0.22, 0, Math.PI*2); g.fill();
+    const sparkGrad = g.createRadialGradient(cx+r*0.66, cy-r*1.42, 0, cx+r*0.66, cy-r*1.42, r*0.32);
+    sparkGrad.addColorStop(0, '#fff6c8');
+    sparkGrad.addColorStop(1, '#ffb02e');
+    g.fillStyle = sparkGrad;
+    g.beginPath(); g.arc(cx + r*0.66, cy - r*1.42, r*0.24, 0, Math.PI*2); g.fill();
   } else if (kind === 'frenzy') {
-    g.beginPath();                              // 번개
-    g.moveTo(cx + r*0.34, cy - r*1.05);
-    g.lineTo(cx - r*0.62, cy + r*0.16);
-    g.lineTo(cx - r*0.04, cy + r*0.16);
-    g.lineTo(cx - r*0.30, cy + r*1.05);
-    g.lineTo(cx + r*0.66, cy - r*0.20);
-    g.lineTo(cx + r*0.06, cy - r*0.20);
-    g.closePath(); g.fill();
+    // 번개는 노랑→주황 그라데이션 채우기 + 크림색 얇은 외곽선. 보라 배경 위에서
+    // 흰 실루엣보다 훨씬 또렷하고 시안 느낌에 가깝다.
+    const bolt = new Path2D();
+    bolt.moveTo(cx + r*0.34, cy - r*1.05);
+    bolt.lineTo(cx - r*0.62, cy + r*0.16);
+    bolt.lineTo(cx - r*0.04, cy + r*0.16);
+    bolt.lineTo(cx - r*0.30, cy + r*1.05);
+    bolt.lineTo(cx + r*0.66, cy - r*0.20);
+    bolt.lineTo(cx + r*0.06, cy - r*0.20);
+    bolt.closePath();
+    const boltGrad = g.createLinearGradient(cx-r*0.5, cy-r, cx+r*0.5, cy+r);
+    boltGrad.addColorStop(0, '#fff6a8');
+    boltGrad.addColorStop(1, '#ff9d2e');
+    g.fillStyle = boltGrad;
+    g.fill(bolt);
+    g.strokeStyle = 'rgba(255,255,255,.85)';
+    g.lineWidth = r*0.08;
+    g.stroke(bolt);
   } else if (kind === 'ice') {
     // 눈꽃. 판 전체에 걸리는 효과라 11px 에서도 '얼음'으로 읽혀야 해서 가지를
     // 두 쌍만 남기고 굵게 그린다. 시안의 drawFlake 는 선이 얇아 이 크기에선 뭉갠다.
@@ -4089,15 +4327,52 @@ function drawItemIcon(g, kind, cx, cy, r){
   } else {
     // 점수 2배. 동전(원+안쪽 링)으로 그렸더니 11px 크기에선 그냥 도넛으로 보여서
     // 무슨 아이템인지 아무도 못 알아봤다. 점수 = 별이 훨씬 즉각적이다.
-    g.beginPath();
+    // 참고 시안은 별을 금색 링(동전) 안에 넣은 모양인데, 그 링을 여기서 되살리면
+    // 위 교훈 그대로 다시 도넛이 된다 - 링은 빼고, 별 자체를 금색 그라데이션 +
+    // 흰 하이라이트로 반짝이게만 만들어 시안 쪽으로 다가간다.
+    const star = new Path2D();
     for (let i = 0; i < 10; i++) {
       const rad = (i % 2 ? r*0.44 : r*1.02);
       const a = -Math.PI/2 + i * Math.PI/5;
       const px = cx + Math.cos(a)*rad, py = cy + Math.sin(a)*rad;
-      i ? g.lineTo(px, py) : g.moveTo(px, py);
+      i ? star.lineTo(px, py) : star.moveTo(px, py);
     }
-    g.closePath(); g.fill();
+    star.closePath();
+    const starGrad = g.createLinearGradient(cx-r, cy-r, cx+r*0.6, cy+r*0.8);
+    starGrad.addColorStop(0, '#fff6d8');
+    starGrad.addColorStop(0.5, '#ffd75e');
+    starGrad.addColorStop(1, '#e8960c');
+    g.fillStyle = starGrad;
+    g.fill(star);
+    g.strokeStyle = 'rgba(255,255,255,.8)';
+    g.lineWidth = r*0.06;
+    g.stroke(star);
   }
+  g.restore();
+}
+
+// 시안(블록.png)처럼 광택 있는 뱃지 배경 - 대각선 그라데이션 위에 왼쪽 위 하이라이트
+// 방울과 아래쪽 안쪽 그림자를 얹어 입체감을 낸다. boss·curse·trap·아이템이 공용으로 쓴다.
+function glossyBadgeBG(g, x, y, w, h, r, lightColor, darkColor){
+  const grad = g.createLinearGradient(x, y, x+w, y+h);
+  grad.addColorStop(0, lightColor);
+  grad.addColorStop(1, darkColor);
+  g.fillStyle = grad;
+  roundRect(g, x, y, w, h, r);
+  g.fill();
+  g.save();
+  roundRect(g, x, y, w, h, r);
+  g.clip();
+  const hl = g.createRadialGradient(x+w*0.28, y+h*0.22, 0, x+w*0.28, y+h*0.22, w*0.6);
+  hl.addColorStop(0, 'rgba(255,255,255,0.55)');
+  hl.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = hl;
+  g.fillRect(x, y, w, h);
+  const sh = g.createLinearGradient(x, y+h*0.68, x, y+h);
+  sh.addColorStop(0, 'rgba(0,0,0,0)');
+  sh.addColorStop(1, 'rgba(0,0,0,0.22)');
+  g.fillStyle = sh;
+  g.fillRect(x, y+h*0.68, w, h*0.32);
   g.restore();
 }
 
@@ -4118,23 +4393,56 @@ function drawBrick(g, brick, x, y){
   if (brick.type === 'hp') {
     const tier = hpTier(brick.hp, brick.tier);
     const bw = CONFIG.CELL-pad*2, bh = CONFIG.CELL-pad*2;
-    const grad = g.createLinearGradient(x, y, x, y+CONFIG.CELL);
-    if (brick.boss)       { grad.addColorStop(0,T.boss[0]); grad.addColorStop(1,T.boss[1]); }
-    else if (brick.curse) { grad.addColorStop(0,T.curse[0]); grad.addColorStop(1,T.curse[1]); }
-    else if (brick.trap)  { grad.addColorStop(0,T.trap[0]); grad.addColorStop(1,T.trap[1]); }
-    else                  { grad.addColorStop(0, tier.light); grad.addColorStop(1, tier.base); }
-    g.fillStyle = grad;
-    roundRect(g, x+pad, y+pad, bw, bh, 7);
-    g.fill();
+    const special = brick.boss || brick.curse || brick.trap;
+    if (!special) {
+      // 일반 숫자 블록은 손 안 댄다 - 라운드 판정에 색이 그대로 쓰이는 gameplay
+      // 신호라, 광택을 더한다고 읽기 쉬워지지 않는다(오히려 대비만 흐려질 위험).
+      const grad = g.createLinearGradient(x, y, x, y+CONFIG.CELL);
+      grad.addColorStop(0, tier.light); grad.addColorStop(1, tier.base);
+      g.fillStyle = grad;
+      roundRect(g, x+pad, y+pad, bw, bh, 7);
+      g.fill();
+      g.fillStyle = T.gloss;
+      roundRect(g, x+pad+2, y+pad+2, bw-4, bh*0.38, 5);
+      g.fill();
+    } else if (brick.trap) {
+      const img = BADGE_IMG.trap;
+      if (badgeReady(img)) {
+        // 시안 원본 오려쓴 것 - 배경+자물쇠가 이미 한 장에 다 있다(숫자만 아래서 새로 찍는다)
+        g.drawImage(img, x+pad, y+pad, bw, bh);
+      } else {
+        // 이미지가 아직 안 불러와졌을 때만 쓰는 대체 그림(손으로 그린 예전 버전)
+        glossyBadgeBG(g, x+pad, y+pad, bw, bh, 7, T.trap[0], T.trap[1]);
+        const numBandH = bh*0.42;
+        g.save();
+        roundRect(g, x+pad, y+pad, bw, bh, 7);
+        g.clip();
+        const bandGrad = g.createLinearGradient(x, y+pad+bh-numBandH, x, y+pad+bh);
+        bandGrad.addColorStop(0, 'rgba(30,8,64,0.10)');
+        bandGrad.addColorStop(1, 'rgba(20,4,48,0.42)');
+        g.fillStyle = bandGrad;
+        g.fillRect(x+pad, y+pad+bh-numBandH, bw, numBandH);
+        g.restore();
+        drawLock(g, x+CONFIG.CELL/2, y+pad+bh*0.24, CONFIG.CELL*0.30);
+      }
+    } else {
+      const img = BADGE_IMG[brick.boss ? 'boss' : 'curse'];
+      if (badgeReady(img)) {
+        g.drawImage(img, x+pad, y+pad, bw, bh);
+      } else {
+        glossyBadgeBG(g, x+pad, y+pad, bw, bh, 7, T[brick.boss?'boss':'curse'][0], T[brick.boss?'boss':'curse'][1]);
+        if (brick.boss) drawCrown(g, x+CONFIG.CELL/2, y+pad, CONFIG.CELL*0.42);
+        else { g.fillStyle='#fff'; g.font = (CONFIG.CELL*0.28)+'px sans-serif';
+               g.textAlign = 'center'; g.textBaseline = 'middle';
+               g.fillText('▲', x+CONFIG.CELL/2, y+pad+CONFIG.CELL*0.18); }
+      }
+    }
 
-    g.fillStyle = T.gloss;
-    roundRect(g, x+pad+2, y+pad+2, bw-4, bh*0.38, 5);
-    g.fill();
-
-    if (brick.boss || brick.curse || brick.trap) {
+    if (special) {
+      // 보스는 판에서 제일 먼저 눈에 띄어야 한다 - 두꺼운 금테를 맥동시킨다.
+      // 시안 이미지를 쓸 때도 이 애니메이션 테두리는 그대로 얹는다(정지 이미지가
+      // 못 주는 '살아있는' 느낌은 여기서 보탠다).
       const puls = 0.5 + Math.sin(Date.now()/300 + x*0.5)*0.5;
-      // 보스는 판에서 제일 먼저 눈에 띄어야 한다: 바깥에 어두운 테를 한 겹 둘러
-      // 실루엣을 만들고, 그 위에 두꺼운 금테를 맥동시킨다.
       if (brick.boss) {
         g.strokeStyle = 'rgba(90,10,45,.55)';
         g.lineWidth = 3.4;
@@ -4150,16 +4458,6 @@ function drawBrick(g, brick, x, y){
       roundRect(g, x+pad, y+pad, bw, bh, 7);
       g.stroke();
       g.restore();
-      if (brick.boss) {
-        // 왕관은 윗변에 걸터앉힌다. 이모지는 기기마다 모양이 달라 직접 그린다.
-        drawCrown(g, x+CONFIG.CELL/2, y+pad, CONFIG.CELL*0.42);
-      } else if (brick.curse) {
-        g.font = (CONFIG.CELL*0.28)+'px sans-serif';
-        g.textAlign = 'center'; g.textBaseline = 'middle';
-        g.fillText('▲', x+CONFIG.CELL/2, y+pad+CONFIG.CELL*0.18);
-      } else {
-        drawLock(g, x+CONFIG.CELL/2, y+pad, CONFIG.CELL*0.34);
-      }
     }
 
     // 갇힌 공 수를 오른쪽 아래에 작은 배지로 - 공중에서 사라진 공이 어디 있는지
@@ -4186,13 +4484,16 @@ function drawBrick(g, brick, x, y){
       brick.flash -= 0.12;
     }
 
+    // 도둑은 숫자 밴드(아래쪽) 한가운데에 찍는다 - 위 자물쇠 밴드와 안 겹치게.
+    // 나머지는 전부 그대로 칸 정중앙(기존 자리 그대로 - 회귀 없게).
+    const numY = brick.trap ? y+pad+bh*(1-0.42/2) : y+CONFIG.CELL/2;
     const hpText = shortNum(brick.hp);
     g.fillStyle = T.brickShade;
     g.font = 'bold ' + (hpText.length > 3 ? 12.5 : 15) + 'px sans-serif';
     g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.fillText(hpText, x+CONFIG.CELL/2, y+CONFIG.CELL/2+2);
+    g.fillText(hpText, x+CONFIG.CELL/2, numY+2);
     g.fillStyle = '#fff';
-    g.fillText(hpText, x+CONFIG.CELL/2, y+CONFIG.CELL/2+1);
+    g.fillText(hpText, x+CONFIG.CELL/2, numY+1);
   } else if (brick.type === 'op') {
     g.fillStyle = opColor(brick.op);
     roundRect(g, x+pad, y+pad, CONFIG.CELL-pad*2, CONFIG.CELL-pad*2, 6);
@@ -4205,30 +4506,31 @@ function drawBrick(g, brick, x, y){
     g.font = 'bold ' + (label.length > 3 ? 11 : 13) + 'px sans-serif';
     g.fillText(label, x+CONFIG.CELL/2, y+CONFIG.CELL/2+1);
   } else {
-    // 아이템도 체력 블록과 같은 형태로 그린다. 예전엔 혼자 흰 바탕 + 이모지라
-    // 판 위에서 비어 보였고, 이모지는 기기마다 모양이 달라 통일도 안 됐다.
-    // 대신 자기 색 + 맥동하는 흰 테두리로 희귀함을 표현한다.
+    // 아이템은 시안(블록.png)에서 통째로 오려 쓴다 - 배경·아이콘이 이미 한 장에
+    // 다 있어서 번호 블록처럼 따로 새로 찍을 값도 없다(패치할 숫자 자체가 없다).
     const vis = itemVisual(brick.kind);
     const puls = 0.5 + Math.sin(Date.now()/260 + x*0.6)*0.5;
     const bw = CONFIG.CELL-pad*2;
-    const grad = g.createLinearGradient(x, y, x, y+CONFIG.CELL);
-    grad.addColorStop(0, vis.light);
-    grad.addColorStop(1, vis.color);
+    const img = BADGE_IMG['item_'+brick.kind];
     g.save();
     g.shadowColor = vis.color;
     g.shadowBlur = 5 + puls*9;
-    g.fillStyle = grad;
-    roundRect(g, x+pad, y+pad, bw, bw, 7);
-    g.fill();
+    if (badgeReady(img)) {
+      g.drawImage(img, x+pad, y+pad, bw, bw);
+    } else {
+      // 대체 그림(이미지 로딩 전에만 잠깐 보임)
+      glossyBadgeBG(g, x+pad, y+pad, bw, bw, 7, vis.light, vis.color);
+    }
     g.restore();
-    g.fillStyle = T.gloss;
-    roundRect(g, x+pad+2, y+pad+2, bw-4, bw*0.38, 5);
-    g.fill();
-    g.strokeStyle = `rgba(255,255,255,${(0.5 + puls*0.45).toFixed(2)})`;
-    g.lineWidth = 1.6;
-    roundRect(g, x+pad, y+pad, bw, bw, 7);
-    g.stroke();
-    drawItemIcon(g, brick.kind, x+CONFIG.CELL/2, y+CONFIG.CELL/2, bw*0.30);
+    if (!badgeReady(img)) {
+      g.strokeStyle = vis.light;
+      g.globalAlpha = 0.55 + puls*0.35;
+      g.lineWidth = 1.6;
+      roundRect(g, x+pad, y+pad, bw, bw, 7);
+      g.stroke();
+      g.globalAlpha = 1;
+      drawItemIcon(g, brick.kind, x+CONFIG.CELL/2, y+CONFIG.CELL/2, bw*0.32);
+    }
   }
 }
 
@@ -4634,10 +4936,8 @@ function frame(){
     return;
   }
   if (S.state === 'firing') {
-    // Wall-clock for the auto-speed ramp. S.turnTime is simulated time and is
-    // advanced inside stepPhysics, so it must not be incremented here too.
     S.turnWallTime += FIXED_DT;
-    const auto = autoSpeedFor(S.turnWallTime);
+    const auto = autoSpeedFor(S.turnWallTime, S.turnHadHit);
     const mult = Math.max(S.speedMult, auto);
     for (let i=0;i<mult;i++) stepPhysics(FIXED_DT);
   } else if (S.state === 'shifting') {

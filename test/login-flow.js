@@ -79,6 +79,9 @@ const sandbox = {
   location: { origin: 'http://localhost', pathname: '/', search: '' },
   history: { replaceState: noop },
   URLSearchParams,
+  // harness.js와 같은 이유 - new Image() 스텁 없으면 로드 자체가 죽는다
+  Image: class { constructor(){ this.complete = false; this.naturalWidth = 0; } set src(v){} },
+  Path2D: class { moveTo(){} lineTo(){} closePath(){} },
   requestAnimationFrame: () => 0,
   setTimeout: (fn) => { try { fn(); } catch (e) {} return 0; },
   clearTimeout: noop,

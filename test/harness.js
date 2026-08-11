@@ -43,6 +43,13 @@ function load(extraExports = '') {
     location: { origin: 'http://localhost', pathname: '/', search: '' },
     history: { replaceState: noop },
     URLSearchParams,
+    // 뱃지 이미지(new Image())를 로드 시점에 만든다 - 브라우저 전용 생성자라
+    // 스텁이 없으면 그 시도만으로 전체가 죽는다. 절대 로딩되지 않는 가짜라
+    // badgeReady()가 항상 false를 돌려주고, 손으로 그린 대체 코드로 자연히 빠진다.
+    Image: class { constructor(){ this.complete = false; this.naturalWidth = 0; } set src(v){} },
+    // drawItemIcon의 번개·별 아이콘이 쓴다 - 실제 경로 데이터는 헤드리스 테스트엔
+    // 안 중요하니(그려봤자 캔버스 스텁이 noop) 메서드만 있으면 된다.
+    Path2D: class { moveTo(){} lineTo(){} closePath(){} },
     requestAnimationFrame: () => 0, setTimeout: () => 0, clearTimeout: noop,
     performance: { now: () => 0 },
     Math, Date, JSON, Set, Map, Array, Object, Number, String, Boolean, isNaN, console
