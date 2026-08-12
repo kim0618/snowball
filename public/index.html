@@ -3831,6 +3831,9 @@ function clampAngleFromVertical(dir, maxAngle){
 // ---- rendering ----
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
+// 게임판 캔버스가 실제로 쓰는 픽셀 배율. resizeCanvas() 가 채우고, 공 스프라이트를
+// 이 배율로 구우려고 전역에 둔다(resizeCanvas 지역변수로만 두면 캐시가 못 읽는다).
+let canvasDpr = 1;
 
 // frame-ice.webp 에서 실측한 액자 두께. 그림 가장자리부터 판이 시작되는 안쪽까지의 비율로,
 // 좌우는 그림 폭 대비 / 위아래는 그림 높이 대비다(윗변에 눈이 얹혀 있어 위가 두껍다).
@@ -3902,6 +3905,8 @@ function resizeCanvas(){
   const dpr = Math.min(window.devicePixelRatio||1, 2.5);
   canvas.width = Math.floor(WIDTH*dpr); canvas.height = Math.floor(HEIGHT*dpr);
   ctx.setTransform(dpr,0,0,dpr,0,0);
+  // 공 스프라이트는 이 배율로 구워둔다. 배율이 바뀌면 키가 달라져 저절로 다시 구워진다.
+  canvasDpr = dpr;
   // 액자 안쪽 모서리 둥글기를 캔버스 좌표로 환산해 넘긴다
   buildBoardSurface(dpr, boxW * FRAME.innerRadius * WIDTH / Math.max(1, inW));
 }
@@ -3962,11 +3967,13 @@ function ballTier(){
 // gctx 를 받는 이유: 게임판(전역 ctx)뿐 아니라 도감 칩의 작은 canvas에도 이
 // 함수를 그대로 재사용하려고(눈덩이 굴리기 항목 - growthChip() 참고). 인자를
 // 안 주면 지금까지처럼 전역 ctx에 그린다.
-function iceBall(cx, cy, r, dim, flake, gctx = ctx){
-  const t = ballTier();
+// blurScale 은 후광 반경 배율이다. 판에 공이 잔뜩 깔렸을 때만 1보다 작게 준다
+// (ballGlowScale 참고) - 후광을 잘라내면 경계선이 생기지만 애초에 작게 그리면
+// 가장자리가 예전처럼 자연스럽게 사라진다.
+function paintIceBall(gctx, cx, cy, r, dim, flake, t = ballTier(), blurScale = 1){
   gctx.save();
   gctx.shadowColor = dim ? `rgba(${t.glow},.5)` : `rgba(${t.glow},.95)`;
-  gctx.shadowBlur = r*2.4;
+  gctx.shadowBlur = r*2.4*blurScale;
   // 속이 꽤 진해야 흰 눈 결정이 또렷하게 뜬다. 예전엔 가운데까지 하얘서
   // 그냥 물방울처럼 보였다. dim(회수 중)은 같은 색을 옅게 깐다.
   const g = gctx.createRadialGradient(cx-r*0.35, cy-r*0.4, r*0.10, cx, cy, r);
@@ -3989,6 +3996,68 @@ function iceBall(cx, cy, r, dim, flake, gctx = ctx){
   // 왼쪽 위 반사광
   gctx.fillStyle = 'rgba(255,255,255,.9)';
   gctx.beginPath(); gctx.ellipse(cx-r*0.34, cy-r*0.40, r*0.28, r*0.17, -0.55, 0, Math.PI*2); gctx.fill();
+}
+
+// ---- 공 스프라이트 캐시 ----
+// paintIceBall 은 공 하나마다 그림자 블러와 방사 그라데이션을 새로 굽는다. 판에
+// 공이 수십~수백 개 날아다니면 이것만으로 프레임 예산을 통째로 먹는다(실측
+// 2026-08-12, 폰급으로 CPU 4배 조인 상태: 공 150개일 때 프레임당 65ms 중 46ms).
+// PC 는 그냥 삼켜서 티가 안 나지만 폰은 프레임을 놓치고, 이 게임은 rAF 한 번에
+// FIXED_DT 씩만 굴리므로 놓친 프레임이 그대로 슬로모션이 된다.
+// 그림 자체는 티어·반지름·dim 조합에 따라 몇 종류뿐이고 매 프레임 똑같다.
+// 그래서 조합마다 한 번만 구워두고 매 프레임엔 drawImage 로 찍기만 한다.
+let ballSprites = new Map();
+
+// 스프라이트는 캔버스 경계에서 잘리므로 후광이 퍼지는 만큼 여백을 미리 확보해야 한다.
+// 다만 여백은 넉넉할수록 좋은 값이 아니다 - 매 프레임 공 하나당 이 정사각형을 통째로
+// 덧칠하므로 넓힌 만큼 제곱으로 비싸진다. 그래서 눈금을 실측해서 정했다(2026-08-12):
+// 후광이 실제로 닿는 거리는 shadowBlur 값의 0.83배쯤이고(r=6 은 표면에서 12px,
+// r=15 는 30px, 알파 4/255 기준) 그 바깥은 눈에 안 보이는 꼬리다. 0.85 로 두면
+// 예전 그림과 픽셀이 사실상 일치하고(최대 채널차 11/255), 1.15 로 넓혀봐야 그림은
+// 그대로인데 프레임만 느려진다.
+const BALL_GLOW_PAD = 0.85;
+
+// 진짜 비용은 블러 계산이 아니라 후광이 덮는 면적이었다. 공 하나의 후광 반경이
+// 본체의 3.5배라 칠하는 픽셀이 13배쯤 되고, 스프라이트로 바꿔도 그 면적은 매
+// 프레임 그대로 덧칠해야 한다(그래서 그림을 유지한 채로는 22% 밖에 못 줄였다).
+// 그런데 공이 수십 개 깔리면 후광끼리 겹쳐서 어차피 뭉개진다 - 한 알 한 알
+// 또렷하게 보이는 건 공이 몇 개 없는 초반뿐이다. 그래서 붐빌 때만 후광을 줄인다.
+// 기준을 '이번 턴에 쏘는 공 수'로 잡은 이유: 화면에 떠 있는 공 수로 재면 발사가
+// 이어지는 동안 턴 한복판에서 그림이 바뀐다. 이 값은 턴 시작 때 확정된다.
+const GLOW_BUSY_FROM = 30;
+const GLOW_BUSY_SCALE = 0.45;
+const ballGlowScale = () => S.ballCountAtTurnStart >= GLOW_BUSY_FROM ? GLOW_BUSY_SCALE : 1;
+
+function iceBallSprite(tierIdx, r, dim, dpr, blurScale){
+  const key = tierIdx + '|' + r.toFixed(2) + '|' + (dim ? 1 : 0) + '|' + dpr + '|' + blurScale;
+  const hit = ballSprites.get(key);
+  if (hit) return hit;
+  const pad = r*2.4*blurScale*BALL_GLOW_PAD + 4;
+  // 크기는 실제 픽셀 기준으로 짝수를 맞춘다. 그래야 공 중심이 픽셀 격자 한가운데
+  // 정확히 놓인다 - CSS 크기만 짝수로 맞추면 dpr 2.5 에서 중심이 반 픽셀 밀려서
+  // (23 CSS px = 57.5 px) 공 테두리가 예전보다 흐리게 찍힌다.
+  const devSize = Math.ceil((r + pad) * dpr) * 2;
+  const size = devSize / dpr;
+  const cv = document.createElement('canvas');
+  cv.width = devSize; cv.height = devSize;
+  const g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  paintIceBall(g, size/2, size/2, r, dim, false, BALL_TIERS[tierIdx], blurScale);
+  const s = { cv, size };
+  // 반지름은 6~15 사이 이산값이고 티어도 한 판에 한두 개뿐이라 실제로는 스무 장
+  // 안팎이면 충분하다. 그래도 예상 못 한 값이 새면 무한정 쌓이지 않게 막아둔다.
+  if (ballSprites.size > 64) ballSprites = new Map();
+  ballSprites.set(key, s);
+  return s;
+}
+
+function iceBall(cx, cy, r, dim, flake, gctx = ctx){
+  // 눈 결정이 박힌 발사구 공은 프레임당 하나뿐이라 캐시할 이유가 없고, 도감 칩은
+  // 배율이 다른 별도 캔버스라 게임판 스프라이트를 나눠 쓰면 안 된다. 둘 다 예전처럼
+  // 그 자리에서 직접 그린다(발사구는 늘 또렷해야 하므로 후광도 줄이지 않는다).
+  if (flake || gctx !== ctx) { paintIceBall(gctx, cx, cy, r, dim, flake); return; }
+  const s = iceBallSprite(BALL_TIERS.indexOf(ballTier()), r, dim, canvasDpr, ballGlowScale());
+  gctx.drawImage(s.cv, cx - s.size/2, cy - s.size/2, s.size, s.size);
 }
 
 // ---- 얼음판 바닥 ----
