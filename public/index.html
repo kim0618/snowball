@@ -118,7 +118,7 @@
   body.playing #app > footer{position:relative;flex:0 0 var(--play-footer-h);
     width:calc(100% - (2 * var(--play-side)) - 20px);max-width:none;padding:0;
     margin:auto 0 clamp(10px,3.2dvh,28px);
-    gap:clamp(8px,4vw,28px);align-items:center;}
+    gap:clamp(5px,2vw,15px);align-items:center;}
   /* 게임 화면의 밤 배경. 폰에서는 #ambient 가 꺼지므로(아래 미디어쿼리) 여기서 직접 깐다 -
      안 그러면 게임판 바깥이 맨 남색으로 남는다. */
   #app{background:#0a1836 url("img/bg-play.webp") center center / cover no-repeat;}
@@ -202,7 +202,9 @@
     background-clip:border-box, padding-box;
     filter:drop-shadow(0 0 12px rgba(94,194,255,.35)) drop-shadow(0 10px 22px rgba(2,22,78,.30));}
 
-  footer{flex:0 0 auto;display:flex;gap:10px;padding:12px 16px;
+  /* 폭 기준을 화면(vw)이 아니라 footer 자신으로 잡는다 - 큰 화면에서는 footer 가 게임판
+     폭에 묶여 좁아지는데 vw 는 화면을 따라 커져서, 1024px 에서 버튼 글자가 잘렸다. */
+  footer{flex:0 0 auto;display:flex;gap:10px;padding:12px 16px;container-type:inline-size;
     padding-bottom:max(12px, env(safe-area-inset-bottom));
     max-width:620px;width:100%;margin:0 auto;}
   /* 시안에서 오려낸 얼음 버튼(btn-ice-wide.webp)을 9-슬라이스로 늘려 쓴다.
@@ -211,17 +213,47 @@
      테두리 폭은 화면에 얹힐 크기(약 0.41배)로 줄여 잡는다. 이 둘이 어긋나면 그림이 겹쳐 찍힌다. */
   /* 좌우 테두리(눈꽃 장식 몫)는 좁은 폰에서 글자 자리를 다 먹어 '다음 라운드' 가 두 줄로
      접힌다. 화면 폭에 따라 같이 줄이고 라벨은 절대 접지 않는다. */
-  footer button{flex:1;padding:3px 0;border-style:solid;
-    border-width:19px clamp(24px,8.5vw,39px) 16px;
+  /* 슬롯 3칸이 같은 줄을 나눠 쓰면서 버튼에 남는 폭이 확 줄었다. 좌우 눈꽃 장식 몫을
+     좁은 폰에서 더 깎지 않으면 '다음 라운드' 가 화면 밖으로 밀린다(실측 390px 에서
+     테두리만 좌우 33px 씩 먹었다). */
+  footer button{flex:1;min-width:0;padding:3px 0;border-style:solid;
+    border-width:19px clamp(9px,3vw,26px) 16px;   /* cq 미지원 브라우저용 기본값 */
     border-image:url("img/btn-ice-wide.webp") 46 96 40 96 fill stretch;
     background:none;color:#12386e;font-weight:800;white-space:nowrap;
-    font-size:clamp(13px,3.9vw,15px);
+    font-size:clamp(10.5px,3vw,15px);
     text-shadow:0 1px 0 rgba(255,255,255,.75);
     filter:drop-shadow(0 4px 10px rgba(4,20,60,.45));
     transition:transform .08s;}
   footer button:hover{filter:drop-shadow(0 5px 12px rgba(4,20,60,.48)) brightness(1.04);}
   footer button:active{transform:translateY(2px) scale(.97);filter:brightness(.95);}
   footer button.active{color:#0b2d6b;filter:drop-shadow(0 0 12px rgba(120,200,255,.9));}
+  @supports (container-type: inline-size){
+    footer button{border-width:19px clamp(8px,3.6cqw,26px) 16px;
+      font-size:clamp(10.5px,3.5cqw,15px);}
+    .slot{width:clamp(32px,12cqw,54px);}
+  }
+
+  /* ---- 슬롯 아이템 칸 ---- */
+  /* 좌우 버튼과 한 줄을 나눠 쓴다. 폰 폭이 좁으면 버튼 글자가 먼저 죽으므로
+     슬롯은 폭을 고정으로 잡고(vw 연동) 버튼이 남는 몫을 가져가게 둔다. */
+  #slots{flex:0 0 auto;display:flex;gap:clamp(3px,1vw,6px);align-items:center;}
+  .slot{width:clamp(32px,10vw,44px);aspect-ratio:1;border:0;padding:0;background:none;
+    border-radius:26%;position:relative;flex:0 0 auto;
+    box-shadow:inset 0 0 0 2px rgba(146,208,255,.55), 0 3px 9px rgba(4,20,60,.4);
+    transition:transform .08s, filter .12s;}
+  /* 빈 칸도 '여기 슬롯이 있다'가 보여야 아이템을 모을 마음이 생긴다.
+     밤 눈밭 배경 위라 밝은 반투명만으로는 그대로 묻힌다(캡처로 확인). */
+  .slot.empty{background:rgba(10,36,92,.34);
+    box-shadow:inset 0 0 0 2px rgba(160,215,255,.5), 0 2px 6px rgba(4,20,60,.35);
+    display:flex;align-items:center;justify-content:center;}
+  .slot.empty::after{content:'❄';color:rgba(190,228,255,.45);
+    font-size:clamp(13px,4.6cqw,20px);line-height:1;}
+  .slot img{width:100%;height:100%;display:block;border-radius:26%;}
+  /* 조준 중이 아닐 땐 눌러도 안 먹는다는 걸 눈으로 알려준다 */
+  .slot.locked{filter:grayscale(.55) brightness(.72);}
+  .slot.filled:active{transform:translateY(2px) scale(.95);}
+  .slot.filled::after{content:'';position:absolute;inset:0;border-radius:26%;
+    box-shadow:0 0 10px rgba(125,211,252,.75);pointer-events:none;}
 
   /* ---- 공통 시트 ---- */
   .veil{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
@@ -715,16 +747,27 @@
   .gGroup{background:rgba(255,255,255,.42);border:1.5px solid rgba(255,255,255,.55);
     border-radius:0 18px 18px 18px;padding:7px;margin-bottom:12px;}
   .gGroup:last-child{margin-bottom:4px;}
+  /* 섹션 전체에 걸리는 규칙(슬롯 사용 조건 같은 것). 항목 카드와 구분되게 눕혀 둔다. */
+  .gNote{margin:2px 4px 8px;padding:9px 11px;border-radius:12px;
+    background:rgba(90,160,255,.16);border:1px solid rgba(255,255,255,.4);
+    color:#12386e;font-size:12.5px;line-height:1.5;font-weight:600;}
+  #guideScreen.full .gNote{background:rgba(120,190,255,.18);border-color:rgba(255,255,255,.28);
+    color:#e8f4ff;}
 
   .gItem{position:relative;display:flex;gap:12px;align-items:center;
     background-image:var(--flake-i), linear-gradient(180deg,#ffffff,#eef6ff);
-    background-repeat:no-repeat;background-position:right 10px center, center;
-    background-size:26px 26px, auto;
-    border-radius:18px;padding:9px 38px 9px 9px;margin-bottom:7px;
+    background-repeat:no-repeat;background-position:right 7px center, center;
+    background-size:22px 22px, auto;
+    /* 오른쪽 여백은 눈꽃 워터마크 자리만큼만 - 더 두면 글줄이 좁아져 두 줄로 접힌다
+       (시안 ref4 는 설명이 한 줄로 떨어진다) */
+    border-radius:18px;padding:9px 29px 9px 9px;margin-bottom:7px;
     box-shadow:0 4px 0 rgba(158,196,235,.55), 0 9px 20px rgba(10,40,110,.22),
                inset 0 1px 0 #fff;}
   .gItem:last-child{margin-bottom:0;}
-  .gChip{width:48px;height:48px;border-radius:15px;flex:0 0 auto;display:flex;
+  /* 칩 크기 기준: 시안 ref4 의 칩은 카드 높이의 0.74 배다(74 : 100). 실제 글꼴로 짠
+     카드는 한 줄짜리도 81px 이라 62px 이 그 비율이고, 카드 안쪽 높이(81-18)에 딱 들어가
+     밖으로 삐져나오지 않는다. */
+  .gChip{width:62px;height:62px;border-radius:18px;flex:0 0 auto;display:flex;
     align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:19px;
     letter-spacing:-.03em;overflow:hidden;
     background-repeat:no-repeat;background-position:top center, center;
@@ -735,15 +778,22 @@
   /* ---- 블록 도감: 액자 없이 화면 전체를 쓰는 변형(시안 ref4) ---- */
   #guideScreen.full{background-image:linear-gradient(180deg,rgba(6,22,60,.34),rgba(6,22,60,.18)),
     url('img/bg-lobby.webp');background-size:cover;background-position:center;}
-  #guideScreen.full .guideWrap{max-width:none;}
+  /* 액자가 없으니 판이 화면 높이를 그대로 다 쓴다. 예전엔 목록 높이를
+     calc(100dvh - 232px) 로 어림잡았는데, 머리글 실제 높이와 안 맞아서 아래에 60px 넘게
+     빈자리가 남고 목록은 그만큼 일찍 잘렸다. 남는 높이를 목록이 가져가게 한다. */
+  #guideScreen.full .guideWrap{max-width:none;align-self:stretch;height:100%;
+    display:flex;flex-direction:column;min-height:0;}
   #guideScreen.full .guidePanel{background:none;border:none;box-shadow:none;padding:2px 0 0;
-    backdrop-filter:none;-webkit-backdrop-filter:none;}
-  #guideScreen.full .guideHead{padding-right:0;min-height:64px;}
-  #guideScreen.full .gTitleImg{height:64px;max-width:74%;}
-  #guideScreen.full .guideHead .iconBtn{top:6px;}
-  #guideScreen.full .gSub{display:block;}
+    backdrop-filter:none;-webkit-backdrop-filter:none;
+    flex:1 1 auto;min-height:0;display:flex;flex-direction:column;}
+  #guideScreen.full .guideHead{padding-right:0;min-height:46px;flex:0 0 auto;}
+  /* 제목 그림도 시안 비율(판 너비의 48%, 높이 44)로 - 크면 닫기 버튼과 붙는다 */
+  #guideScreen.full .gTitleImg{height:44px;max-width:56%;}
+  /* .title .iconBtn 이 min-width:52px 을 걸어 둬서 width 만 줄이면 안 먹는다 */
+  #guideScreen.full .guideHead .iconBtn{top:0;width:44px;min-width:44px;height:46px;}
+  #guideScreen.full .gSub{display:block;flex:0 0 auto;}
   /* 시안처럼 스크롤 막대를 얼음결로 보이게 하고, 끝 흐림은 끈다 */
-  #guideScreen.full .guideBody{max-height:calc(100dvh - 232px);padding-right:13px;
+  #guideScreen.full .guideBody{flex:1 1 auto;min-height:0;max-height:none;padding-right:13px;
     -webkit-mask-image:none;mask-image:none;}
   #guideScreen.full .gGroup{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.30);}
   .guideBody::-webkit-scrollbar{width:10px;}
@@ -754,14 +804,20 @@
   .regTitle{height:62px;max-width:78%;margin:2px auto 10px;}
   .gSub{display:none;margin:-4px 0 12px;font-size:12.5px;font-weight:800;color:#dcefff;
     text-shadow:0 2px 6px rgba(4,16,48,.75);}
-  /* 캔버스로 그린 진짜 블록 칩 - 배경·테두리 없이 그림만 */
-  .gChip.brick{width:54px;height:54px;border-radius:0;background:none;
+  /* 캔버스로 그린 진짜 블록 칩 - 배경·테두리 없이 그림만.
+     예전엔 transform:scale(1.42) 로 그림만 키웠는데, 실측해 보니 블록 그림이 캔버스를
+     꽉 채우고 있어서(88x88) 카드(높이 81)와 옆 아이템 타일(62)보다 커져 카드 밖으로
+     삐져나왔다. 이제 아이템 타일과 같은 크기(62)로 그린다. */
+  .gChip.brick{width:62px;height:62px;border-radius:0;background:none;
     box-shadow:none;flex:0 0 auto;display:block;
     filter:drop-shadow(0 4px 6px rgba(10,40,110,.35));}
-  .gChip.art{width:54px;height:54px;border-radius:0;box-shadow:none;
+  .gChip.art{width:62px;height:62px;border-radius:0;box-shadow:none;
     background:center/contain no-repeat;
     color:#fff;font-size:15px;font-weight:900;letter-spacing:-.05em;
     text-shadow:0 2px 3px rgba(8,32,90,.5);}
+  /* 한글은 기본값이면 어절 한가운데서 줄이 바뀐다("잡으면 공 4 / 개를 줘요").
+     띄어쓰기에서만 넘기게 해야 줄 끝이 읽히는 대로 떨어진다. */
+  .gTxt, .gNote{word-break:keep-all;overflow-wrap:anywhere;}
   .gTxt b{display:block;font-size:14.5px;font-weight:800;color:#123a86;margin-bottom:3px;}
   .gTxt p{margin:0;font-size:12.5px;color:#5b7fae;line-height:1.5;font-weight:600;}
   .gTxt em{display:block;margin-top:4px;font-style:normal;font-size:11.5px;
@@ -1169,7 +1225,8 @@
     <div id="buffBanner"></div>
   </div>
   <footer>
-    <button id="btnSpeed">1배속</button>
+    <button id="btnSpeed">2배속</button>
+    <div id="slots"></div>
     <button id="btnNextRound">다음 라운드</button>
   </footer>
 </div>
@@ -1604,6 +1661,36 @@ const CONFIG = {
   SUB_CHANCE_MAX: 0.34,
   ITEM_CHANCE: 0.045,
   BOMB_RADIUS: 1,
+  // 아이템은 두 부류다. 즉발형(bomb·frenzy·gold·flame)은 지금까지처럼 공이 닿는
+  // 순간 터지고, 보관형은 아래 슬롯에 담겼다가 플레이어가 원할 때 쓴다.
+  // 아이템 블록이 뜨는 빈도(ITEM_CHANCE)는 건드리지 않는다 - 종류만 늘리고
+  // 그 안에서 가중치로 나눠 가지므로 한 판에 만나는 아이템 개수는 예전과 같다.
+  // 강한 것일수록 드물게 잡았다(아래줄 밀어내기가 가장 귀하다).
+  ITEM_WEIGHTS: {
+    bomb: 23, frenzy: 18, gold: 18, flame: 11,                      // 즉발형 70
+    thunder: 8, foresight: 6, bigball: 6, blizzard: 5,              // 보관형 30
+    stopline: 4, sweep: 1,
+  },
+  SLOT_CAPACITY: 3,
+  // 번개: 무작위로 고른 칸에 현재 총 화력의 이 비율만큼 꽂는다. 화염이 판 전체를
+  // 얕게 깎는다면 번개는 소수를 깊게 찍는다. 기준을 총 화력으로 잡아야 라운드가
+  // 올라가도 계속 아프다(화염이 maxHp 기준인 것과 같은 이유).
+  THUNDER_TARGETS: 8,
+  THUNDER_CUT: 0.40,
+  // 여덟 발을 한 프레임에 다 때리면 숫자만 툭 줄고 만다. 이 간격으로 끊어 꽂아야
+  // 촤라락 연타로 읽힌다(총 0.08 x 7 = 0.56초).
+  THUNDER_INTERVAL: 0.08,
+  BLIZZARD_MULT: 2,
+  // 왕눈덩이: 다음 턴에 공을 전부 하나로 뭉쳐 쏜다. 이 한 알이 블록을 튕기지 않고
+  // 꿰뚫으며 지나가는 족족 총 화력만큼 때린다(사용자 확정 2026-08-12).
+  // 예전엔 '공을 최대 크기로 발사'였는데 크기만 커질 뿐 특별할 게 없었다.
+  // 화력이 한 알에 몰리므로 잘 조준하면 여러 줄을 한 번에 뚫고, 빗나가면 턴을 통째로 날린다.
+  CRUSH_RADIUS: 22,
+  // 조준선은 평소 2번 튕기는 데까지만 보여준다(PREVIEW_BOUNCES). 눈길 읽기를 쓰면
+  // 이만큼까지 늘어나고, 한 턴이 아니라 이 턴 수만큼 이어진다(사용자 확정 2026-08-12).
+  // 조준 보조는 한 턴만으로는 이득을 체감하기 어렵다 - 그 한 턴을 잘 쏘려고 아껴두게 된다.
+  FORESIGHT_BOUNCES: 6,
+  FORESIGHT_TURNS: 3,
   // 화염(예전 얼음 자리, 2026-08-11 이미지·이름만 교체 - 매커니즘은 그대로):
   // 판 위 제일 센 블록 체력의 이 비율만큼을 고정 데미지로 뽑아 모든 숫자
   // 블록에 똑같이 먹인다(그래서 진짜 하드코딩 -30 같은 것과 다르다 - 기준이
@@ -1640,8 +1727,22 @@ const CONFIG = {
   // 안전판(공을 몇 개 넘게 가두면 체력과 무관하게 강제로 터짐)이 생기면서 체력이
   // 최악의 경우를 더는 좌우하지 않게 됐다. 재측정(2026-08-11, 시드 12개)해보니
   // 2.0배(기본 블록의 2배)로 올려도 중앙값 그대로·평균 +0.9%로 사실상 영향 없음 -
-  // 그래서 사용자 요청대로 2.0배로 올림.
-  TRAP_HP_MULT: 2.0,
+  // 그래서 사용자 요청대로 2.0배로 올렸었다.
+  //
+  // ⚠ 그런데 그 "영향 없음"이 사실은 고장 신호였다(2026-08-12에 밝혀짐).
+  // 도둑 블록에 맞은 공은 튕기지 않고 갇혀서 사라진다. 그래서 이 블록 하나에
+  // 부을 수 있는 화력은 우리 상한(그때는 4개)이 전부인데, 체력은 총 공격력의
+  // 1.6배쯤이었다 - 즉 체력의 1~2%만 깎고 반드시 우리가 먼저 찼다. 시뮬레이션
+  // 16건이 100% 강제 폭발이었고 체력으로 깬 건 0건. 체력을 올리든 내리든 결과가
+  // 안 바뀌니 "영향 없음"으로 보였던 것이다. 도감의 "이 턴 안에 깨면 갇힌 공이
+  // 바로 풀려난다"는 설명도 실제로는 갈 수 없는 길이었다.
+  // 그래서 상한을 공 개수 비례로 바꾸고(아래), 체력도 그 안에서 깰 수 있는
+  // 수준으로 낮춘다. 깨려면 [체력 <= 상한 x 공 1개 공격력] 이어야 하는데,
+  // 상한이 총 공격력의 0.2배이고 체력이 총 공격력의 (0.8 x 배율)이니 배율은
+  // 0.25 아래여야 한다. 0.15 면 갇힐 수 있는 양의 약 3/4만 부어도 깨진다.
+  // ⚠️ 0.2 로 올려봤더니 '깨는 데 드는 화력'과 '가둘 수 있는 최대량'이 거의 같아져서
+  // 다시 100% 강제 폭발로 돌아갔다(실측). 이 값은 0.2 를 넘기면 안 된다.
+  TRAP_HP_MULT: 0.15,
   // 실제 플레이에서 발견된 문제(2026-08-11): 공 하나가 스치듯 맞을 때마다 그
   // 공만큼만 체력이 깎이고 사라지길 반복하면, 죽이지도 못하고 공만 계속
   // 빨아들이는 블록이 될 수 있다. 라운드 기반 난이도는 그동안 계속 올라가는데
@@ -1650,7 +1751,18 @@ const CONFIG = {
   // 그래서 우리에 담을 수 있는 공 수에 상한을 둔다. 다 차면 체력과 무관하게
   // 우리가 터져서 강제로 풀려난다 - '죽인 것'과는 구분해서 점수는 안 준다
   // (일부러 채워서 씹어먹는 전략을 만들면 안 되니까).
-  TRAP_MAX_HOLD: 4,
+  // 상한은 고정값이 아니라 그 턴 공 개수에 비례한다. 원래 막으려던 건 "남은 공이
+  // 없어지는 것"이지 "많이 갇히는 것"이 아니었다 - 위 실측도 9개가 문제였던 게
+  // 아니라 남은 게 1개였던 게 문제였다. 공 150개 중 30개가 갇히는 건 아무 일도
+  // 아닌데, 고정 4개는 공이 늘어난 뒤로 그냥 "4번 맞으면 터지는 블록"이 돼버렸다.
+  TRAP_MAX_HOLD_MIN: 4,
+  TRAP_MAX_HOLD_RATIO: 0.2,
+  // ⚠️ 갇힌 공은 턴이 끝나도 안 돌려준다 - 도둑을 깨야 회수한다(2026-08-12 사용자 확정).
+  // 예전엔 턴 끝에 전부 자동 반환이라 도둑이 아니라 보관함이었고, 일부만(60%) 돌려주게
+  // 바꿔봐도 실제 손실이 24판에 11번·한 번에 2개뿐이라(보유 150개 중) 체감이 없었다.
+  // 지금은 못 깨는 동안 계속 묶여 있으므로 다음 턴 발사량이 그만큼 줄고, HUD 공 개수에도
+  // 바로 나타난다. 데스 스파이럴은 우리 상한(TRAP_MAX_HOLD_RATIO, 가진 공의 20%)이 막는다 -
+  // 한 블록이 아무리 먹어도 80% 는 늘 남고, 우리가 차면 저절로 터져 전부 돌아온다.
   // 풀려나는 공들은 위쪽 반원으로 부채꼴로 흩어진다 - 조준 각도 상한과 같은 값을
   // 써서 '쏘아 올린 공'과 같은 규칙 안에서 움직이게 한다(수평으로 튀어나가 벽만
   // 왕복하는 이상한 각도가 안 나오게).
@@ -1786,12 +1898,16 @@ function generateOpBrick(rng, round){
     return { type:'op', op:'add', val };
   }
 }
+// 슬롯에 담아 뒀다가 쓰는 아이템들. 나머지(bomb·frenzy·gold·flame)는 닿는 즉시 터진다.
+const STORED_ITEMS = ['thunder', 'blizzard', 'foresight', 'bigball', 'stopline', 'sweep'];
+const isStoredItem = kind => STORED_ITEMS.includes(kind);
+
 function generateItemBrick(rng){
-  const r = rng.next();
-  if (r < 0.34) return { type:'item', kind:'bomb' };
-  if (r < 0.62) return { type:'item', kind:'frenzy' };
-  if (r < 0.88) return { type:'item', kind:'gold' };
-  return { type:'item', kind:'flame' };
+  const entries = Object.entries(CONFIG.ITEM_WEIGHTS);
+  const total = entries.reduce((a, [, w]) => a + w, 0);
+  let v = rng.next() * total;
+  for (const [kind, w] of entries) { v -= w; if (v < 0) return { type:'item', kind }; }
+  return { type:'item', kind: entries[0][0] };
 }
 function generateRow(rng, round, power){
   const row = new Array(CONFIG.COLS).fill(null);
@@ -1932,7 +2048,9 @@ const S = {
   aimDir: {x:0, y:-1},
   fireQueueRemaining: 0, firePowerQueue: [], fireTimer: 0, ballCountAtTurnStart: 1,
   collectedForNextTurn: 0, pendingPenalty: 0, landedThisTurn: false,
-  speedMult: 1,
+  // 기본 배속 2배(사용자 확정 2026-08-12). 1배속은 공이 다 돌아올 때까지 너무 오래
+  // 걸려서 실제로 쓸 일이 없었다. 버튼으로 2 → 4 → 8 을 돌려 가며 쓴다.
+  speedMult: 2,
   seed: 0,
   rng: createRng(Date.now() >>> 0),
   hintDismissed: false,
@@ -1945,6 +2063,18 @@ const S = {
   waves: [], flash: null, hitstop: 0,
   embers: [],
   flameQueue: [], flameQueueTime: 0,   // 화염 효과가 순차 적용되는 동안의 대기열·경과시간
+  // 번개도 같은 방식으로 순서대로 내리꽂는다. 여덟 칸을 한 프레임에 다 때리면
+  // 숫자만 툭 줄고 마는데(사용자 지적: "이팩트가 너무 약해"), 짧은 시차를 두면
+  // 촤라락 내리치는 게 보인다. bolts 는 화면에 그려지는 번개 줄기다.
+  thunderQueue: [], thunderQueueTime: 0, thunderKills: 0,
+  bolts: [],
+  // 슬롯에 담아 둔 아이템 kind 들(최대 CONFIG.SLOT_CAPACITY). 이어하기 저장에 함께 들어간다.
+  slots: [],
+  slotFullNotice: 0,      // '슬롯이 꽉 찼어요' 안내 쿨다운 - 공이 계속 닿으면 매 프레임 뜬다
+  // 쓰면 켜졌다가 그 턴(줄 정지는 그 라운드)에 소비되는 일회성 효과들
+  blizzardArmed: false, crushArmed: false, stopLineArmed: false,
+  foresightTurns: 0,      // 눈길 읽기가 남은 턴 수(한 턴짜리가 아니라 여러 턴 이어진다)
+  turnCrush: false,       // 이번 턴을 '뭉친 한 알'로 쏠지(왕눈덩이)
   turnWallTime: 0,
   turnHadHit: false,
   paused: false,
@@ -1964,9 +2094,12 @@ const S = {
 function resetTransientState(){
   S.activeBalls = []; S.particles = []; S.popups = []; S.returning = [];
   S.shake = 0; S.shiftAnim = 0;
+  S.slotFullNotice = 0; S.turnCrush = false;
+  renderSlots();
   S.waves = []; S.flash = null; S.hitstop = 0;
   S.embers = [];
   S.flameQueue = []; S.flameQueueTime = 0;
+  S.thunderQueue = []; S.thunderQueueTime = 0; S.thunderKills = 0; S.bolts = [];
   S.launcherX = WIDTH/2;
   S.collectedForNextTurn = 0; S.pendingPenalty = 0; S.landedThisTurn = false;
   S.fireQueueRemaining = 0; S.firePowerQueue = [];
@@ -1988,12 +2121,15 @@ function startFreshGame(seed, challenge){
   S.grid = Array.from({length: CONFIG.GRID_ROWS}, () => new Array(CONFIG.COLS).fill(null));
   S.grid[0] = generateRow(S.rng, 1, CONFIG.START_BALLS);
   S.bossKills = 0;
+  S.slots = [];
+  S.blizzardArmed = S.crushArmed = S.stopLineArmed = false;
+  S.foresightTurns = 0;
   resetTransientState();
   clearSavedGame();          // 새로 시작하면 이전 저장은 의미가 없다
 }
 
 // ---- 이어하기: 끝이 없는 게임이라 중간에 꺼도 되돌아왔을 때 그대로 이어져야 한다 ----
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 2;   // 2: 슬롯 아이템 추가(2026-08-12)
 // 슬롯이 둘이다. 무한 모드 판과 받은 도전장 판은 서로를 덮어쓰면 안 된다 -
 // 친구 링크를 눌렀다고 며칠 쌓은 판이 날아가면 그건 버그로 읽힌다.
 function saveKey(mode){
@@ -2010,6 +2146,11 @@ function saveGame(){
       maxBalls: S.maxBalls,
       bossKills: S.bossKills, grid: S.grid,
       challenge: S.challenge,
+      // 슬롯에 든 아이템과, 썼지만 아직 안 쓰인 예약 효과. 저장은 조준 중에만 하므로
+      // 이 시점의 예약 효과는 다음 발사(줄 정지는 다음 줄 이동)에 그대로 걸려야 한다.
+      slots: S.slots,
+      armed: { blizzard: S.blizzardArmed, foresightTurns: S.foresightTurns,
+               crush: S.crushArmed, stopLine: S.stopLineArmed },
     }));
   } catch(e){}
 }
@@ -2038,6 +2179,14 @@ function resumeGame(data){
   S.maxBalls = Math.min(CONFIG.MAX_BALLS, Math.max(S.ballCount, Number(data.maxBalls) || 1));
   S.grid = data.grid;
   S.bossKills = data.bossKills || 0;
+  // 저장에 없거나 망가져 있으면 빈 슬롯으로 되돌린다 - 아이템을 잃는 쪽이
+  // 알 수 없는 값으로 게임이 이상해지는 것보다 낫다.
+  S.slots = Array.isArray(data.slots)
+    ? data.slots.filter(isStoredItem).slice(0, CONFIG.SLOT_CAPACITY) : [];
+  const armed = data.armed || {};
+  S.blizzardArmed = !!armed.blizzard; S.crushArmed = !!armed.crush;
+  S.stopLineArmed = !!armed.stopLine;
+  S.foresightTurns = Math.max(0, Math.min(CONFIG.FORESIGHT_TURNS, Number(armed.foresightTurns) || 0));
   resetTransientState();
 }
 // 창이 닫히는 시점에 안전망으로 한 번 더 저장한다. saveGame()은 'aiming'
@@ -2142,6 +2291,57 @@ function addShake(amount){ S.shake = Math.min(CONFIG.SHAKE_MAX, S.shake + amount
 function addHitstop(sec){
   S.hitstop = Math.min(CONFIG.HITSTOP_MAX, S.hitstop + sec);
 }
+// 판 위 하늘에서 목표 칸까지 지그재그로 내리꽂는 번개 줄기.
+function addBolt(tx, ty){
+  const pts = [];
+  const segs = 7;
+  const sx = tx + (Math.random()-0.5) * 90;   // 바로 위가 아니라 비스듬히 내려온다
+  let side = Math.random() < 0.5 ? -1 : 1;
+  for (let i = 0; i <= segs; i++){
+    const t = i / segs;
+    // 좌우로 번갈아 꺾어야 번개로 읽힌다. 무작위로만 흔들면 구불구불한 줄이 된다.
+    // 목표에 가까울수록 진폭을 줄여 마지막엔 정확히 꽂히게 한다.
+    side = -side;
+    const amp = (0.25 + (1 - t) * 0.75) * 21;
+    pts.push({ x: sx + (tx - sx) * t + side * amp * (0.45 + Math.random() * 0.55),
+               y: -16 + (ty + 16) * t });
+  }
+  pts.push({ x: tx, y: ty });
+  S.bolts.push({ pts, life: 1 });
+
+  // 중간에서 갈라지는 짧은 가지 하나. 이게 있어야 '전기'로 보인다.
+  if (Math.random() < 0.75) {
+    const i = 2 + Math.floor(Math.random() * (segs - 4));
+    const base = pts[i];
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    const branch = [base];
+    for (let k = 1; k <= 3; k++) {
+      branch.push({ x: base.x + dir * (14 + Math.random() * 16) * k,
+                    y: base.y + (16 + Math.random() * 12) * k });
+    }
+    S.bolts.push({ pts: branch, life: 0.85, thin: true });
+  }
+}
+
+function drawBolt(g, b){
+  g.save();
+  g.globalAlpha = Math.min(1, b.life * 1.7);
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  g.shadowColor = 'rgba(91,33,182,.9)';
+  // 게임판이 밝은 하늘색이라 연보라는 그대로 묻힌다. 짙은 보라로 바깥을 눌러
+  // 대비를 만들고 안쪽을 흰 코어로 채워야 번쩍이는 줄기로 읽힌다.
+  const k = b.thin ? 0.45 : 1;
+  for (const [w, col, blur] of [[15, 'rgba(76,29,149,.45)', 20], [8, '#7c3aed', 14],
+                                [4, '#c4b5fd', 8], [1.8, '#ffffff', 5]]){
+    g.strokeStyle = col; g.lineWidth = w * k; g.shadowBlur = blur;
+    g.beginPath();
+    g.moveTo(b.pts[0].x, b.pts[0].y);
+    for (let i = 1; i < b.pts.length; i++) g.lineTo(b.pts[i].x, b.pts[i].y);
+    g.stroke();
+  }
+  g.restore();
+}
+
 function addShockwave(x, y, color, maxR, width){
   S.waves.push({ x, y, r: 6, maxR, color, width: width || 4, life: 1 });
 }
@@ -2268,6 +2468,11 @@ function updateParticles(dt){
   }
   updateEmbers(dt);
   updateFlameQueue(dt);
+  updateThunderQueue(dt);
+  for (let i=S.bolts.length-1;i>=0;i--){
+    S.bolts[i].life -= dt / 0.22;     // 짧고 강하게 - 오래 남으면 판이 안 보인다
+    if (S.bolts[i].life <= 0) S.bolts.splice(i,1);
+  }
   S.shake *= 0.86;
   if (S.shake < 0.2) S.shake = 0;
 }
@@ -2348,6 +2553,9 @@ const ballPower = b => {
 // BALL_GROWTH_POWER_CAP에서 멈춘다(위 CONFIG 주석 참고 - 무제한으로 두면 죽일수록
 // 세지고 세질수록 더 빨리 죽이는 되먹임으로 라운드 밸런스가 초반부터 무너진다).
 function growBall(b){
+  // 뭉친 한 알(왕눈덩이)은 이미 최대 크기다. 일반 공 상한(BALL_MAX_RADIUS)으로 다시
+  // 재면 블록을 깨자마자 22 → 15 로 오히려 줄어든다(실측).
+  if (b.crush) return;
   b.radius = Math.min(CONFIG.BALL_MAX_RADIUS, (b.radius || CONFIG.BALL_RADIUS) + CONFIG.BALL_GROWTH_PER_KILL);
   if ((b.growPower || 0) < CONFIG.BALL_GROWTH_POWER_CAP) {
     b.growPower = Math.min(CONFIG.BALL_GROWTH_POWER_CAP, (b.growPower || 0) + CONFIG.BALL_GROWTH_POWER_PER_KILL);
@@ -2378,6 +2586,13 @@ function releaseTrap(brick, x0, y0, spawnList){
 const queuedPower = () => S.firePowerQueue.reduce((sum, power) => sum + power, 0);
 const totalOwnedPower = () => S.ballCount + S.bonusPower;
 
+// 도둑 블록 우리에 담기는 공 수 상한. 그 턴에 쏘는 공 수에 비례한다(고정값이었을 때
+// 생긴 문제는 TRAP_MAX_HOLD_RATIO 주석 참고). 턴 시작 때 확정되는 값을 쓰므로
+// 발사 도중에 상한이 바뀌지 않는다.
+const trapMaxHold = () => Math.max(
+  CONFIG.TRAP_MAX_HOLD_MIN,
+  Math.floor((S.ballCountAtTurnStart || S.ballCount) * CONFIG.TRAP_MAX_HOLD_RATIO));
+
 function applyOperator(brick, selfIndex, removeSet, spawnList){
   if (brick.op === 'x2') {
     const alive = [];
@@ -2405,6 +2620,15 @@ function applyOperator(brick, selfIndex, removeSet, spawnList){
 }
 
 function applyItem(kind, rr, cc, spawnList){
+  // 보관형은 여기서 효과를 내지 않고 슬롯에 들어가기만 한다. 실제 효과는
+  // 플레이어가 조준 중에 슬롯을 눌렀을 때 useSlotItem() 이 낸다.
+  if (isStoredItem(kind)) {
+    S.slots.push(kind);
+    renderSlots();
+    vibrate(PATTERN.itemGold);
+    showBuffBanner(`${SLOT_ITEMS[kind].emoji} ${SLOT_ITEMS[kind].name} 획득!`);
+    return;
+  }
   if (kind === 'bomb') {
     for (let dr=-CONFIG.BOMB_RADIUS; dr<=CONFIG.BOMB_RADIUS; dr++){
       for (let dc=-CONFIG.BOMB_RADIUS; dc<=CONFIG.BOMB_RADIUS; dc++){
@@ -2475,6 +2699,149 @@ function applyItem(kind, rr, cc, spawnList){
     showBuffBanner(targets.length
       ? `🔥 전체 블록 -${shortNum(Math.max(1, Math.ceil(maxHp * CONFIG.FLAME_CUT)))}`
       : '🔥 태울 블록이 없어요');
+  }
+}
+
+// ---- 슬롯 아이템 ----
+// 즉발형과 달리 이것들은 먹는 순간엔 아무 일도 안 일어나고, 조준 중에 꺼내 쓴다.
+// 그래서 '무엇을 언제 쓰느냐'가 조준각 말고 두 번째 결정이 된다.
+const SLOT_ITEMS = {
+  thunder:   { color:'#a78bfa', name:'번개',            emoji:'⚡', desc:`무작위 블록 ${CONFIG.THUNDER_TARGETS}칸에 현재 총 화력의 ${Math.round(CONFIG.THUNDER_CUT*100)}% 피해`, tip:'깊게 찍는 공격형' },
+  blizzard:  { color:'#7dd3fc', name:'눈보라',          emoji:'🌨', desc:`이번 턴 발사량 ${CONFIG.BLIZZARD_MULT}배`, tip:'공이 상한에 걸린 뒤에도 강력해요' },
+  foresight: { color:'#38bdf8', name:'눈길 읽기',       emoji:'🎯', desc:`${CONFIG.FORESIGHT_TURNS}턴 동안 조준선 반사를 ${CONFIG.FORESIGHT_BOUNCES}회까지 표시`, tip:'정밀 조준에 특화' },
+  bigball:   { color:'#60a5fa', name:'왕눈덩이',         emoji:'💎', desc:'다음 턴 공이 하나로 뭉쳐, 튕기지 않고 블록을 꿰뚫으며 지나가요', tip:'지나간 블록마다 총 화력이 그대로 꽂혀요' },
+  stopline:  { color:'#f87171', name:'줄 정지',         emoji:'⛔', desc:'이번 라운드 줄이 내려오지 않음', tip:'위기에서 한 턴 벌어요' },
+  sweep:     { color:'#93c5fd', name:'아래줄 밀어내기', emoji:'🧹', desc:'블록이 있는 맨 아래 줄을 통째로 제거', tip:'점수 없이 위험만 지워내요' },
+};
+
+// 공이 아니라 효과로 블록을 없앨 때 쓰는 공통 처리. 슬롯은 조준 중에만 쓸 수 있어
+// 판에 날아다니는 공이 없다 - 그래서 도둑이 물고 있던 공은 하늘로 날려 보내지 않고
+// 다음 턴 발사량에 조용히 더한다(releaseExpiredTraps 와 같은 처리).
+function removeBrickByEffect(r, c, giveScore, color){
+  const b = S.grid[r] && S.grid[r][c];
+  if (!b) return 0;
+  S.grid[r][c] = null;
+  if (giveScore && b.type === 'hp') addScore(b.maxHp * CONFIG.SCORE_PER_HP);
+  let freed = 0;
+  if (b.trap && b.trapped && b.trapped.length) {
+    for (const t of b.trapped) {
+      S.collectedForNextTurn += Math.max(1, Math.floor(t.power||1) + Math.floor(t.growPower||0));
+      freed++;
+    }
+    b.trapped.length = 0;
+  }
+  spawnBreakParticle(c*CONFIG.CELL+CONFIG.CELL/2, r*CONFIG.CELL+CONFIG.CELL/2, color);
+  return freed;
+}
+
+function useSlotItem(i){
+  const kind = S.slots[i];
+  if (!kind) return;
+  // 공이 날아가는 중에 쓰면 판정이 꼬인다(발사량·조준선은 이미 정해진 뒤다).
+  // 흐리게 해 두는 것만으로는 왜 안 눌리는지 모르니, 눌렀을 때 이유를 알려준다.
+  if (S.state !== 'aiming' || S.paused) {
+    if (S.slotFullNotice <= 0) {
+      S.slotFullNotice = 1.5;
+      showBuffBanner('공이 다 돌아온 뒤에 쓸 수 있어요');
+    }
+    return;
+  }
+  const info = SLOT_ITEMS[kind];
+  S.slots.splice(i, 1);
+  renderSlots();
+
+  if (kind === 'thunder') {
+    const cells = [];
+    for (let r=0;r<CONFIG.GRID_ROWS;r++) for (let c=0;c<CONFIG.COLS;c++){
+      const t = S.grid[r][c];
+      if (t && t.type === 'hp') cells.push({r, c});
+    }
+    if (!cells.length) { showBuffBanner('⚡ 내리칠 블록이 없어요'); saveGame(); return; }
+    // 무작위로 고른다. 물리와 무관한 연출성 선택이라 Math.random 을 써도 되지만,
+    // 나중에 판 재생 검증을 붙일 때를 생각해 판 난수를 그대로 쓴다.
+    const picked = [];
+    for (let n = Math.min(CONFIG.THUNDER_TARGETS, cells.length); n > 0; n--) {
+      picked.push(cells.splice(Math.floor(S.rng.next() * cells.length), 1)[0]);
+    }
+    const dmg = Math.max(1, Math.ceil(totalOwnedPower() * CONFIG.THUNDER_CUT));
+    // 위에서 아래로 순서대로 꽂는다. 같은 줄이면 왼쪽부터.
+    picked.sort((a, b) => a.r - b.r || a.c - b.c);
+    S.thunderKills = 0;
+    S.thunderQueueTime = 0;
+    S.thunderQueue = picked.map((p, i) => ({ r: p.r, c: p.c, dmg,
+      t: i * CONFIG.THUNDER_INTERVAL }));
+    // 첫 방이 떨어지기 직전 하늘이 번쩍하는 예고
+    addFlash('#ddd6fe', 0.55);
+    addShake(9);
+    vibrate(PATTERN.itemBomb);
+    showBuffBanner(`⚡ 벼락 -${shortNum(dmg)} x ${picked.length}`);
+
+  } else if (kind === 'sweep') {
+    let lowest = -1;
+    for (let r=CONFIG.GRID_ROWS-1; r>=0; r--) if (S.grid[r].some(c => c !== null)) { lowest = r; break; }
+    if (lowest < 0) { showBuffBanner('🧹 밀어낼 줄이 없어요'); saveGame(); return; }
+    let freed = 0;
+    for (let c=0;c<CONFIG.COLS;c++) freed += removeBrickByEffect(lowest, c, false, '#bae6fd');
+    addShockwave(WIDTH/2, lowest*CONFIG.CELL+CONFIG.CELL/2, '#7dd3fc', 260, 6);
+    addFlash('#e0f2fe', 0.35);
+    addHitstop(0.1);
+    addShake(6);
+    vibrate(PATTERN.trapRelease);
+    showBuffBanner(`🧹 아래줄을 밀어냈어요${freed ? ` · 공 +${freed}` : ''}`);
+
+  } else {
+    // 나머지는 다음 발사(줄 정지는 이번 라운드 줄 이동)에 걸리는 예약형이다.
+    if (kind === 'blizzard')  S.blizzardArmed  = true;
+    if (kind === 'bigball')   S.crushArmed      = true;
+    if (kind === 'stopline')  S.stopLineArmed   = true;
+    if (kind === 'foresight') S.foresightTurns  = CONFIG.FORESIGHT_TURNS;
+    vibrate(PATTERN.itemFrenzy);
+    showBuffBanner(kind === 'foresight'
+      ? `${info.emoji} ${info.name} ${CONFIG.FORESIGHT_TURNS}턴 동안!`
+      : `${info.emoji} ${info.name} 준비!`);
+  }
+  updateHud();
+  saveGame();   // 조준 중이라 저장이 안전한 시점이다 - 슬롯을 쓴 사실을 체크포인트에 남긴다
+}
+
+// 번개 한 방. 큐가 시간에 맞춰 하나씩 부른다.
+function strikeThunder(q){
+  const cx = q.c*CONFIG.CELL + CONFIG.CELL/2, cy = q.r*CONFIG.CELL + CONFIG.CELL/2;
+  addBolt(cx, cy);
+  const t = S.grid[q.r] && S.grid[q.r][q.c];
+  // 그 사이 공에 맞아 이미 깨졌을 수 있다 - 그래도 줄기와 불꽃은 그대로 터뜨린다
+  // (허공에 꽂히는 게 어색해 보이지만, 안 그리면 여덟 발 중 몇 발이 조용히 사라진다)
+  if (t && t.type === 'hp') {
+    t.hp -= q.dmg;
+    if (t.hp <= 0) { removeBrickByEffect(q.r, q.c, true, '#c4b5fd'); S.thunderKills++; }
+    else { t.flash = 1; }
+  }
+  burstRing(cx, cy, '#c4b5fd', 12, 210);
+  spawnHitParticle(cx, cy, '#ffffff');
+  spawnHitParticle(cx+4, cy-3, '#a78bfa');
+  addShockwave(cx, cy, '#a78bfa', 120, 5);
+  addShockwave(cx, cy, '#ffffff', 60, 2);
+  // 여덟 발이 0.08초 간격으로 오므로 한 방마다 세게 번쩍이면 판이 하얗게 떠서
+  // 블록 숫자가 안 보인다(실측: 4발 누적에 판 전체가 흰색). 낱발은 약하게 준다.
+  addFlash('#ede9fe', 0.12);
+  addShake(5);
+  addHitstop(0.045);          // 한 방씩 짧게 끊어 줘야 '연타'로 읽힌다
+  vibrate(PATTERN.trapCapture);
+}
+
+function updateThunderQueue(dt){
+  if (!S.thunderQueue.length) return;
+  S.thunderQueueTime += dt;
+  for (let i = S.thunderQueue.length-1; i >= 0; i--){
+    const q = S.thunderQueue[i];
+    if (q.t > S.thunderQueueTime) continue;
+    S.thunderQueue.splice(i, 1);
+    strikeThunder(q);
+  }
+  if (!S.thunderQueue.length) {
+    S.thunderQueueTime = 0;
+    if (S.thunderKills) showBuffBanner(`⚡ ${S.thunderKills}개 격파!`);
+    S.thunderKills = 0;
   }
 }
 
@@ -2566,13 +2933,20 @@ function substep(subDt){
       {
         if (deepest) {
           const { hit, brick, rr, cc, x0, y0 } = deepest;
-            b.x += hit.nx*hit.push;
-            b.y += hit.ny*hit.push;
+            // 뭉친 한 알(왕눈덩이)은 밀려나지도 튕기지도 않고 그대로 꿰뚫고 지나간다.
+            // 대신 같은 칸을 두 번 때리면 안 된다 - 안 죽은 블록 안을 지나는 동안
+            // 서브스텝마다 계속 맞아서 사실상 무한 데미지가 된다.
+            const pierced = b.crush;
+            if (pierced && b.hitCells && b.hitCells.has(rr*CONFIG.COLS+cc)) {
+              // 이미 지나간 칸 - 아무 일도 없이 통과
+            } else {
+            if (!pierced) { b.x += hit.nx*hit.push; b.y += hit.ny*hit.push; }
+            if (pierced && b.hitCells) b.hitCells.add(rr*CONFIG.COLS+cc);
             b.lastHit = 0;
             S.turnHadHit = true;   // 자동 배속 유예기간 판단용 - autoSpeedFor 참고
             if (brick.type === 'hp') {
-              b.vx = hit.vx; b.vy = hit.vy;
-              if (b.dmgLock) { /* 이번 프레임 몫은 이미 썼다: 튕기기만 한다 */ } else {
+              if (!pierced) b.vx = hit.vx; if (!pierced) b.vy = hit.vy;
+              if (b.dmgLock && !pierced) { /* 이번 프레임 몫은 이미 썼다: 튕기기만 한다 */ } else {
               b.dmgLock = true;
               brick.hp -= ballPower(b);
               brick.flash = 1;
@@ -2614,7 +2988,7 @@ function substep(subDt){
                   // 작은 팡, 여럿이면 보스급 팡으로.
                   const freed = brick.trapped.length;
                   releaseTrap(brick, x0, y0, spawnList);
-                  spawnPopup(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2-16, '공 +'+freed, '#67e8f9');
+                  spawnPopup(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2-16, '공 '+freed+' 되찾음', '#67e8f9');
                   addShockwave(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, T.trap[0], 130+freed*18, 6);
                   addShockwave(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, T.trapEdge, 80+freed*10, 3);
                   burstRing(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, T.trapEdge, 16+freed*3, 260);
@@ -2624,13 +2998,14 @@ function substep(subDt){
                   vibrate(PATTERN.trapRelease);
                   // 자물쇠 이모지(🔓)는 기기마다 그림이 다르고 눈덩이 게임의 얼음
                   // 톤과도 안 어울려서, 다른 배너들과 같은 눈꽃(❄) 표시로 통일한다.
-                  showBuffBanner(`❄ 갇혔던 공 ${freed}개 풀림!`);
+                  showBuffBanner(`❄ 뺏겼던 공 ${freed}개 되찾았어요!`);
                 }
                 // Ration shake to cascades, not every break (Holedown principle).
                 if (S.combo >= 4) addShake(1.2 + Math.min(3, S.combo*0.12));
                 vibrate(PATTERN.brickBreak);
-              } else if (brick.trap) {
-                // 안 죽었으면 이 공은 튕겨 나가는 대신 여기 갇힌다 - 위에서 이미
+              } else if (brick.trap && !pierced) {
+                // 안 죽었으면 이 공은 튕겨 나가는 대신 여기 갇힌다
+                // (뭉친 한 알은 예외다 - 꿰뚫는 공이 갇히면 앞뒤가 안 맞는다) - 위에서 이미
                 // 적용한 반사 속도(hit.vx/vy)는 이 공이 곧 제거되니 그냥 버려진다.
                 // 공중에서 조용히 지우면 '버그인가' 싶으니, 캡처 전용 색·진동·
                 // 작은 파열로 '갇혔다'는 걸 분명히 알린다.
@@ -2638,7 +3013,7 @@ function substep(subDt){
                   power: b.power, radius: b.radius || CONFIG.BALL_RADIUS, growPower: b.growPower || 0,
                 });
                 removeSet.add(i);
-                if (brick.trapped.length >= CONFIG.TRAP_MAX_HOLD) {
+                if (brick.trapped.length >= trapMaxHold()) {
                   // 우리가 다 찼다 - 체력이 남았어도 강제로 터진다. 스치듯 한 발씩만
                   // 맞고 안 죽는 블록이 공을 몇 턴이고 계속 빨아들이는 걸 막는 안전판
                   // (TRAP_MAX_HOLD 주석 참고). 격파가 아니라 넘쳐서 터진 거라 점수는
@@ -2646,7 +3021,7 @@ function substep(subDt){
                   S.grid[rr][cc] = null;
                   const freed = brick.trapped.length;
                   releaseTrap(brick, x0, y0, spawnList);
-                  spawnPopup(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2-16, '공 +'+freed, '#67e8f9');
+                  spawnPopup(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2-16, '공 '+freed+' 되찾음', '#67e8f9');
                   addShockwave(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, T.trap[0], 130+freed*18, 6);
                   addShockwave(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, T.trapEdge, 80+freed*10, 3);
                   burstRing(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2, T.trapEdge, 16+freed*3, 260);
@@ -2656,8 +3031,16 @@ function substep(subDt){
                   vibrate(PATTERN.trapRelease);
                   showBuffBanner(`❄ 우리가 다 차서 터졌어요! 공 ${freed}개 풀림`);
                 } else {
+                  // 여기가 '뺏기는' 순간이다. 예전엔 작은 파문 하나뿐이라 잃는 게
+                  // 눈에 안 띄었고, 정작 돌려받을 때만 요란해서 이득처럼 읽혔다
+                  // (사용자: "뺏어가는 게 아니라 그냥 공이 늘어나는 것 같다").
+                  // 숫자로 -1 을 띄우고 자물쇠 색 파문을 키워 손해로 읽히게 한다.
                   spawnBreakParticle(b.x, b.y, T.trap[0]);
-                  addShockwave(b.x, b.y, T.trapEdge, 26, 2);
+                  spawnPopup(x0+CONFIG.CELL/2, y0+CONFIG.CELL/2-14, '공 -1', '#c084fc');
+                  addShockwave(b.x, b.y, T.trap[0], 74, 4);
+                  addShockwave(b.x, b.y, T.trapEdge, 42, 2);
+                  addFlash(T.trap[0], 0.16);
+                  addShake(3);
                   vibrate(PATTERN.trapCapture);
                 }
               }
@@ -2676,12 +3059,23 @@ function substep(subDt){
               } else addShake(2);
               applyOperator(brick, i, removeSet, spawnList);
             } else if (brick.type === 'item') {
-              S.grid[rr][cc] = null;
-              const cxp = x0+CONFIG.CELL/2, cyp = y0+CONFIG.CELL/2;
-              spawnBreakParticle(cxp, cyp, itemVisual(brick.kind).color);
-              itemFanfare(cxp, cyp, brick.kind);
-              applyItem(brick.kind, rr, cc, spawnList);
+              // 보관형인데 슬롯이 꽉 찼으면 못 먹는다 - 블록을 그대로 두고 공만
+              // 튕겨 나간다. 그래야 '하나 쓰고 자리를 비울까'라는 판단이 생긴다
+              // (안 그러면 무한정 쌓여서 아끼기만 하는 게 늘 이득이 된다).
+              if (isStoredItem(brick.kind) && S.slots.length >= CONFIG.SLOT_CAPACITY) {
+                if (S.slotFullNotice <= 0) {
+                  S.slotFullNotice = 1.5;   // 공이 계속 닿는다고 매 프레임 띄우지 않는다
+                  showBuffBanner('슬롯이 꽉 찼어요');
+                }
+              } else {
+                S.grid[rr][cc] = null;
+                const cxp = x0+CONFIG.CELL/2, cyp = y0+CONFIG.CELL/2;
+                spawnBreakParticle(cxp, cyp, itemVisual(brick.kind).color);
+                itemFanfare(cxp, cyp, brick.kind);
+                applyItem(brick.kind, rr, cc, spawnList);
+              }
             }
+            }   // 꿰뚫는 공이 이미 지나간 칸인지 가르는 분기의 끝
         }
       }
     }
@@ -2735,7 +3129,10 @@ function spawnBall(power = 1){
     vy: S.aimDir.y * CONFIG.BALL_SPEED,
     age: 0,
     power: Math.max(1, Math.floor(power)),
-    radius: CONFIG.BALL_RADIUS, growPower: 0,
+    // 뭉친 한 알은 처음부터 크고, 블록을 튕기지 않고 꿰뚫는다(crush).
+    radius: S.turnCrush ? CONFIG.CRUSH_RADIUS : CONFIG.BALL_RADIUS, growPower: 0,
+    crush: S.turnCrush || false,
+    hitCells: S.turnCrush ? new Set() : null,   // 같은 칸을 두 번 때리지 않게 기억한다
   });
 }
 
@@ -2759,6 +3156,13 @@ function handleFireQueue(dt){
 }
 
 function shiftRowsAndSpawnNewRow(){
+  // 줄 정지를 썼으면 이번 라운드는 줄이 안 밀리고 새 줄도 안 생긴다 - 이 게임에서
+  // 죽음을 미루는 유일한 수단이라 한 번 쓰면 바로 소비한다.
+  if (S.stopLineArmed) {
+    S.stopLineArmed = false;
+    showBuffBanner('⛔ 줄이 멈췄어요');
+    return;
+  }
   for (let r=CONFIG.GRID_ROWS-1; r>0; r--) S.grid[r] = S.grid[r-1];
   S.grid[0] = generateRow(S.rng, S.round, totalOwnedPower());
 }
@@ -2772,6 +3176,9 @@ function checkGameOver(){
 // (실측: 11라운드에 9개 넘게 갇히고 정작 남은 공은 1개 - TRAP_MAX_HOLD 주석도 참고).
 // 날아다니는 연출은 안 준다 - 여기는 이미 다음 조준 단계로 넘어가는 길목이라
 // 공이 하늘을 날 자리가 없다. 대신 다음 턴 공 수에 조용히 더해준다.
+// 턴이 끝날 때 갇힌 공을 돌려주던 함수. 지금은 안 쓴다 - 도둑을 깨거나(releaseTrap)
+// 우리가 넘쳐 터질 때만 돌아온다. 자동 반환이 있으면 '뺏긴다'가 성립하지 않았다.
+// (호출부를 지웠을 뿐 함수는 남겨 둔다 - 되돌릴 일이 생기면 여기만 다시 부르면 된다)
 function releaseExpiredTraps(){
   let freed = 0, gained = 0;
   for (let r=0;r<CONFIG.GRID_ROWS;r++){
@@ -2793,7 +3200,6 @@ function releaseExpiredTraps(){
 
 function finishTurn(){
   flushFlameQueue();
-  releaseExpiredTraps();
   // 물리 공은 최대 150개, 초과분은 공들에 고르게 나눠지는 추가 공격력으로 보존한다.
   // 천장은 여기 한 곳에서만 건다 - 공 개수·보너스 공격력·블록 체력·점수가 전부
   // 이 값에서 파생되므로, 여기만 막으면 아래로 다 따라온다.
@@ -2806,6 +3212,7 @@ function finishTurn(){
   S.collectedForNextTurn = 0;
   S.pendingPenalty = 0;
   S.landedThisTurn = false;
+  if (S.foresightTurns > 0 && --S.foresightTurns === 0) showBuffBanner('🎯 눈길 읽기가 끝났어요');
   // 색만 슬쩍 바뀌면 대부분 눈치를 못 챈다 - 올라간 순간만 짚어준다
   if (ballTier() !== tierBefore) showBuffBanner('공이 한 단계 강해졌어요!');
   S.round++;
@@ -2821,6 +3228,7 @@ function updateShift(dt){
     S.shiftAnim = 0;
     if (checkGameOver()) { enterGameOver(); return; }
     S.state = 'aiming';
+    renderSlots();            // 조준으로 돌아왔으니 슬롯 잠금이 풀린다
     saveGame();               // 매 턴 경계마다 자동 저장 - 이게 '이어하기'의 체크포인트다
   }
 }
@@ -3286,7 +3694,7 @@ const GUIDE = [
       null, {type:'hp', hp:24, maxHp:24, boss:true}],
     ['#111827', '▲',  '증식',      '때릴 때마다 주변 8칸의 숫자가 1씩 올라가요.', '한 번에 깨거나, 아예 건드리지 마세요',
       null, {type:'hp', hp:9, maxHp:9, curse:true}],
-    ['#7c3aed', '🔒', '도둑',      `이 블록에 맞은 공은 갇혀요. 이 턴 안에 블록을 깨면 갇힌 공이 바로 풀려나 계속 날아가요. 못 깨도 다음 턴엔 자동으로 돌려받고, 공을 ${CONFIG.TRAP_MAX_HOLD}개 넘게 가두면 우리가 넘쳐서 저절로 터져요.`, '5라운드부터 등장. 이 턴에 깰수록 이득',
+    ['#7c3aed', '🔒', '도둑',      `이 블록에 맞은 공은 갇혀요. 깨야만 되찾을 수 있고, 그때까지 다음 턴 발사량이 그만큼 줄어요. 가진 공의 ${Math.round(CONFIG.TRAP_MAX_HOLD_RATIO*100)}%보다 많이 가두면 우리가 넘쳐서 저절로 터져요.`, '5라운드부터 등장. 안 깨면 계속 묶여요',
       null, {type:'hp', hp:16, maxHp:16, trap:true, trapped:[]}],
   ]],
   ['공 개수', [
@@ -3307,6 +3715,12 @@ const GUIDE = [
     ['#c92615', '🔥', '화염',    `화염이 번져 판 위 제일 센 블록의 ${Math.round(CONFIG.FLAME_CUT*100)}%만큼 모든 블록이 똑같이 다쳐요.`, '약한 블록일수록 상대적으로 크게 다쳐요',
       null, {type:'item', kind:'flame'}],
   ]],
+  ['슬롯 아이템',
+    STORED_ITEMS.map(k => {
+      const it = SLOT_ITEMS[k];
+      return [it.color, it.emoji, it.name, it.desc + '.', it.tip, 'item-' + k];
+    }),
+    `먹으면 아래 ${CONFIG.SLOT_CAPACITY}칸 슬롯에 담겨요 · 조준 중에만 쓸 수 있어요 · 슬롯이 꽉 차 있으면 블록이 그대로 남아요`],
 ];
 
 const HOWTO = [
@@ -3331,20 +3745,25 @@ function shade(hex, amt){
   return '#' + c.map(v => Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0')).join('');
 }
 
+// 칩 한 변(px). CSS 의 .gChip 과 같은 값이어야 한다 - 캔버스는 style 로 크기를 직접 박으므로
+// 한쪽만 고치면 블록 그림만 아이템 타일과 크기가 어긋난다.
+const CHIP_PX = 62;
+
 // 도감에 넣을 블록 그림 한 장. 게임판과 같은 drawBrick 을 쓰되, 한 칸만 크게 그린다.
 function brickChip(brick){
-  const px = 54, dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const px = CHIP_PX, dpr = Math.min(window.devicePixelRatio || 1, 3);
   const cv = document.createElement('canvas');
   cv.className = 'gChip brick';
   cv.width = Math.round(px * dpr); cv.height = Math.round(px * dpr);
   cv.style.width = px + 'px'; cv.style.height = px + 'px';
   const g = cv.getContext('2d');
   if (!g) return cv;
-  // drawBrick 은 칸(CELL) 안에 여백 3을 두고 그린다. 칸이 아니라 '블록'이 칩을 채우도록
-  // 블록 크기 기준으로 확대하고, 발광이 잘리지 않게 가장자리 3px 만 남긴다.
-  const inner = CONFIG.CELL - 6, edge = 3;
-  const k = (px - edge*2) / inner;
-  g.setTransform(k*dpr, 0, 0, k*dpr, (edge - edge*k)*dpr, (edge - edge*k)*dpr);
+  // drawBrick 은 칸(CELL) 안에 여백 PAD 를 두고 블록을 그린다. 블록이 캔버스를 채우도록
+  // 그 크기 기준으로 확대한다(블록의 (PAD,PAD) 가 캔버스 (0,0) 에 오게).
+  const PAD = 3;
+  const inner = CONFIG.CELL - PAD*2;
+  const k = px / inner;
+  g.setTransform(k*dpr, 0, 0, k*dpr, -PAD*k*dpr, -PAD*k*dpr);
   drawBrick(g, { ...brick }, 0, 0);   // 사본 - flash 같은 필드를 원본에 남기지 않는다
   return cv;
 }
@@ -3353,14 +3772,17 @@ function brickChip(brick){
 // iceBall()을 그대로 재사용해서 커지는 공 세 개를 그린다 - 다른 항목들과 같은
 // 원칙("도감의 그림은 게임판이 실제로 그리는 것 그대로")을 이 항목에도 지킨다.
 function growthChip(){
-  const px = 54, dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const px = CHIP_PX, dpr = Math.min(window.devicePixelRatio || 1, 3);
   const cv = document.createElement('canvas');
   cv.className = 'gChip brick';
   cv.width = Math.round(px * dpr); cv.height = Math.round(px * dpr);
   cv.style.width = px + 'px'; cv.style.height = px + 'px';
   const g = cv.getContext('2d');
   if (!g) return cv;
-  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // 공 세 개의 자리는 62px 상자를 기준으로 잡아 뒀다. 칩 크기가 바뀌어도 구도가
+  // 그대로 따라오도록 비율로 늘린다.
+  const k = px / 62;
+  g.setTransform(dpr * k, 0, 0, dpr * k, 0, 0);
   iceBall(12, 44, 5, false, false, g);
   iceBall(26, 28, 8, false, false, g);
   iceBall(40, 14, 12, false, false, g);
@@ -3375,11 +3797,16 @@ function renderGuide(data, title, art, sub){
   document.getElementById('guideSub').textContent = sub || '';
   const box = document.getElementById('guideBody');
   box.innerHTML = '';
-  for (const [sec, items] of data){
+  for (const [sec, items, note] of data){
     const tab = document.createElement('div'); tab.className = 'gSec';
     const flake = document.createElement('b'); flake.textContent = '❄';
     tab.append(flake, document.createTextNode(sec));
     const grp = document.createElement('div'); grp.className = 'gGroup';
+    if (note){                                   // 섹션 전체에 걸리는 규칙 안내
+      const n = document.createElement('p'); n.className = 'gNote';
+      n.textContent = note;
+      grp.append(n);
+    }
     for (const [color, icon, name, desc, tip, art, brick] of items){
       const row = document.createElement('div'); row.className = 'gItem';
       let chip;
@@ -3387,6 +3814,12 @@ function renderGuide(data, title, art, sub){
         chip = brickChip(brick);
       } else if (art === 'grow-balls'){          // 눈덩이 굴리기 전용 - iceBall() 재사용
         chip = growthChip();
+      } else if (art && art.startsWith('item-') && STORED_ITEMS.includes(art.slice(5))){
+        // 슬롯 아이템(보관형 6종)은 도감 시안에서 오려낸 타일 그대로
+        chip = document.createElement('span');
+        chip.className = 'gChip art';
+        chip.style.backgroundImage = `url(img/${art}.webp)`;
+        chip.style.filter = `drop-shadow(0 4px 5px rgba(10,40,110,.4)) drop-shadow(0 0 9px ${color}80)`;
       } else if (art){                           // 시안에서 오려낸 얼음 블록 그림
         chip = document.createElement('span');
         chip.className = 'gChip art';
@@ -3394,8 +3827,11 @@ function renderGuide(data, title, art, sub){
         chip.style.filter = art === 'grow'
           ? 'grayscale(1) contrast(2.15) brightness(.62) drop-shadow(0 4px 5px rgba(0,0,0,.55)) drop-shadow(0 0 5px #cbd5e1)'
           : `drop-shadow(0 4px 5px rgba(10,40,110,.4)) drop-shadow(0 0 9px ${color}80)`;
-        // 시안에 없던 블록은 글자를 지운 빈 큐브에 이름을 얹어 같은 결로 맞춘다
-        if (art.startsWith('blank')) chip.textContent = icon;
+        // 뱃지 그림에는 숫자가 없다(게임판은 그 위에 canvas 로 숫자를 덧그린다).
+        // 도감에서도 같은 구성이 되도록 예시 숫자를 얹는다. 아이템 그림은 이미
+        // 아이콘이 들어 있으므로 안 얹는다.
+        if (art.startsWith('blank') || ['hp','boss-block','curse-block','trap-block'].includes(art))
+          chip.textContent = icon;
       } else {                                   // 그림이 없는 항목은 CSS 로 비슷하게 세운다
         chip = document.createElement('div');
         chip.className = 'gChip' + (icon.length > 1 ? ' sm' : '');
@@ -3805,11 +4241,16 @@ function stepPhysics(dt){
 
 function startFiring(dir){
   S.aimDir = dir;
-  S.ballCountAtTurnStart = S.ballCount;
-  const totalPower = totalOwnedPower();
-  const basePower = Math.floor(totalPower / S.ballCount);
-  const strongerBalls = totalPower % S.ballCount;
-  S.firePowerQueue = Array.from({ length:S.ballCount }, (_, i) =>
+  // 왕눈덩이를 쓴 턴은 공이 하나로 뭉친다 - 개수 1, 화력은 전부 그 한 알에.
+  // 눈보라: 이번 턴만 공을 두 배로 쏜다. 공 하나하나의 공격력은 그대로 두고 개수만
+  // 늘린다 - 화력이 두 배가 되는 동시에 판을 훑는 밀도도 같이 올라간다.
+  const volley = S.crushArmed ? 1
+    : (S.blizzardArmed ? S.ballCount * CONFIG.BLIZZARD_MULT : S.ballCount);
+  S.ballCountAtTurnStart = volley;
+  const totalPower = totalOwnedPower() * (S.blizzardArmed ? CONFIG.BLIZZARD_MULT : 1);
+  const basePower = Math.floor(totalPower / volley);
+  const strongerBalls = totalPower % volley;
+  S.firePowerQueue = Array.from({ length: volley }, (_, i) =>
     basePower + (i < strongerBalls ? 1 : 0));
   S.fireQueueRemaining = S.firePowerQueue.length;
   S.fireTimer = 0;
@@ -3819,6 +4260,12 @@ function startFiring(dir){
   S.frenzyActive = false;
   S.scoreMult = 1;
   S.state = 'firing';
+  // 눈보라·왕눈덩이는 여기서 소비된다(이번 턴 한정). 왕눈덩이는 spawnBall 이 아직
+  // 읽어야 하므로 turnCrush 에 옮겨 담고 예약 플래그만 내린다.
+  // 눈길 읽기는 여러 턴 이어지므로 여기서 안 건드리고, 턴이 끝날 때 하나씩 깎는다.
+  S.turnCrush = S.crushArmed;
+  S.blizzardArmed = false; S.crushArmed = false;
+  renderSlots();
   if (!S.hintDismissed) { S.hintDismissed = true; try { localStorage.setItem('snowball.hintSeen','1'); } catch(e){} }
 }
 
@@ -4681,8 +5128,9 @@ function render(){
   }
   for (const r of S.returning)   iceBall(r.x, r.y, CONFIG.BALL_RADIUS*0.8, true);
 
-  // 불티는 공보다 앞, 글자보다 뒤. 앞에 다 깔면 점수 팝업을 가린다.
+  // 불티·번개는 공보다 앞, 글자보다 뒤. 앞에 다 깔면 점수 팝업을 가린다.
   for (const s of S.embers) drawEmber(ctx, s);
+  for (const b of S.bolts) drawBolt(ctx, b);
   ctx.globalAlpha = 1;
 
   for (const p of S.popups) {
@@ -4749,7 +5197,8 @@ function traceTrajectory(dir){
   let bounces = 0;
   let hitBrick = null;
 
-  for (let i=0; i<1400 && bounces < CONFIG.PREVIEW_BOUNCES; i++){
+  const maxBounces = S.foresightTurns > 0 ? CONFIG.FORESIGHT_BOUNCES : CONFIG.PREVIEW_BOUNCES;
+  for (let i=0; i<1400 && bounces < maxBounces; i++){
     x += vx*step; y += vy*step;
 
     // Wall handling must mirror substep() exactly, including doing the brick
@@ -4900,13 +5349,35 @@ canvas.addEventListener('pointerup', e => {
 });
 canvas.addEventListener('pointercancel', () => { dragging = false; dragStart=null; dragCurrent=null; });
 
+// ---- 슬롯 ----
+const slotBox = document.getElementById('slots');
+function renderSlots(){
+  if (!slotBox) return;
+  // 조준 중에만 쓸 수 있다. 잠긴 동안에도 무엇을 들고 있는지는 보여야 해서
+  // 숨기지 않고 흐리게만 처리한다.
+  const usable = S.state === 'aiming' && !S.paused;
+  let html = '';
+  for (let i = 0; i < CONFIG.SLOT_CAPACITY; i++) {
+    const kind = S.slots[i];
+    html += kind
+      ? `<button type="button" class="slot filled${usable ? '' : ' locked'}" data-slot="${i}"
+           aria-label="${SLOT_ITEMS[kind].name}"><img src="img/item-${kind}.webp" alt=""></button>`
+      : `<div class="slot empty"></div>`;
+  }
+  slotBox.innerHTML = html;
+}
+if (slotBox) slotBox.addEventListener('click', e => {
+  const el = e.target && e.target.closest ? e.target.closest('.slot.filled') : null;
+  if (el) useSlotItem(Number(el.dataset.slot));
+});
+
 // ---- buttons ----
 const btnSpeed = document.getElementById('btnSpeed');
 const btnNextRound = document.getElementById('btnNextRound');
 btnSpeed.addEventListener('click', () => {
-  S.speedMult = S.speedMult===1 ? 2 : S.speedMult===2 ? 4 : 1;
+  S.speedMult = S.speedMult===2 ? 4 : S.speedMult===4 ? 8 : 2;
   btnSpeed.textContent = S.speedMult+'배속';
-  btnSpeed.classList.toggle('active', S.speedMult>1);
+  btnSpeed.classList.toggle('active', S.speedMult>2);
 });
 btnNextRound.addEventListener('click', () => {
   if (S.state === 'aiming') {
@@ -4976,15 +5447,14 @@ document.getElementById('btnPauseGuide').addEventListener('click', () =>
   renderGuide(GUIDE, '블록 도감', 'img/t-guide.webp', '게임에 등장하는 블록과 아이템을 확인해 보세요!'));
 
 // ---- main loop ----
-function frame(){
-  if (S.paused) { render(); requestAnimationFrame(frame); return; }
+// 게임 시간 1/60초를 굴린다. 물리는 반드시 이 고정 폭으로만 나아가야 한다
+// (충돌 판정이 스텝 폭에 맞춰 짜여 있고, 같은 시드+발사각이면 같은 판이 나와야 한다).
+function tick(){
   if (S.hitstop > 0) {
     // 물리만 멈춘다. 파티클과 링은 계속 움직여야 "멈췄다"가 아니라 "꽝"으로 읽힌다.
     S.hitstop -= FIXED_DT;
     updateParticles(FIXED_DT);
     updateBuffEdge();
-    render();
-    requestAnimationFrame(frame);
     return;
   }
   if (S.state === 'firing') {
@@ -4997,6 +5467,40 @@ function frame(){
   }
   updateParticles(FIXED_DT);
   updateBuffEdge();
+  if (S.slotFullNotice > 0) S.slotFullNotice -= FIXED_DT;
+}
+
+// 한 프레임에 몰아서 굴릴 수 있는 최대 틱 수. 이걸 안 두면 느린 기기에서 악순환이 난다
+// (프레임이 늦음 → 밀린 틱을 몰아 굴림 → 그 프레임이 더 늦음 → ...).
+// 상한에 걸리면 밀린 시간은 버린다 - 따라잡기를 포기하고 그 순간만 느리게 가는 게,
+// 영영 못 따라잡고 계속 버벅이는 것보다 낫다.
+const MAX_CATCHUP_TICKS = 5;
+// 탭을 오래 두고 왔거나 화면이 꺼졌다 켜지면 경과 시간이 몇 초씩 찍힌다. 그걸 그대로
+// 굴리면 안 보는 사이에 판이 진행돼 버리므로, 한 프레임이 인정하는 최대 간격을 둔다.
+const MAX_FRAME_GAP = MAX_CATCHUP_TICKS * FIXED_DT;
+let frameClock = 0;      // 직전 프레임 시각(ms). 0 이면 아직 기준이 없다는 뜻
+let tickDebt = 0;        // 아직 안 굴린 게임 시간(초)
+
+function frame(now){
+  // rAF 가 인자를 주지만, 테스트처럼 직접 부르는 경우도 있어 없으면 시계를 읽는다.
+  const t = typeof now === 'number' ? now : performance.now();
+  const gap = frameClock ? Math.min((t - frameClock)/1000, MAX_FRAME_GAP) : FIXED_DT;
+  frameClock = t;
+
+  if (S.paused) { render(); requestAnimationFrame(frame); return; }
+
+  // 예전엔 rAF 한 번을 무조건 게임 1/60초로 셌다. 그래서 화면이 60fps 를 못 내면
+  // 프레임이 끊기는 게 아니라 게임 시간 자체가 느려졌다(30fps = 2배 슬로모션).
+  // 폰에서만 느려 보이던 게 이것 때문이다. 이제는 실제로 흐른 시간만큼 굴린다.
+  // 120Hz 화면에서 두 배로 빨라지던 것도 같이 잡힌다.
+  tickDebt += gap;
+  let ticks = 0;
+  while (tickDebt >= FIXED_DT && ticks < MAX_CATCHUP_TICKS) {
+    tick();
+    tickDebt -= FIXED_DT;
+    ticks++;
+  }
+  if (ticks >= MAX_CATCHUP_TICKS) tickDebt = 0;
   render();
   requestAnimationFrame(frame);
 }
