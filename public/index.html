@@ -1638,9 +1638,18 @@ const CONFIG = {
   FIRE_TOTAL_TARGET: 1.8,
   MIN_DRAG: 18,
   MAX_ANGLE_FROM_VERTICAL: 80 * Math.PI/180,
-  // 보유량과 실제 동시 발사량 모두 150개로 제한한다. 합친 대표 공은 사용하지 않는다.
-  MAX_BALLS: 150,
-  ACTIVE_BALL_CAP: 150,
+  // 보유량과 실제 동시 발사량 모두 100개로 제한한다. 합친 대표 공은 사용하지 않는다.
+  // 이건 화력 캡이 아니라 렌더·물리 캡이다 - 넘치는 만큼은 bonusPower 로 공들에
+  // 균등 분배돼서 총 공격력은 그대로 보존된다(finishTurn 참고). 그래서 이 값을
+  // 내려도 블록 체력·점수 곡선은 안 움직이고, 줄어드는 건 동시에 나는 궤적 수뿐이다.
+  // 150 -> 100 (2026-08-12): 공 비용이 프레임의 70% 안팎이고 공 개수에 선형이라
+  // 폰 피크 프레임을 가장 싸게 깎을 수 있는 레버가 여기였다. 실측(test/sim.js 10판)
+  // 으로 6판이 150 천장에 닿았고 R20 언저리부터 판이 끝날 때까지 붙어 있었으므로,
+  // 천장을 내린 만큼은 실제로 회수된다.
+  // ⚠️ 기기별로 다르게 두면 안 된다 - 공 개수가 플레이 결과를 바꾸므로 데일리 모드의
+  // '같은 시드 = 같은 판' 재현성이 깨진다. 낮추려면 전 기기 공통이어야 한다.
+  MAX_BALLS: 100,
+  ACTIVE_BALL_CAP: 100,
   PRESSURE_AT_14: 0.72,
   PRESSURE_BASE: 0.72,
   MIN_ROWS: 12,
@@ -1753,13 +1762,13 @@ const CONFIG = {
   // (일부러 채워서 씹어먹는 전략을 만들면 안 되니까).
   // 상한은 고정값이 아니라 그 턴 공 개수에 비례한다. 원래 막으려던 건 "남은 공이
   // 없어지는 것"이지 "많이 갇히는 것"이 아니었다 - 위 실측도 9개가 문제였던 게
-  // 아니라 남은 게 1개였던 게 문제였다. 공 150개 중 30개가 갇히는 건 아무 일도
+  // 아니라 남은 게 1개였던 게 문제였다. 공 100개 중 20개가 갇히는 건 아무 일도
   // 아닌데, 고정 4개는 공이 늘어난 뒤로 그냥 "4번 맞으면 터지는 블록"이 돼버렸다.
   TRAP_MAX_HOLD_MIN: 4,
   TRAP_MAX_HOLD_RATIO: 0.2,
   // ⚠️ 갇힌 공은 턴이 끝나도 안 돌려준다 - 도둑을 깨야 회수한다(2026-08-12 사용자 확정).
   // 예전엔 턴 끝에 전부 자동 반환이라 도둑이 아니라 보관함이었고, 일부만(60%) 돌려주게
-  // 바꿔봐도 실제 손실이 24판에 11번·한 번에 2개뿐이라(보유 150개 중) 체감이 없었다.
+  // 바꿔봐도 실제 손실이 24판에 11번·한 번에 2개뿐이라(당시 보유 상한 150개 중) 체감이 없었다.
   // 지금은 못 깨는 동안 계속 묶여 있으므로 다음 턴 발사량이 그만큼 줄고, HUD 공 개수에도
   // 바로 나타난다. 데스 스파이럴은 우리 상한(TRAP_MAX_HOLD_RATIO, 가진 공의 20%)이 막는다 -
   // 한 블록이 아무리 먹어도 80% 는 늘 남고, 우리가 차면 저절로 터져 전부 돌아온다.
@@ -1774,6 +1783,10 @@ const CONFIG = {
   // 순위표를 망가뜨리고 결국 정수 정밀도(2^53)까지 넘긴다.
   // 천장은 +N 블록으로 자라는 속도(라운드의 제곱 언저리)와 같은 차수로 둔다. 8개 시드로
   // 끝까지 돌려 보니 실제 플레이는 천장의 3~22% 선이라, 폭주할 때만 걸리고 평소엔 안 걸린다.
+  // 밑값은 MAX_BALLS 와 따로 둔다. 예전엔 MAX_BALLS 를 그대로 썼는데, 그러면 렌더
+  // 성능 때문에 공 캡을 만질 때마다 ×2 폭주 천장까지 같이 움직인다. 둘은 서로 다른
+  // 이유로 정해진 값이라 묶여 있으면 안 된다(공 캡 100 으로 내릴 때 분리, 2026-08-12).
+  POWER_CAP_BASE: 150,
   POWER_CAP_SLOPE: 2.5,
   GOLD_MULT: 2,
   SHIFT_DURATION: 0.28,
@@ -1883,7 +1896,7 @@ function generateHpBrick(rng, round, power, variant){
 }
 // 라운드 r 에서 가질 수 있는 총 공격력(공 개수 + 보너스 공격력)의 천장
 function powerCap(round){
-  return CONFIG.MAX_BALLS + Math.round(round * round * CONFIG.POWER_CAP_SLOPE);
+  return CONFIG.POWER_CAP_BASE + Math.round(round * round * CONFIG.POWER_CAP_SLOPE);
 }
 function generateOpBrick(rng, round){
   const subChance = clamp(CONFIG.SUB_CHANCE_BASE + round*CONFIG.SUB_CHANCE_PER_ROUND, CONFIG.SUB_CHANCE_BASE, CONFIG.SUB_CHANCE_MAX);
@@ -3200,7 +3213,7 @@ function releaseExpiredTraps(){
 
 function finishTurn(){
   flushFlameQueue();
-  // 물리 공은 최대 150개, 초과분은 공들에 고르게 나눠지는 추가 공격력으로 보존한다.
+  // 물리 공은 최대 100개, 초과분은 공들에 고르게 나눠지는 추가 공격력으로 보존한다.
   // 천장은 여기 한 곳에서만 건다 - 공 개수·보너스 공격력·블록 체력·점수가 전부
   // 이 값에서 파생되므로, 여기만 막으면 아래로 다 따라온다.
   const tierBefore = ballTier();
@@ -4390,10 +4403,11 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', resi
 // 눈 결정이 비치는 유리구슬. 빛은 왼쪽 위에서 온다.
 // 공 색은 지금까지 키운 총 공격력(공 개수 + 보너스 공격력)에 따라 올라간다.
 // 블록 색과 달리 이건 '내가 얼마나 컸나'를 보여주는 눈금이라 절대 수치로 끊는다.
-// 150 은 물리 공 최대치라 여기까지가 한 단계, 그 뒤로는 보너스 공격력 구간이다.
+// 100 은 물리 공 최대치라 여기까지가 한 단계, 그 뒤로는 보너스 공격력 구간이다.
+// (MAX_BALLS 와 같이 움직여야 하는 값이다 - 안 옮기면 첫 승급이 보너스 쌓일 때까지 밀린다.)
 const BALL_TIERS = [
   { at: 0,     core:'#eaf7ff', mid:'#6dc4fb', deep:'#1c76dd', edge:'#053d95', glow:' 70,175,255' },
-  { at: 150,   core:'#e8fdff', mid:'#5fe3f0', deep:'#0e9fbe', edge:'#064a72', glow:' 80,225,245' },
+  { at: 100,   core:'#e8fdff', mid:'#5fe3f0', deep:'#0e9fbe', edge:'#064a72', glow:' 80,225,245' },
   { at: 500,   core:'#eafff3', mid:'#59e2a4', deep:'#12a566', edge:'#065239', glow:' 90,235,175' },
   { at: 1000,  core:'#f6f0ff', mid:'#b18bfa', deep:'#6d31d6', edge:'#331276', glow:'165,130,255' },
   { at: 3000,  core:'#fff2e4', mid:'#ffa45c', deep:'#e0680b', edge:'#7a3400', glow:'255,150,70' },
@@ -4448,7 +4462,7 @@ function paintIceBall(gctx, cx, cy, r, dim, flake, t = ballTier(), blurScale = 1
 // ---- 공 스프라이트 캐시 ----
 // paintIceBall 은 공 하나마다 그림자 블러와 방사 그라데이션을 새로 굽는다. 판에
 // 공이 수십~수백 개 날아다니면 이것만으로 프레임 예산을 통째로 먹는다(실측
-// 2026-08-12, 폰급으로 CPU 4배 조인 상태: 공 150개일 때 프레임당 65ms 중 46ms).
+// 2026-08-12, 폰급으로 CPU 4배 조인 상태: 당시 공 상한 150개일 때 프레임당 65ms 중 46ms).
 // PC 는 그냥 삼켜서 티가 안 나지만 폰은 프레임을 놓치고, 이 게임은 rAF 한 번에
 // FIXED_DT 씩만 굴리므로 놓친 프레임이 그대로 슬로모션이 된다.
 // 그림 자체는 티어·반지름·dim 조합에 따라 몇 종류뿐이고 매 프레임 똑같다.
