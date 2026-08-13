@@ -384,12 +384,15 @@
   .rank li{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:13px;
     font-size:14.5px;color:#3c62a0;font-weight:700;}
   .rank li + li{border-top:1px solid rgba(160,205,250,.35);}
-  /* 내 줄은 시안처럼 하늘색 링 + 빛으로 확실히 띄운다 */
+  /* 내 줄. 예전엔 흰 배경 + 하늘색 링 + 바깥 빛이라, 판 자체가 거의 흰색인 로비에서는
+     줄이 아니라 '카드 한 장이 명단 위에 얹힌 것'처럼 겉돌았다(링이 위아래 줄을 밀어냈다).
+     판이 밝으니 내 줄은 반대로 파랗게 깔아야 명단 안에 있으면서 도드라진다. */
   .rank li.me{position:relative;border-top-color:transparent;
-    background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(214,238,255,.9));
-    color:#123a86;font-weight:900;
-    box-shadow:0 0 0 2px rgba(120,200,255,.9), 0 0 16px rgba(110,195,255,.65),
-      inset 0 1px 0 rgba(255,255,255,.95);}
+    background:linear-gradient(180deg,rgba(212,235,255,.96),rgba(178,216,252,.93));
+    color:#0d3272;font-weight:900;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.75);}
+  .rank li.me .nm{color:#0d3272;}
+  .rank li.me .sc{color:#0a2f6e;}
   .rank li.me + li{border-top-color:transparent;}
   .rank .no{width:22px;color:var(--ink3);font-variant-numeric:tabular-nums;font-weight:800;
     text-align:center;flex:0 0 auto;}
@@ -624,6 +627,9 @@
     border-style:solid;border-width:0;
     border-image-source:url('img/btn-play.webp');
     border-image-slice:58 70 46 70 fill;
+    /* 배율은 일부러 안 맞춘다. 원본 734x453 을 k=.322 로 통일하면(18.7/22.5/14.8)
+       가운데 조각 눌림(편차 37%)은 사라지지만 눈 모자와 얼음 테가 같이 얇아져
+       실제 크기에서 버튼이 더 밋밋해졌다. 이음매는 1x 에서 거의 안 보인다. */
     border-image-width:26px 32px 21px 32px;
     border-image-repeat:stretch;
     color:#fff;margin:0 0 16px;box-shadow:none;
@@ -683,6 +689,17 @@
      하나는 크고 하나는 작아 보여 글자 줄이 서로 어긋난다. height 를 고정해 같은 자리를 차지하게 한다. */
   .title .twoBtn button img{height:40px;width:auto;max-width:56px;
     filter:drop-shadow(0 4px 7px rgba(10,40,110,.3));}
+  /* 로비 아래 두 칸은 가로세로비가 1.74 인데 btn-ghost(5.58)를 9분할로 늘려 쓰고 있었다.
+     모서리 조각과 가운데 조각의 배율이 3배 가까이 어긋나 위아래에 가로 이음매 줄이 그어지고,
+     그림 오른쪽 눈꽃이 세로로 뭉개져 얼룩처럼 번졌다.
+     짧은 알약인 btn-gender(2.99, 눈꽃 없음)로 바꾼다.
+     배율 k 는 세로가 딱 맞게 잡아야 가로 이음매가 사라진다: k = 버튼높이/원본높이 = 75.8/99 = .766.
+     이러면 slice 40 × .766 = 30.6px, 세로 가운데 조각 14.6px = 원본 19 × .766 로 정확히 일치한다.
+     (k=.5 로 뒀더니 세로 가운데만 1.88배 늘어나 위아래에 옅은 줄이 남았다) */
+  #btnHow, #btnGuide{
+    border-image-source:url('img/btn-gender.webp');
+    border-image-slice:40 fill;
+    border-image-width:30.6px;}
 
   /* ---- 도감·게임 방법 ---- */
   /* 얼음판 한 장 위에 제목 + 섹션(탭 + 카드 묶음)이 얹힌다 */
@@ -1439,7 +1456,6 @@
     <div class="panel">
       <div class="panelHead">
         <span>친구 랭킹</span>
-        <button id="btnAllRank" class="more">전체 보기</button>
       </div>
       <ol class="rank" id="lobbyRank"></ol>
     </div>
@@ -1796,7 +1812,11 @@ const CONFIG = {
   // 여덟 발을 한 프레임에 다 때리면 숫자만 툭 줄고 만다. 이 간격으로 끊어 꽂아야
   // 촤라락 연타로 읽힌다(총 0.08 x 7 = 0.56초).
   THUNDER_INTERVAL: 0.08,
-  BLIZZARD_MULT: 2,
+  // 눈보라: 이번 턴에 같은 발사를 이만큼 연달아 한다(사용자 확정 2026-08-13).
+  // 예전엔 '공 개수를 2배로 부풀린 한 번의 발사'였는데, 화면에선 그냥 공이 좀 많은
+  // 평범한 턴으로 보였다. 같은 양을 두 번 나눠 쏘면 '한 번 더 날아간다'가 눈에 보인다.
+  // 총 발사량·회수량은 예전과 같다(2배).
+  BLIZZARD_VOLLEYS: 2,
   // 왕눈덩이: 다음 턴에 공을 전부 하나로 뭉쳐 쏜다. 이 한 알이 블록을 튕기지 않고
   // 꿰뚫으며 지나가는 족족 총 화력만큼 때린다(사용자 확정 2026-08-12).
   // 예전엔 '공을 최대 크기로 발사'였는데 크기만 커질 뿐 특별할 게 없었다.
@@ -1807,6 +1827,9 @@ const CONFIG = {
   // 조준 보조는 한 턴만으로는 이득을 체감하기 어렵다 - 그 한 턴을 잘 쏘려고 아껴두게 된다.
   FORESIGHT_BOUNCES: 6,
   FORESIGHT_TURNS: 3,
+  // 두 개를 연달아 쓰면 턴 수가 더해진다(사용자 지적 2026-08-13: 중첩이 안 됐다).
+  // 상한은 슬롯을 눈길 읽기로만 가득 채워 한꺼번에 쓴 경우(3칸 x 3턴).
+  FORESIGHT_MAX_TURNS: 9,
   // 화염(예전 얼음 자리, 2026-08-11 이미지·이름만 교체 - 매커니즘은 그대로):
   // 판 위 제일 센 블록 체력의 이 비율만큼을 고정 데미지로 뽑아 모든 숫자
   // 블록에 똑같이 먹인다(그래서 진짜 하드코딩 -30 같은 것과 다르다 - 기준이
@@ -2021,14 +2044,28 @@ function generateOpBrick(rng, round){
 // 슬롯에 담아 뒀다가 쓰는 아이템들. 나머지(bomb·frenzy·gold·flame)는 닿는 즉시 터진다.
 const STORED_ITEMS = ['thunder', 'blizzard', 'foresight', 'bigball', 'stopline', 'sweep'];
 const isStoredItem = kind => STORED_ITEMS.includes(kind);
+// 판 위에서는 보관형 아이템이 전부 이 한 종류로만 보인다(사용자 확정 2026-08-13).
+// 무엇이 나올지는 주울 때 정해진다 - 그래야 '저 칸은 눈보라니까 아껴 두자' 같은
+// 계산이 사라지고, 아이템 블록은 언제나 한 번 쳐 볼 만한 칸이 된다.
+// 즉발형(bomb·frenzy·gold·flame)은 닿는 즉시 효과가 나오므로 지금처럼 그대로 보인다.
+const MYSTERY = 'mystery';
+const isSlotBrick = kind => kind === MYSTERY || isStoredItem(kind);
 
-function generateItemBrick(rng){
-  const entries = Object.entries(CONFIG.ITEM_WEIGHTS);
+// 가중치 표에서 하나 뽑는다. only 를 주면 그 종류들 안에서만 뽑는다.
+function pickWeighted(rng, weights, only){
+  const entries = Object.entries(weights).filter(([k]) => !only || only.includes(k));
   const total = entries.reduce((a, [, w]) => a + w, 0);
   let v = rng.next() * total;
-  for (const [kind, w] of entries) { v -= w; if (v < 0) return { type:'item', kind }; }
-  return { type:'item', kind: entries[0][0] };
+  for (const [kind, w] of entries) { v -= w; if (v < 0) return kind; }
+  return entries[entries.length-1][0];
 }
+function generateItemBrick(rng){
+  const kind = pickWeighted(rng, CONFIG.ITEM_WEIGHTS);
+  // 보관형이 뽑혔으면 종류는 아직 정하지 않는다 - 주울 때 rollStoredItem() 이 정한다.
+  return { type:'item', kind: isStoredItem(kind) ? MYSTERY : kind };
+}
+// 보관형 아이템의 실제 종류. 원래 가중치 비율 그대로다(보관형끼리만 정규화).
+const rollStoredItem = rng => pickWeighted(rng, CONFIG.ITEM_WEIGHTS, STORED_ITEMS);
 function generateRow(rng, round, power){
   const row = new Array(CONFIG.COLS).fill(null);
   const ramp = Math.min(1, round / CONFIG.DENSITY_RAMP_ROUNDS);
@@ -2071,6 +2108,11 @@ function opColor(op){
 // 2026-08-11 참고 시안(다운로드 폴더 블록.png)에 맞춰 더 진하고 광택 있는 톤으로
 // 다시 뽑았다 - 실제 시안 픽셀을 크롭해서 샘플링한 값 기준.
 function itemVisual(kind){
+  // 정체를 숨긴 아이템 블록. 남색 - 하늘색으로 칠했더니 판 배경과 대비가 1.10
+  // 밖에 안 나와서(실측) 블록 윤곽이 배경에 녹았고, 하늘색은 제일 약한 숫자
+  // 블록 색(BALL/HP 티어 1)과도 겹쳤다. 숫자 티어 8색·아이템 4색 어디에도 없는
+  // 색이어야 '아직 안 밝혀진 칸'으로 읽힌다.
+  if (kind===MYSTERY)  return { color:'#26359c', light:'#6f8cff', soft:'#e8edff', icon:'?' };
   if (kind==='bomb')   return { color:'#e2470a', light:'#ffc98a', soft:'#fff1e8', icon:'💥' };
   if (kind==='frenzy') return { color:'#6f3ad1', light:'#c9a0fb', soft:'#f3edff', icon:'⚡' };
   // 화염 배지(다운로드폴더 블록2.png)에서 직접 샘플링: 카드 바탕의 진붉은색과
@@ -2203,6 +2245,8 @@ const S = {
   blizzardArmed: false, crushArmed: false, stopLineArmed: false,
   foresightTurns: 0,      // 눈길 읽기가 남은 턴 수(한 턴짜리가 아니라 여러 턴 이어진다)
   turnCrush: false,       // 이번 턴을 '뭉친 한 알'로 쏠지(왕눈덩이)
+  turnFireQueue: [],      // 이번 턴 첫 발사의 공격력 대기열 사본(눈보라 앙코르가 그대로 다시 쓴다)
+  blizzardEncore: 0,      // 남은 추가 발사 횟수
   turnWallTime: 0,
   turnHadHit: false,
   paused: false,
@@ -2223,6 +2267,7 @@ function resetTransientState(){
   S.activeBalls = []; S.particles = []; S.popups = []; S.returning = [];
   S.shake = 0; S.shiftAnim = 0;
   S.slotFullNotice = 0; S.turnCrush = false;
+  S.turnFireQueue = []; S.blizzardEncore = 0;
   renderSlots();
   S.waves = []; S.flash = null; S.hitstop = 0;
   S.embers = [];
@@ -2306,6 +2351,14 @@ function resumeGame(data){
   S.bonusPower = Math.max(0, Math.floor(Number(data.bonusPower) || 0));
   S.maxBalls = Math.min(CONFIG.MAX_BALLS, Math.max(S.ballCount, Number(data.maxBalls) || 1));
   S.grid = data.grid;
+  // 정체를 숨기기 전(2026-08-13 이전)에 저장된 판에는 종류가 박힌 보관형 아이템
+  // 블록이 남아 있다. 이어하기로 돌아온 판만 옛날 그림이 섞이지 않게 여기서 덮는다.
+  for (const row of S.grid) {
+    for (let c = 0; c < row.length; c++) {
+      const b = row[c];
+      if (b && b.type === 'item' && isStoredItem(b.kind)) b.kind = MYSTERY;
+    }
+  }
   S.bossKills = data.bossKills || 0;
   // 저장에 없거나 망가져 있으면 빈 슬롯으로 되돌린다 - 아이템을 잃는 쪽이
   // 알 수 없는 값으로 게임이 이상해지는 것보다 낫다.
@@ -2314,7 +2367,7 @@ function resumeGame(data){
   const armed = data.armed || {};
   S.blizzardArmed = !!armed.blizzard; S.crushArmed = !!armed.crush;
   S.stopLineArmed = !!armed.stopLine;
-  S.foresightTurns = Math.max(0, Math.min(CONFIG.FORESIGHT_TURNS, Number(armed.foresightTurns) || 0));
+  S.foresightTurns = Math.max(0, Math.min(CONFIG.FORESIGHT_MAX_TURNS, Number(armed.foresightTurns) || 0));
   resetTransientState();
 }
 // 창이 닫히는 시점에 안전망으로 한 번 더 저장한다. saveGame()은 'aiming'
@@ -2777,11 +2830,13 @@ function applyOperator(brick, selfIndex, removeSet, spawnList){
 function applyItem(kind, rr, cc, spawnList){
   // 보관형은 여기서 효과를 내지 않고 슬롯에 들어가기만 한다. 실제 효과는
   // 플레이어가 조준 중에 슬롯을 눌렀을 때 useSlotItem() 이 낸다.
-  if (isStoredItem(kind)) {
-    S.slots.push(kind);
+  // 판에서는 전부 물음표 한 종류로 보이므로, 무엇이 나올지는 이 순간 판 난수로 정해진다.
+  if (isSlotBrick(kind)) {
+    const got = kind === MYSTERY ? rollStoredItem(S.rng) : kind;
+    S.slots.push(got);
     renderSlots();
     vibrate(PATTERN.itemGold);
-    showBuffBanner(`${SLOT_ITEMS[kind].emoji} ${SLOT_ITEMS[kind].name} 획득!`);
+    showBuffBanner(`${SLOT_ITEMS[got].emoji} ${SLOT_ITEMS[got].name} 획득!`);
     return;
   }
   if (kind === 'bomb') {
@@ -2862,8 +2917,8 @@ function applyItem(kind, rr, cc, spawnList){
 // 그래서 '무엇을 언제 쓰느냐'가 조준각 말고 두 번째 결정이 된다.
 const SLOT_ITEMS = {
   thunder:   { color:'#a78bfa', name:'번개',            emoji:'⚡', desc:`무작위 블록 ${CONFIG.THUNDER_TARGETS}칸에 현재 총 화력의 ${Math.round(CONFIG.THUNDER_CUT*100)}% 피해`, tip:'깊게 찍는 공격형' },
-  blizzard:  { color:'#7dd3fc', name:'눈보라',          emoji:'🌨', desc:`이번 턴 발사량 ${CONFIG.BLIZZARD_MULT}배`, tip:'공이 상한에 걸린 뒤에도 강력해요' },
-  foresight: { color:'#38bdf8', name:'눈길 읽기',       emoji:'🎯', desc:`${CONFIG.FORESIGHT_TURNS}턴 동안 조준선 반사를 ${CONFIG.FORESIGHT_BOUNCES}회까지 표시`, tip:'정밀 조준에 특화' },
+  blizzard:  { color:'#7dd3fc', name:'눈보라',          emoji:'🌨', desc:`이번 턴에 같은 발사를 ${CONFIG.BLIZZARD_VOLLEYS}번 연달아`, tip:'공이 상한에 걸린 뒤에도 강력해요' },
+  foresight: { color:'#38bdf8', name:'눈길 읽기',       emoji:'🎯', desc:`${CONFIG.FORESIGHT_TURNS}턴 동안 조준선 반사를 ${CONFIG.FORESIGHT_BOUNCES}회까지 표시`, tip:'이어 쓰면 남은 턴에 더해져요' },
   bigball:   { color:'#60a5fa', name:'왕눈덩이',         emoji:'💎', desc:'다음 턴 공이 하나로 뭉쳐, 튕기지 않고 블록을 꿰뚫으며 지나가요', tip:'지나간 블록마다 총 화력이 그대로 꽂혀요' },
   stopline:  { color:'#f87171', name:'줄 정지',         emoji:'⛔', desc:'이번 라운드 줄이 내려오지 않음', tip:'위기에서 한 턴 벌어요' },
   sweep:     { color:'#93c5fd', name:'아래줄 밀어내기', emoji:'🧹', desc:'블록이 있는 맨 아래 줄을 통째로 제거', tip:'점수 없이 위험만 지워내요' },
@@ -2949,10 +3004,15 @@ function useSlotItem(i){
     if (kind === 'blizzard')  S.blizzardArmed  = true;
     if (kind === 'bigball')   S.crushArmed      = true;
     if (kind === 'stopline')  S.stopLineArmed   = true;
-    if (kind === 'foresight') S.foresightTurns  = CONFIG.FORESIGHT_TURNS;
+    // 눈길 읽기는 이어 쓰면 남은 턴에 더해진다 - 덮어쓰면 아직 남은 턴이 사라져서
+    // 두 개를 연달아 써도 3턴 그대로였다(사용자 지적 2026-08-13).
+    if (kind === 'foresight') {
+      S.foresightTurns = Math.min(CONFIG.FORESIGHT_MAX_TURNS,
+                                  S.foresightTurns + CONFIG.FORESIGHT_TURNS);
+    }
     vibrate(PATTERN.itemFrenzy);
     showBuffBanner(kind === 'foresight'
-      ? `${info.emoji} ${info.name} ${CONFIG.FORESIGHT_TURNS}턴 동안!`
+      ? `${info.emoji} ${info.name} ${S.foresightTurns}턴 동안!`
       : `${info.emoji} ${info.name} 준비!`);
   }
   updateHud();
@@ -3217,7 +3277,7 @@ function substep(subDt){
               // 보관형인데 슬롯이 꽉 찼으면 못 먹는다 - 블록을 그대로 두고 공만
               // 튕겨 나간다. 그래야 '하나 쓰고 자리를 비울까'라는 판단이 생긴다
               // (안 그러면 무한정 쌓여서 아끼기만 하는 게 늘 이득이 된다).
-              if (isStoredItem(brick.kind) && S.slots.length >= CONFIG.SLOT_CAPACITY) {
+              if (isSlotBrick(brick.kind) && S.slots.length >= CONFIG.SLOT_CAPACITY) {
                 if (S.slotFullNotice <= 0) {
                   S.slotFullNotice = 1.5;   // 공이 계속 닿는다고 매 프레임 띄우지 않는다
                   showBuffBanner('슬롯이 꽉 찼어요');
@@ -3355,6 +3415,8 @@ function releaseExpiredTraps(){
 
 function finishTurn(){
   flushFlameQueue();
+  // '다음 라운드' 버튼처럼 턴을 접고 들어오는 경로가 있어서, 남은 앙코르는 여기서 끊는다.
+  S.blizzardEncore = 0;
   // 물리 공은 최대 100개, 초과분은 공들에 고르게 나눠지는 추가 공격력으로 보존한다.
   // 천장은 여기 한 곳에서만 건다 - 공 개수·보너스 공격력·블록 체력·점수가 전부
   // 이 값에서 파생되므로, 여기만 막으면 아래로 다 따라온다.
@@ -3579,14 +3641,45 @@ const LB = {
   stats: { best: 0, bestRound: 0, plays: 0 },
 };
 
+// 최고기록은 계정별로 따로 둔다. 예전엔 기기에 하나뿐인 'snowball.best' 를 썼는데,
+// 로그아웃해도 이 값이 남아서 같은 기기에서 다른 계정으로 로그인하면 그 사람의
+// 기록이 앞 사람 기록으로 덮여 보였고, 게임이 끝날 때 submitScore 가 그 값을
+// (toSend = max(점수, pending, best)) 서버로 올려 남의 기록을 자기 계정에 박아
+// 넣었다(사용자 지적 2026-08-13). 이제 계정이 바뀌면 읽는 칸 자체가 달라진다.
+const bestKeyFor = id => 'snowball.best.' + (id || 'guest');
+const pendKeyFor = id => 'snowball.pending.' + (id || 'guest');
+const EMPTY_STATS = () => ({ best: 0, bestRound: 0, plays: 0 });
+
+// 지금 LB.id 몫의 기록만 읽어 온다. 로그인·로그아웃으로 주인이 바뀔 때마다 부른다.
+function lbLoadPersonal(){
+  try {
+    LB.best = Number(localStorage.getItem(bestKeyFor(LB.id)) || 0);
+    LB.pending = Number(localStorage.getItem(pendKeyFor(LB.id)) || 0);
+  } catch(e){ LB.best = 0; LB.pending = 0; }
+}
+// 계정 구분이 없던 시절의 키를, 그 값을 만든 계정(마지막으로 로그인해 있던 계정)
+// 몫으로 한 번만 옮긴다.
+function migrateLegacyBest(){
+  try {
+    const legacyBest = localStorage.getItem('snowball.best');
+    const legacyPend = localStorage.getItem('snowball.pending');
+    if (legacyBest === null && legacyPend === null) return;
+    const bk = bestKeyFor(LB.id), pk = pendKeyFor(LB.id);
+    if (legacyBest !== null && localStorage.getItem(bk) === null) localStorage.setItem(bk, legacyBest);
+    if (legacyPend !== null && localStorage.getItem(pk) === null) localStorage.setItem(pk, legacyPend);
+    localStorage.removeItem('snowball.best');
+    localStorage.removeItem('snowball.pending');
+  } catch(e){}
+}
+
 function lbLoad(){
   try {
     LB.id = localStorage.getItem('snowball.id') || '';
     LB.nick = localStorage.getItem('snowball.nick') || '';
     LB.token = localStorage.getItem('snowball.token') || '';
     LB.expiresAt = Number(localStorage.getItem('snowball.expiresAt') || 0);
-    LB.best = Number(localStorage.getItem('snowball.best') || 0);
-    LB.pending = Number(localStorage.getItem('snowball.pending') || 0);
+    migrateLegacyBest();
+    lbLoadPersonal();
     if (!LB.expiresAt || LB.expiresAt <= Date.now()) {
       LB.token = '';
       LB.expiresAt = 0;
@@ -3599,8 +3692,8 @@ function lbSaveLocal(){
     localStorage.setItem('snowball.nick', LB.nick);
     localStorage.setItem('snowball.token', LB.token);
     localStorage.setItem('snowball.expiresAt', String(LB.expiresAt || 0));
-    localStorage.setItem('snowball.best', String(LB.best));
-    localStorage.setItem('snowball.pending', String(LB.pending));
+    localStorage.setItem(bestKeyFor(LB.id), String(LB.best));
+    localStorage.setItem(pendKeyFor(LB.id), String(LB.pending));
   } catch(e){}
 }
 function cleanField(v, max){
@@ -3875,7 +3968,7 @@ const GUIDE = [
       const it = SLOT_ITEMS[k];
       return [it.color, it.emoji, it.name, it.desc + '.', it.tip, 'item-' + k];
     }),
-    `먹으면 아래 ${CONFIG.SLOT_CAPACITY}칸 슬롯에 담겨요 · 조준 중에만 쓸 수 있어요 · 슬롯이 꽉 차 있으면 블록이 그대로 남아요`],
+    `판에서는 전부 물음표(?) 블록 하나로 보이고, 깨는 순간 이 중 하나가 무작위로 슬롯에 담겨요 · 아래 ${CONFIG.SLOT_CAPACITY}칸까지 · 조준 중에만 쓸 수 있어요 · 슬롯이 꽉 차 있으면 블록이 그대로 남아요`],
 ];
 
 // 부제를 넘기면 도감과 같은 전체화면 판으로 그려진다(renderGuide 의 full 판정 기준).
@@ -3892,8 +3985,11 @@ const HOWTO = [
     ['#e11d63', 'HP', '같이 강해져요', '공이 늘면 블록 체력도 같이 올라가요. 그래서 끝없이 쉬워지지 않아요.', '', 'hp'],
     ['#f59e0b', '순서', '순서가 실력', '×2는 일찍 맞힐수록 좋아요. 그 자리에서 늘어난 공이 남은 시간 동안 더 많이 깨거든요.', '−N은 턴이 끝날 때 한꺼번에 빠져요', 'order'],
     ['#38bdf8', '❄', '눈덩이 굴리기', '공이 벽돌을 깰 때마다 그 자리에서 커지고 세져요. 착지하면 다시 기본 크기로 녹아요.', '커진 공은 좁은 틈은 못 지나가요', 'grow-balls'],
-    ['#a855f7', '슬롯', '아이템은 담아 뒀다 써요', `주운 아이템은 화면 아래 ${CONFIG.SLOT_CAPACITY}칸에 담겨요. 조준하는 동안 눌러서 원하는 때에 꺼내 쓰면 돼요.`,
-      '슬롯이 꽉 차 있으면 아이템 블록이 그대로 남아요', 'slots'],
+    // 아이템 획득과 슬롯 보관은 한 항목으로 합쳐 둔다 - 나눠 놓으면 같은 이야기를
+    // 두 번 읽게 된다(사용자 지적). 그림은 판에 실제로 뜨는 그 블록을 그대로 그린다
+    // (brickChip -> drawBrick). 글로만 적어두면 판에서 그게 뭔지 못 알아본다.
+    ['#26359c', '?', '물음표 블록은 뽑기예요', `무엇이 나올지는 깨 봐야 알아요. 깨는 순간 슬롯 아이템 ${STORED_ITEMS.length}종 중 하나가 화면 아래 ${CONFIG.SLOT_CAPACITY}칸에 담기고, 조준하는 동안 눌러서 원하는 때에 꺼내 써요.`,
+      '슬롯이 꽉 차 있으면 블록이 그대로 남아요', null, {type:'item', kind: MYSTERY}],
   ]],
 ];
 
@@ -4189,6 +4285,10 @@ function applyAuth(data, rememberedPw){
   LB.nick = data.nick || data.id;
   LB.token = data.token;
   LB.expiresAt = Number(data.expiresAt) || (Date.now() + 60 * 60 * 1000);
+  // 방금 로그인한 계정 몫의 기록으로 갈아 끼운다 - 앞사람(또는 로그인 전 게스트)의
+  // best/pending 이 그대로 남아 있으면 그 값이 이 계정의 기록으로 올라간다.
+  LB.stats = EMPTY_STATS();
+  lbLoadPersonal();
   LB.best = Math.max(LB.best, data.best || 0);
   if (data.stats) LB.stats = data.stats;
   lbSaveLocal();
@@ -4412,6 +4512,7 @@ function stepPhysics(dt){
   // 회수돼버렸다.
   if (S.turnWallTime > CONFIG.TURN_HARD_CAP) {
     S.frenzyActive = false;
+    S.blizzardEncore = 0;    // 시간 상한에 걸려 회수된 턴은 앙코르도 없다
     S.collectedForNextTurn += queuedPower();
     S.fireQueueRemaining = 0;
     S.firePowerQueue = [];
@@ -4427,22 +4528,44 @@ function stepPhysics(dt){
   // 전에 줄이 밀려서 2초짜리 연출이 끊겨 보인다(flushFlameQueue는 수동 스킵 같은
   // 다른 경로용 안전판이지, 정상 진행에선 여기서 자연스럽게 다 비워지고 넘어간다).
   if (S.fireQueueRemaining <= 0 && S.activeBalls.length === 0 && S.returning.length === 0
-      && S.flameQueue.length === 0) finishTurn();
+      && S.flameQueue.length === 0) {
+    // 눈보라는 여기서 턴을 끝내지 않고 같은 발사를 한 번 더 쏜다.
+    if (S.blizzardEncore > 0) { S.blizzardEncore--; relaunchVolley(); }
+    else finishTurn();
+  }
+}
+
+// 눈보라 앙코르: 이번 턴에 쏜 것과 똑같은 발사를 같은 방향으로 다시 한 번.
+// 공 개수·공격력을 여기서 다시 계산하지 않는 이유는, 첫 발사 동안 회수된 공이
+// 이미 collectedForNextTurn 에 쌓여 있어서 다시 세면 그 턴에 번 것까지 쏘게 되기
+// 때문이다. '같은 발사를 한 번 더'가 정확히 턴 시작 시점의 대기열이다.
+function relaunchVolley(){
+  S.firePowerQueue = S.turnFireQueue.slice();
+  S.fireQueueRemaining = S.firePowerQueue.length;
+  S.fireTimer = 0;
+  // 두 번째 발사도 처음 속도부터 시작한다 - 안 그러면 자동 배속이 이미 8배까지
+  // 올라가 있어서 앙코르가 순식간에 지나가 버린다(TURN_HARD_CAP 도 같이 다시 잰다).
+  S.turnWallTime = 0;
+  S.turnHadHit = false;
+  S.state = 'firing';
+  addFlash('#e0f2fe', 0.28);
+  vibrate(PATTERN.itemFrenzy);
+  showBuffBanner('🌨 눈보라 - 한 번 더!');
 }
 
 function startFiring(dir){
   S.aimDir = dir;
   // 왕눈덩이를 쓴 턴은 공이 하나로 뭉친다 - 개수 1, 화력은 전부 그 한 알에.
-  // 눈보라: 이번 턴만 공을 두 배로 쏜다. 공 하나하나의 공격력은 그대로 두고 개수만
-  // 늘린다 - 화력이 두 배가 되는 동시에 판을 훑는 밀도도 같이 올라간다.
-  const volley = S.crushArmed ? 1
-    : (S.blizzardArmed ? S.ballCount * CONFIG.BLIZZARD_MULT : S.ballCount);
+  const volley = S.crushArmed ? 1 : S.ballCount;
   S.ballCountAtTurnStart = volley;
-  const totalPower = totalOwnedPower() * (S.blizzardArmed ? CONFIG.BLIZZARD_MULT : 1);
+  const totalPower = totalOwnedPower();
   const basePower = Math.floor(totalPower / volley);
   const strongerBalls = totalPower % volley;
   S.firePowerQueue = Array.from({ length: volley }, (_, i) =>
     basePower + (i < strongerBalls ? 1 : 0));
+  // 눈보라가 걸린 턴은 공이 다 돌아온 뒤 이 대기열을 그대로 한 번 더 쏜다.
+  S.turnFireQueue = S.firePowerQueue.slice();
+  S.blizzardEncore = S.blizzardArmed ? CONFIG.BLIZZARD_VOLLEYS - 1 : 0;
   S.fireQueueRemaining = S.firePowerQueue.length;
   S.fireTimer = 0;
   S.turnWallTime = 0;
@@ -5078,6 +5201,33 @@ function drawItemIcon(g, kind, cx, cy, r){
   g.restore();
 }
 
+// 정체를 숨긴 아이템 블록. 다른 아이템 뱃지와 같은 광택 배경 위에 물음표만
+// 얹는다 - 여기서 종류를 알려주는 표시를 더하면 숨기는 의미가 없다.
+function drawMysteryBadge(g, x, y, w, puls){
+  const vis = itemVisual(MYSTERY);
+  g.save();
+  g.shadowColor = vis.color;
+  g.shadowBlur = 5 + puls*9;
+  glossyBadgeBG(g, x, y, w, w, 7, vis.light, vis.color);
+  g.restore();
+  g.save();
+  g.strokeStyle = 'rgba(255,255,255,0.85)';
+  g.globalAlpha = 0.55 + puls*0.35;
+  g.lineWidth = 1.6;
+  roundRect(g, x, y, w, w, 7);
+  g.stroke();
+  g.restore();
+  g.save();
+  g.fillStyle = '#ffffff';
+  g.shadowColor = 'rgba(12,44,86,0.55)';
+  g.shadowBlur = 3;
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.font = `900 ${Math.round(w*0.68)}px sans-serif`;
+  g.fillText('?', x + w/2, y + w*0.54);
+  g.restore();
+}
+
 // 시안(블록.png)처럼 광택 있는 뱃지 배경 - 대각선 그라데이션 위에 왼쪽 위 하이라이트
 // 방울과 아래쪽 안쪽 그림자를 얹어 입체감을 낸다. boss·curse·trap·아이템이 공용으로 쓴다.
 function glossyBadgeBG(g, x, y, w, h, r, lightColor, darkColor){
@@ -5238,6 +5388,13 @@ function drawBrick(g, brick, x, y){
     const vis = itemVisual(brick.kind);
     const puls = 0.5 + Math.sin(Date.now()/260 + x*0.6)*0.5;
     const bw = CONFIG.CELL-pad*2;
+    // 정체를 숨긴 아이템은 오려 쓸 시안이 없어서 여기서 직접 그린다. 나중에
+    // img/item-mystery.webp 를 만들어 BADGE_IMG 에 등록하면 아래 이미지 경로로
+    // 자동으로 넘어간다(다른 아이템과 같은 방식).
+    if (brick.kind === MYSTERY && !badgeReady(BADGE_IMG['item_'+MYSTERY])) {
+      drawMysteryBadge(g, x+pad, y+pad, bw, puls);
+      return;
+    }
     const img = BADGE_IMG['item_'+brick.kind];
     g.save();
     g.shadowColor = vis.color;
@@ -5733,9 +5890,13 @@ document.getElementById('btnGuideBack').addEventListener('click', () => {
   document.getElementById('mascot').classList.remove('front');
   setMascot(!document.body.classList.contains('playing'));
 });
-document.getElementById('btnAllRank').addEventListener('click', refreshLobbyRank);
 document.getElementById('btnLobbyOut').addEventListener('click', () => {
-  LB.token = ''; LB.expiresAt = 0; lbSaveLocal();
+  LB.token = ''; LB.expiresAt = 0;
+  lbSaveLocal();               // 방금까지의 기록을 그 계정 칸에 확정해 두고
+  // 계정을 놓는다. 여기서 안 놓으면 다음 사람이 앞사람 기록을 그대로 물려받는다.
+  LB.id = ''; LB.nick = '';
+  LB.stats = EMPTY_STATS();
+  lbLoadPersonal();            // 로그인 전(게스트) 몫으로 되돌린다
   document.getElementById('lobby').classList.remove('show');
   showTitle();
 });

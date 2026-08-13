@@ -1,7 +1,9 @@
 // Shared harness: loads index.html's <script> into a headless sandbox.
 const fs = require('fs'), vm = require('vm'), path = require('path');
 
-function load(extraExports = '') {
+// overrides: 샌드박스 전역을 바꿔 끼운다(예: 진짜처럼 동작하는 localStorage).
+// 기본 스텁으로는 저장·계정 관련 코드를 시험할 수 없다.
+function load(extraExports = '', overrides = {}) {
   const htmlPath = path.join(__dirname, '..', 'public', 'index.html');
   const html = fs.readFileSync(htmlPath, 'utf8');
   const body = html.match(/<script>([\s\S]*)<\/script>/)[1];
@@ -54,6 +56,7 @@ function load(extraExports = '') {
     performance: { now: () => 0 },
     Math, Date, JSON, Set, Map, Array, Object, Number, String, Boolean, isNaN, console
   };
+  Object.assign(sandbox, overrides);
   sandbox.globalThis = sandbox;
   vm.createContext(sandbox);
   vm.runInContext(script, sandbox);

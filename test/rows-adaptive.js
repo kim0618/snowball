@@ -42,14 +42,18 @@ const SCREENS = [
   ['프로맥스', 430, 720], ['XR',     414, 766],
   ['아이패드', 768, 894], ['데스크톱', 1440, 770],
 ];
-const SEEDS = [11,22,33,44,55];
+// 판마다 편차가 커서 5판 중앙값은 판 난수가 조금만 밀려도 통째로 뒤집힌다
+// (2026-08-13 실측: 아이템 종류를 주울 때 정하도록 바꿔 난수 순서만 밀렸는데
+//  5판 기준 배수가 1.82 -> 2.06 으로 튀어 실패했다. 같은 두 판을 12판으로 재면
+//  1.16 vs 1.19 로 사실상 같다). 난이도가 실제로 변한 것만 잡도록 표본을 늘린다.
+const SEEDS = [11,22,33,44,55,66,77,88,99];
 let fail = 0;
 const meds = [];
 console.log('화면       줄수  압력   라운드(5판)            중앙값');
 for (const [name,w,h] of SCREENS){
   const rs = SEEDS.map(s => run(w,h,s));
   const rounds = rs.map(r=>r.round).sort((a,b)=>a-b);
-  const med = rounds[2];
+  const med = rounds[Math.floor(rounds.length/2)];
   meds.push(med);
   console.log(`${name.padEnd(9)} ${String(rs[0].rows).padStart(3)}  ${rs[0].pressure.toFixed(2)}   ${rounds.join(',').padEnd(22)} ${String(med).padStart(4)}`);
   if (rounds.some(r => r < 3)) { fail++; console.log('   FAIL: 즉시 사망'); }
