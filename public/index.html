@@ -50,6 +50,18 @@
     --r:14px;
     /* 버튼 위에 얹히는 눈덩이와 옅은 눈꽃 무늬(흰색·파란색) */
     --snowcap:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 26' preserveAspectRatio='none'%3E%3Cg fill='%23ffffff'%3E%3Crect width='240' height='7'/%3E%3Cellipse cx='22' cy='8' rx='32' ry='12'/%3E%3Cellipse cx='218' cy='8' rx='30' ry='12'/%3E%3Cellipse cx='88' cy='6' rx='26' ry='7'/%3E%3Cellipse cx='150' cy='7' rx='24' ry='8'/%3E%3Cellipse cx='62' cy='15' rx='7' ry='11'/%3E%3Cellipse cx='191' cy='14' rx='6' ry='10'/%3E%3C/g%3E%3C/svg%3E");
+    /* 로그인 카드 윗변에 얹히는 눈. 시안(941px 폭)에서 잰 분포는 두 부분으로 나뉜다.
+       - 가운데 20~85%: 2px 남짓한 얇은 능선이 카드 윗선 '위'에만 얹힌다 → --snow-ridge
+       - 양 모서리: 덩어리가 모서리를 타고 넘어 19px 아래까지 흘러내린다 → --snow-corner
+       한 장짜리 SVG 를 카드 폭에 맞춰 늘리면 모서리 덩어리가 납작한 판때기가 되므로
+       늘려도 되는 능선만 늘리고, 덩어리는 비율을 고정해 따로 얹는다.
+       가로로 늘리면 덩어리가 납작한 판때기가 되므로 두 덩어리 모두 비율을 고정한다. */
+    /* 왼쪽: 카드 윗변에 올라앉은 세 덩이 무더기(옆으로 흘러내리지 않는다).
+       시안 실측 폭 75px(=33px)·높이 13px(=6px). */
+    --snow-mound:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 11'%3E%3Cg fill='%23ffffff'%3E%3Crect y='7' width='34' height='4'/%3E%3Cellipse cx='9' cy='5' rx='9' ry='4'/%3E%3Cellipse cx='20' cy='6' rx='8' ry='3'/%3E%3Cellipse cx='29' cy='7' rx='6' ry='2.5'/%3E%3C/g%3E%3C/svg%3E");
+    /* 오른쪽: 시안에서는 이쪽만 덩어리가 커서 모서리를 타고 20px 쯤 흘러내린다.
+       (좌표계: 카드 오른쪽 변이 x=40, 카드 윗변이 y=7) */
+    --snow-corner-r:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 30'%3E%3Cg fill='%23ffffff'%3E%3Cellipse cx='24' cy='10' rx='17' ry='6'/%3E%3Cellipse cx='10' cy='9' rx='9' ry='3.5'/%3E%3Cellipse cx='35' cy='14' rx='9' ry='9'/%3E%3Cellipse cx='36' cy='20' rx='5.5' ry='7'/%3E%3Cellipse cx='36' cy='26' rx='3' ry='4'/%3E%3C/g%3E%3C/svg%3E");
     --flake-w:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-opacity='.5' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M12 2v20M3.5 6.5l17 11M20.5 6.5l-17 11M12 6.4 9.4 3.8M12 6.4l2.6-2.6M12 17.6 9.4 20.2M12 17.6l2.6 2.6M7.5 9.2 3.9 8.3M7.5 14.8 3.9 15.7M16.5 9.2l3.6-.9M16.5 14.8l3.6.9'/%3E%3C/svg%3E");
     --flake-b:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9d6ef' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M12 2v20M3.5 6.5l17 11M20.5 6.5l-17 11M12 6.4 9.4 3.8M12 6.4l2.6-2.6M12 17.6 9.4 20.2M12 17.6l2.6 2.6M7.5 9.2 3.9 8.3M7.5 14.8 3.9 15.7M16.5 9.2l3.6-.9M16.5 14.8l3.6.9'/%3E%3C/svg%3E");
     --flake-i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c7e0f6' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M12 2v20M3.5 6.5l17 11M20.5 6.5l-17 11M12 6.4 9.4 3.8M12 6.4l2.6-2.6M12 17.6 9.4 20.2M12 17.6l2.6 2.6M7.5 9.2 3.9 8.3M7.5 14.8 3.9 15.7M16.5 9.2l3.6-.9M16.5 14.8l3.6.9'/%3E%3C/svg%3E");
@@ -451,10 +463,6 @@
     font-size:13.5px;font-weight:900;}
   .pauseQuick img{display:block;width:auto;height:45px;margin:0 auto 3px;
     filter:drop-shadow(0 4px 5px rgba(0,50,140,.28));}
-  .pauseEffect{display:flex;align-items:center;justify-content:center;min-height:46px;padding:9px 12px;
-    border-radius:16px;color:#4a85ca;background:rgba(239,248,255,.72);
-    border:3px solid rgba(255,255,255,.42);font-size:12.5px;font-weight:850;}
-  .pauseEffect::before{content:'❄';margin-right:10px;font-size:21px;color:#6fb3ee;}
   #pausePanel .pauseActions{margin-top:14px;}
   #pausePanel .pauseActions button{width:100%;border:0;font-weight:900;}
   #pausePanel #btnResume{margin:0;padding:16px 0 14px;font-size:17px;color:#fff;
@@ -509,11 +517,10 @@
   #guideScreen{z-index:34;}
   /* 위에 겹치는 화면은 자기 배경을 깔아야 한다. 안 깔면 아래 타이틀 글자가
      그대로 비쳐서 두 화면이 겹쳐 보인다. */
-  /* 가입 화면은 시안(ref2)처럼 카드 없이 풍경 위에 바로 올린다.
-     같은 그림을 깔면 아래 타이틀이 완전히 가려져 겹쳐 보이지 않는다. */
+  /* 예전 시안(ref2)은 가입 화면에 카드가 없어서 풍경 위에 입력칸만 올렸었다.
+     새 시안(회원가입.png)에는 로그인과 같은 얼음판이 있어 되살린다.
+     판 유리값도 실측상 로그인과 사실상 같다(판 평균 143/201/253 vs 151/202/253). */
   #namePanel{background:url('img/bg-lobby.webp') center/cover no-repeat;}
-  #namePanel .glassCard{background:none;border:none;box-shadow:none;padding:0;
-    backdrop-filter:none;-webkit-backdrop-filter:none;}
   #namePanel .field{margin-bottom:13px;}
   #naverNickPanel{background:url('img/bg-lobby.webp') center/cover no-repeat;}
   #naverNickPanel .glassCard{background:none;border:none;box-shadow:none;padding:0;
@@ -680,7 +687,9 @@
   /* ---- 도감·게임 방법 ---- */
   /* 얼음판 한 장 위에 제목 + 섹션(탭 + 카드 묶음)이 얹힌다 */
   .guideWrap{width:100%;max-width:360px;}
-  /* 얼음 액자: 안쪽에 눈밭 그림을 옅게 깔고, 테두리를 얼음빛으로 두른다 */
+  /* 얼음 액자: 안쪽에 눈밭 그림을 옅게 깔고, 테두리를 얼음빛으로 두른다.
+     ⚠️ 지금은 도감·게임 방법 둘 다 부제를 넘겨서 아래 .full(액자 없는 전체화면)로 그려진다.
+     이 액자는 부제 없이 renderGuide 를 부를 때만 나온다. */
   .guidePanel{position:relative;overflow:hidden;
     border-radius:30px;padding:18px 13px 15px;
     /* 위는 밤하늘, 아래는 눈밭인 그림을 깔아 흰 카드가 도드라지게 한다 */
@@ -808,7 +817,10 @@
      예전엔 transform:scale(1.42) 로 그림만 키웠는데, 실측해 보니 블록 그림이 캔버스를
      꽉 채우고 있어서(88x88) 카드(높이 81)와 옆 아이템 타일(62)보다 커져 카드 밖으로
      삐져나왔다. 이제 아이템 타일과 같은 크기(62)로 그린다. */
-  .gChip.brick{width:62px;height:62px;border-radius:0;background:none;
+  /* border:0 이 핵심이다. 위쪽 canvas 규칙이 게임판 얼음 액자용으로 14px 테두리를
+     깔아 두는데, box-sizing:border-box 라 62px 칸에서 그림이 34px 로 짜부라진다.
+     예전 scale(1.42) 는 그걸 눈으로 때우려던 것이었다(그래도 48px). */
+  .gChip.brick{width:62px;height:62px;border:0;border-radius:0;background:none;
     box-shadow:none;flex:0 0 auto;display:block;
     filter:drop-shadow(0 4px 6px rgba(10,40,110,.35));}
   .gChip.art{width:62px;height:62px;border-radius:0;box-shadow:none;
@@ -886,9 +898,44 @@
     box-shadow:0 20px 50px rgba(6,22,60,.38),inset 0 1px 0 rgba(255,255,255,.78),
       inset 0 0 24px rgba(187,225,255,.28);}
 
-  /* 카드 아래 보조 링크 두 개 */
-  .cardLinks{display:flex;align-items:center;justify-content:center;gap:14px;
-    margin-top:14px;padding-top:4px;}
+  /* 로그인 카드만 시안대로 위에 눈이 얹히고 모서리가 덜 둥글다.
+     시안 941px 폭 기준 모서리 반지름 39px(=화면폭의 4.1%) → 290px 카드에서 19px.
+     눈은 가운데가 얇은 띠, 양 모서리가 두툼한 --snowcap 을 그대로 쓴다. */
+  /* 시안 카드는 테두리가 순백으로 꽤 두껍다(시안 6px = 2.7px). 1.5px 로는 얼음 테가
+     안 보여서 눈덩이가 카드에 얹힌 게 아니라 그냥 떠 있는 것처럼 읽혔다. */
+  /* ★ 판이 우윳빛 판때기로 보이던 원인:
+     판 안쪽/바깥쪽 세로 프로파일의 표준편차를 재보면 뒤 배경 무늬가 판을 통과하는 비율이
+     시안 R .78 / G .56 인데 여기선 R .36 / G .34 였다. blur(16px) 가 뒤 얼음숲을 죽으로
+     만들고 채움 불투명도 .76 이 그 위를 덮어서, 비쳐야 할 판이 그냥 흰 종이가 됐다.
+     흐림을 확 줄이고 채움을 얇게 해서 배경이 살아 오게 한다.
+     대신 시안은 파랑 채널이 253 근처로 눌려 평평하므로(통과율 .08) 안쪽 파란 빛으로 띄운다. */
+  #titleScreen .glassCard, #namePanel .glassCard{position:relative;border-radius:19px;
+    border-width:2.5px;border-color:rgba(255,255,255,.92);
+    background:linear-gradient(180deg,rgba(226,243,255,.36),rgba(176,214,252,.32));
+    backdrop-filter:blur(3px) saturate(1.02) brightness(1.14);
+    -webkit-backdrop-filter:blur(3px) saturate(1.02) brightness(1.14);
+    box-shadow:0 20px 50px rgba(6,22,60,.38),inset 0 1px 0 rgba(255,255,255,.78),
+      inset 0 0 70px rgba(150,215,255,.55);}
+  /* 눈을 background-image 로 깔면 카드의 둥근 모서리에 잘려서 양 끝 덩어리가 사라진다.
+     시안은 눈이 모서리를 타고 넘어 카드 바깥으로 조금 걸쳐 있으므로 위에 덮는다. */
+  #titleScreen .glassCard::before, #namePanel .glassCard::before,
+  #titleScreen .glassCard::after,  #namePanel .glassCard::after{content:'';position:absolute;z-index:2;pointer-events:none;
+    filter:drop-shadow(0 2px 3px rgba(16,56,130,.2));}
+  /* 왼쪽 무더기. 모서리 곡선(반지름 19px)이 끝나는 안쪽에 앉힌다 -
+     바깥으로 빼면 곡선이 아래로 빠져나가 눈이 허공에 뜬다. */
+  #titleScreen .glassCard::before, #namePanel .glassCard::before{left:14px;top:-7px;width:34px;height:11px;
+    background:var(--snow-mound) left top/34px 11px no-repeat;}
+  /* 오른쪽 덩어리 */
+  #titleScreen .glassCard::after, #namePanel .glassCard::after{right:-2px;top:-7px;width:44px;height:30px;
+    background:var(--snow-corner-r) left top/44px 30px no-repeat;}
+
+  /* 카드 아래 보조 링크 두 개. 시안은 링크 줄 위에 옅은 흰 가로선이 하나 있다
+     (시안 y=1404, 카드 좌우에서 각 25px 안쪽으로 들어온 선). */
+  .cardLinks{position:relative;display:flex;align-items:center;justify-content:center;gap:14px;
+    margin-top:14px;padding-top:11px;}
+  .cardLinks::before{content:'';position:absolute;left:9px;right:9px;top:0;height:1px;
+    background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.62) 16%,
+      rgba(255,255,255,.62) 84%,rgba(255,255,255,0));}
   .title .cardLinks button{width:auto;margin:0;padding:8px 6px;background:none;
     border-image:none;box-shadow:none;color:#1749a8;font-size:13px;font-weight:800;
     display:flex;align-items:center;gap:6px;text-shadow:none;}
@@ -924,6 +971,28 @@
   .title input{background-image:var(--flake-i), linear-gradient(180deg,#ffffff,#f1f8ff);
     background-repeat:no-repeat;background-position:right 15px center, center;
     background-size:22px 22px, auto;}
+  /* 로그인 카드의 입력칸만 시안 값으로 맞춘다(가입 화면은 건드리지 않는다).
+     시안: 반지름 27px(941px 기준)→12px, 테두리 한 줄이 순백(255,255,255)이고
+     그 안쪽에 (208,223,247) 음영 띠가 들어가 살짝 파인 것처럼 보인다. */
+  /* 입력칸도 버튼과 같이 시안에서 오려낸 그림을 쓴다 (tools/cut-login-btn.py).
+     시안 단면은 흰 테 → 파란 실선 → 안쪽 음영 → 채움 순으로 층이 4개인데, 이걸
+     box-shadow 로 흉내내면 세 층이 서로 번져 뭉개진다(테가 흐릿해지고 납작해 보였다).
+     그림에는 오른쪽 눈꽃까지 들어 있어 CSS 눈꽃 배경은 뺀다. 아이콘은 어느 배율에서도
+     또렷하도록 CSS 가 SVG 로 그리고, 그림에서는 지웠다. */
+  #titleScreen input, #namePanel input{border-radius:12px;border-color:transparent;background-color:transparent;
+    background-image:url('img/field.webp');
+    background-repeat:no-repeat;background-position:center;background-size:100% 100%;
+    box-shadow:0 3px 5px rgba(6,22,60,.30);}
+  /* 위 규칙이 id 라 .title input:focus 보다 세다 - 포커스 링을 여기서 다시 세운다.
+     안 그러면 칸을 눌러도 아무 표시가 안 난다. */
+  #titleScreen input:focus, #namePanel input:focus{border-color:#7cc6ff;background-color:transparent;
+    background-image:url('img/field.webp');
+    box-shadow:0 0 0 4px rgba(124,198,255,.45), 0 0 18px rgba(124,198,255,.55);}
+  /* 시안 아이콘은 29x32px(=12.9x14.3px)에 색이 (57,107,193) 으로 지금보다 크고 짙다.
+     글리프가 24 viewBox 안에서 63% 만 차지하므로 svg 는 20px 로 둬야 실측 크기가 나온다. */
+  #titleScreen .field svg, #namePanel .field svg{width:20px;height:20px;left:13px;}
+  #titleScreen .field svg.solid, #namePanel .field svg.solid{fill:#396bc1;}
+  #titleScreen .field svg.solid .bar, #namePanel .field svg.solid .bar{stroke:#396bc1;}
   .title input::placeholder{color:#93b3d8;font-weight:600;}
   .title input:focus{border-color:#7cc6ff;background:#fff;
     box-shadow:0 0 0 4px rgba(124,198,255,.45), 0 0 18px rgba(124,198,255,.55);}
@@ -934,6 +1003,10 @@
   .title .field:focus-within svg.solid .bar{stroke:var(--accent);}
   .title .field:focus-within svg{stroke:var(--accent);}
   .title .err{margin:2px 0 6px;}
+  /* 오류 메시지 자리를 늘 18px 비워 두니 성별 칸(로그인은 '정보 저장')과 큰 버튼 사이에
+     40px 넘는 빈 띠가 생겼다. 시안은 그 자리가 거의 0이다. 같은 화면의 .checkMsg 가
+     이미 쓰는 방식대로, 비었을 때만 접는다(오류가 뜨면 버튼이 그만큼 내려간다). */
+  .title .err:empty{min-height:0;margin:0;}
 
   /* 아이디 / 닉네임 중복 확인 결과, 포커스아웃되면 자동으로 채워진다 */
   .title .checkMsg{min-height:15px;font-size:11.5px;font-weight:700;
@@ -950,36 +1023,48 @@
 
   /* 성별 선택 토글 두 칸. .title button 의 눈덩이 버튼 이미지를 지우고 새로 그린다.
      고른 쪽은 살짝 떠오르며(translateY) 파란 빛이 번지고, 안의 아이콘도 흰색으로 톡 튄다. */
-  .title .genderRow{display:flex;gap:8px;margin:2px 4px 14px;}
+  /* 시안에서 성별 칸은 입력칸과 좌우가 딱 맞는다 - 좌우 4px 여백이 있으면 혼자 들어가 보인다 */
+  .title .genderRow{display:flex;gap:7px;margin:2px 0 4px;}
+  /* 시안의 남자/여자 칸은 '회원가입' 버튼과 같은 흰 알약이지만 훨씬 짧다(가로세로비 2.99).
+     btn-join(5.58)을 늘려 쓰면 41% 찌그러지고 오른쪽 눈꽃까지 딸려 오므로 따로 오려 쓴다.
+     직접 칠한 흰 배경 + 파란 테로는 그 얼음 광택이 안 나왔다. */
   .title .genderBtn{flex:1;width:auto;margin:0;padding:12px 0;border-radius:14px;
     display:flex;align-items:center;justify-content:center;gap:7px;
-    border:2px solid rgba(120,170,225,.38);border-image:none;
-    background:#ffffff;color:var(--ink2);font-size:14px;font-weight:700;letter-spacing:0;
-    text-shadow:none;box-shadow:inset 0 2px 5px rgba(20,50,110,.10), 0 2px 6px rgba(6,22,60,.16);
-    transition:border-color .16s, background .18s, color .16s, box-shadow .2s,
-      transform .2s cubic-bezier(.3,1.5,.4,1);}
+    border:0;background-image:url('img/btn-gender.webp');
+    background-repeat:no-repeat;background-size:100% 100%;background-position:center;
+    color:var(--ink2);font-size:14px;font-weight:700;letter-spacing:0;
+    text-shadow:none;box-shadow:0 2px 6px rgba(6,22,60,.16);
+    transition:color .16s, box-shadow .2s, transform .2s cubic-bezier(.3,1.5,.4,1);}
   .title .genderBtn svg{width:17px;height:17px;flex:0 0 auto;
     stroke:#8fabd6;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
     transition:stroke .16s, transform .26s cubic-bezier(.3,1.6,.4,1);}
   .title .genderBtn::before{display:none;}
   .title .genderBtn:active{transform:scale(.96);}
-  /* CSS 그라데이션으로 손수 칠하니 쨍하기만 하고 밋밋했다 - "가입하고 시작"이 쓰는
-     진짜 눈덩이 버튼 그림을 그대로 재사용한다. 여자는 같은 그림에 색조만 돌린다. */
-  .title .genderBtn.active{border-style:solid;border-width:0;border-color:transparent;
-    border-image-source:url('img/btn-primary.webp');
-    border-image-slice:55 95 35 95 fill;
-    border-image-width:19px 32px 12px 32px;
-    border-image-repeat:stretch;
-    background:none;color:#fff;padding:14px 0 11px;
+  /* 고른 쪽은 "가입하고 시작"이 쓰는 파란 눈덩이 버튼 그림으로 바뀐다.
+     여자는 같은 그림에 색조만 돌린다. */
+  .title .genderBtn.active{background-image:url('img/btn-login.webp');
+    color:#fff;padding:14px 0 11px;
     transform:translateY(-1px);box-shadow:none;
     text-shadow:0 2px 4px rgba(8,32,90,.55);}
   .title .genderBtn.active svg{stroke:#fff;transform:scale(1.12);}
   .title .genderBtn.active[data-gender="f"]{filter:hue-rotate(95deg) saturate(.4) brightness(1.15);}
 
-  /* 네이버 로그인 버튼: 카드 안 다른 버튼과 같은 자리를 쓰지만 브랜드색은 지킨다 */
-  .title button.naverBtn{border-image:none;background:#03c75a;color:#fff;text-shadow:none;
+  /* 네이버 로그인 버튼: 카드 안 다른 버튼과 같은 자리를 쓰지만 브랜드색은 지킨다.
+     예전엔 각진 단색 사각형이라 위아래 눈덩이 버튼들과 혼자 따로 놀았다.
+     시안에서 잰 값: 모서리 반지름 27px(941px 기준)→13px, 세로 그라데이션
+     위 (47,214,86) → 중간 (6,193,74) → 아래 (1,175,70), 맨 위 흰 광택 한 줄,
+     맨 아래 짙은 초록 테. */
+  .title button.naverBtn{border-image:none;border-radius:13px;
+    background:linear-gradient(180deg,#5fe665 0%,#2fd656 12%,#1dcf53 25%,#06c14a 44%,
+      #01af47 60%,#01b048 88%,#019a45 100%);
+    color:#fff;text-shadow:0 1px 2px rgba(0,62,24,.32);
     display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 0;
-    box-shadow:0 6px 16px rgba(3,199,90,.35);}
+    /* 시안 단면: 바깥에 짙은 초록 테 5px(=2.2px), 그 바로 안쪽에 거의 흰 연두 하이라이트
+       한 줄(213,250,194), 아래는 짙은 초록 테. 이 세 겹이 알약처럼 볼록해 보이게 만든다. */
+    box-shadow:inset 0 0 0 1.5px rgba(0,146,68,.72),
+      inset 0 3px 0 rgba(200,250,190,.5),
+      inset 0 -4px 0 rgba(0,110,45,.35),
+      0 5px 14px rgba(3,160,72,.38);}
   .title button.naverBtn:active{transform:translateY(2px) scale(.99);filter:brightness(.95);}
   .naverMark{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;
     border-radius:5px;background:#fff;color:#03c75a;font-size:12.5px;font-weight:900;
@@ -1034,13 +1119,18 @@
     stroke-linecap:round;stroke-linejoin:round;
     opacity:0;transform:scale(.5) rotate(-16deg);
     transition:opacity .14s, transform .22s cubic-bezier(.3,1.6,.4,1);}
-  .keepRow input:checked + .box{background:linear-gradient(160deg,#7cc6ff,#2f7ff0);
-    border-color:#2f7ff0;transform:scale(1.06);
-    box-shadow:0 2px 0 #124aa8, 0 0 0 4px rgba(124,198,255,.32), inset 0 1px 0 rgba(255,255,255,.55);}
+  /* 시안 체크칸은 테가 밝은 파랑이 아니라 짙은 남색(0,37,159)이라 훨씬 또렷하게 파인다.
+     채움은 위 (93,170,253) → 아래 (46,126,250) 로 떨어지는 세로 그라데이션. */
+  .keepRow input:checked + .box{background:linear-gradient(180deg,#5daafd,#2e7efa);
+    border-color:#0d2f9c;transform:scale(1.06);
+    box-shadow:0 2px 0 #0a2478, 0 0 0 3px rgba(124,198,255,.28),
+      inset 0 1.5px 0 rgba(255,255,255,.6), inset 0 -2px 3px rgba(4,30,110,.35);}
   .keepRow input:checked + .box svg{opacity:1;transform:none;}
-  .keepRow input:checked ~ .keepLabel{color:#fff;text-shadow:0 1px 3px rgba(6,22,60,.35);}
-  .keepRow:has(input:checked){background:linear-gradient(180deg,rgba(90,167,255,.42),rgba(47,127,240,.30));
-    border-color:rgba(124,198,255,.6);}
+  /* 켜진 상태에서 글자를 흰색으로 뒤집었더니 파란 카드 위에서 오히려 묻혔다.
+     시안은 켜져도 글자가 짙은 남색(0,13,132)이고, 알약만 흰 기가 조금 더 돈다. */
+  .keepRow input:checked ~ .keepLabel{color:#0a2378;text-shadow:0 1px 0 rgba(255,255,255,.45);}
+  .keepRow:has(input:checked){background:linear-gradient(180deg,rgba(255,255,255,.52),rgba(255,255,255,.30));
+    border-color:rgba(255,255,255,.66);}
   .keepRow input:focus-visible + .box{outline:2px solid #7cc6ff;outline-offset:2px;}
   /* 광택 파란 버튼 + 위에 눈 쌓임 */
   /* 버튼은 시안에서 오려낸 그림을 9분할로 늘려 쓴다(모서리·눈은 그대로, 가운데만 늘어난다) */
@@ -1064,6 +1154,21 @@
     border-image-slice:40 60 40 60 fill;
     border-image-width:18px 26px 18px 26px;
     color:#1749a8;text-shadow:none;box-shadow:none;}
+
+  /* ---- 로그인 카드 버튼은 이 화면 시안에서 따로 오려낸 그림을 쓴다 (tools/cut-login-btn.py) ----
+     공용 btn-primary.webp 는 가로세로비가 4.09 인데 로그인 버튼 자리는 5.27 이다.
+     9분할로 늘리면 가운데 조각만 더 눌려서 광택 그라데이션이 끊기고 슬라이스 경계에
+     가로 줄이 드러났다 - 시안과 '질감이 다르다'고 느껴지던 것의 정체가 이 이음매였다.
+     시안에서 그대로 오려내면 비율이 처음부터 맞아 이음매가 안 생긴다.
+
+     9분할 자체도 안 쓴다. 모서리는 배율 k 로, 가운데는 가로로 늘어난 배율로 그려지는데
+     그 둘이 다르면 경계에 세로 줄이 남는다(잘라낸 그림으로 바꿔도 이 줄은 그대로 보였다).
+     이 버튼은 폭이 248~294px 로 거의 고정이라 그림 전체를 그냥 늘려도
+     가로세로 배율 차가 8% 이내다 - 눈에 안 띄고, 대신 이음매가 아예 없다. */
+  #btnGoLogin, #btnGoRegister, #btnAuthOk, .title .genderBtn{border-image-source:none;
+    background-repeat:no-repeat;background-size:100% 100%;background-position:center;}
+  #btnGoLogin, #btnAuthOk{padding:19px 0 15px;background-image:url('img/btn-login.webp');}
+  #btnGoRegister{background-image:url('img/btn-join.webp');}
 
   .title button.link{background:none;border-image:none;color:#17509c;
     font-size:13.5px;font-weight:800;
@@ -1122,7 +1227,7 @@
     body.playing #frame{width:100vw;height:100dvh;max-width:none;max-height:none;}
   }
   @media (max-width: 900px) and (max-height: 900px){
-    #titleScreen .title{zoom:.88;}
+    #titleScreen .title, #namePanel .title{zoom:.88;}
     #lobby .lobbyWrap{zoom:.82;}
     #lobby .lobbyTop{margin-bottom:13px;}
     #lobby .title .play{margin-bottom:12px;}
@@ -1150,7 +1255,7 @@
     #overlay #btnShare,#overlay #btnToLobby{margin-top:6px;padding:10px 3px;font-size:12px;}
   }
   @media (max-width: 900px) and (max-height: 780px){
-    #titleScreen .title{zoom:.84;}
+    #titleScreen .title, #namePanel .title{zoom:.84;}
     #titleScreen .brand{margin-bottom:10px;}
     #titleScreen .brand .markImg{width:96px;}
     #titleScreen .brand .tag{margin-top:3px;}
@@ -1158,7 +1263,7 @@
     .mascot{left:10px;bottom:4px;width:86px;height:86px;}
   }
   @media (max-width: 900px) and (max-height: 680px){
-    #titleScreen .title{zoom:.72;}
+    #titleScreen .title, #namePanel .title{zoom:.72;}
     #lobby .lobbyWrap{zoom:.7;}
     .mascot{width:74px;height:74px;}
   }
@@ -1237,7 +1342,9 @@
     <div class="pauseStats">
       <div class="pauseStat"><i><svg viewBox="0 0 24 24"><path d="M8 4h8v4c0 3-1.8 5-4 5s-4-2-4-5zM12 13v4M8 21h8M9 17h6M8 6H4v2c0 2 1.4 3.5 3.4 3.5M16 6h4v2c0 2-1.4 3.5-3.4 3.5"/></svg></i><span>점수</span><b id="pauseScore">0</b></div>
       <div class="pauseStat"><i><svg viewBox="0 0 24 24"><path d="M6 21V3M7 4h10l-2 4 2 4H7"/></svg></i><span>라운드</span><b id="pauseRound">1</b></div>
-      <div class="pauseStat"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M9 8.5c1.3-1 3.2-1.3 4.7-.5"/></svg></i><span>현재 공</span><b id="pauseBalls">4</b></div>
+      <!-- 공 개수는 100 에서 멈추므로(MAX_BALLS) 후반엔 늘 100 만 찍혀 아무것도 안 알려준다.
+           그 뒤로 자라는 건 화력이라 총 공격력(공 + 추가 공격력)을 보여준다. -->
+      <div class="pauseStat"><i><svg viewBox="0 0 24 24"><path d="M12 2c.7 5 3 7.3 8 8-5 .7-7.3 3-8 8-.7-5-3-7.3-8-8 5-.7 7.3-3 8-8z"/></svg></i><span>공격력</span><b id="pausePower">4</b></div>
       <div class="pauseStat"><i><svg viewBox="0 0 24 24"><path d="M5 10a7 7 0 0 1 14 0v4l-2 2v3h-3v-2h-4v2H7v-3l-2-2z"/><circle cx="9" cy="11" r="1"/><circle cx="15" cy="11" r="1"/></svg></i><span>보스 처치</span><b id="pauseBoss">0</b></div>
     </div>
     <div class="pauseSectionTitle">빠른 메뉴</div>
@@ -1245,8 +1352,8 @@
       <button id="btnPauseHow"><img src="img/icon-howto.webp" alt="">게임 방법</button>
       <button id="btnPauseGuide"><img src="img/icon-guide.webp" alt="">블록 도감</button>
     </div>
-    <div class="pauseSectionTitle">이번 턴 효과</div>
-    <div class="pauseEffect" id="pauseEffect">적용 중인 효과가 없어요</div>
+    <!-- '이번 턴 효과' 칸은 뺐다. 분열·점수 2배는 게임 화면 HUD 배지(hudFx)에 이미 떠 있어
+         같은 걸 두 번 보여주는 자리였고, 대개 '적용 중인 효과가 없어요'만 차지하고 있었다. -->
     <div class="pauseActions">
       <button id="btnResume">이어하기</button>
       <div class="pauseSubActions">
@@ -2019,6 +2126,14 @@ const BADGE_IMG = {};
   img.src = `img/badge-item-${k}.webp`;
   BADGE_IMG['item_'+k] = img;
 });
+// 슬롯 아이템 6종도 도감에 쓰는 타일 그대로 판에 그린다. 예전엔 여기 등록이 없어서
+// 손으로 그린 대체 그림(glossyBadgeBG)이 나왔고, 그래서 판과 도감의 같은 아이템이
+// 서로 다르게 보였다.
+STORED_ITEMS.forEach(k => {
+  const img = new Image();
+  img.src = `img/item-${k}.webp`;
+  BADGE_IMG['item_'+k] = img;
+});
 // 로딩 전(첫 프레임 근처)이거나 어떤 이유로든 못 불러왔으면 손으로 그린 예전 코드로
 // 대체한다 - 게임이 이미지 하나 때문에 깨지면 안 된다.
 function badgeReady(img){ return !!img && img.complete && img.naturalWidth > 0; }
@@ -2287,7 +2402,12 @@ function updateHud(){
   }
 }
 
+// 화염·폭탄이 판을 한꺼번에 쓸면 깨진 블록 수 x 7 만큼 조각이 생긴다(30칸이면 210개).
+// 몇백 개가 깔려도 어차피 서로 겹쳐서 구분이 안 되므로, 위쪽에서 잘라 최악의 경우를
+// 묶어둔다 - 폰에서 그 순간만 뚝 끊기는 걸 막는 값이다.
+const PARTICLE_CAP = 240;
 function spawnBreakParticle(x, y, color){
+  if (S.particles.length >= PARTICLE_CAP) return;
   for (let i=0;i<7;i++){
     const a = Math.random()*Math.PI*2;
     const sp = 60 + Math.random()*140;
@@ -2295,6 +2415,7 @@ function spawnBreakParticle(x, y, color){
   }
 }
 function spawnHitParticle(x, y, color){
+  if (S.particles.length >= PARTICLE_CAP) return;
   S.particles.push({ x, y, vx:(Math.random()-0.5)*40, vy:(Math.random()-0.5)*40, life:0.2, maxLife:0.2, color, size:2 });
 }
 function addShake(amount){ S.shake = Math.min(CONFIG.SHAKE_MAX, S.shake + amount); }
@@ -2434,23 +2555,44 @@ function updateEmbers(dt){
     if (s.y > HEIGHT + 20) { S.embers.splice(i,1); continue; }
   }
 }
-function drawEmber(g, s){
-  g.save();
-  g.translate(s.x, s.y);
-  g.rotate(s.rot);
-  g.globalAlpha = s.alpha;
-  const r = s.size;
-  const grad = g.createRadialGradient(0, 0, 0, 0, 0, r);
+// 불티도 공 코어와 같은 이유로 구워서 쓴다 - 폭탄·화염이 터지면 한 프레임에 수백 개가
+// 깔리는데, 하나하나 그라데이션 만들고 shadowBlur 를 거는 건 그 수만큼 번짐 계산을
+// 새로 시키는 것이다(실측: 200개에 6.2ms). 크기가 3~7px 뿐이라 종류도 몇 장 안 된다.
+// 예전 코드의 rotate 는 지워도 그림이 같다 - 한가운데를 중심으로 한 동심원이라
+// 돌려도 똑같이 보인다.
+let emberSprites = new Map();
+function emberSprite(size, dpr){
+  const r = Math.round(size*2)/2;
+  const key = r + '|' + dpr;
+  const hit = emberSprites.get(key);
+  if (hit) return hit;
+  const blur = 6;
+  const pad = blur*BALL_GLOW_PAD + 2;
+  const devSize = Math.ceil((r + pad) * dpr) * 2;
+  const sz = devSize / dpr;
+  const cv = document.createElement('canvas');
+  cv.width = devSize; cv.height = devSize;
+  const g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const c = sz/2;
+  const grad = g.createRadialGradient(c, c, 0, c, c, r);
   grad.addColorStop(0, '#fff9c4');
   grad.addColorStop(0.45, '#ffb703');
   grad.addColorStop(1, '#e2470a');
   g.fillStyle = grad;
   g.shadowColor = 'rgba(226,71,10,0.55)';
-  g.shadowBlur = 6;
-  g.beginPath();
-  g.arc(0, 0, r, 0, Math.PI*2);
-  g.fill();
-  g.restore();
+  g.shadowBlur = blur;
+  g.beginPath(); g.arc(c, c, r, 0, Math.PI*2); g.fill();
+  const s = { cv, size: sz };
+  if (emberSprites.size > 64) emberSprites = new Map();
+  emberSprites.set(key, s);
+  return s;
+}
+function drawEmber(g, s){
+  const sp = emberSprite(s.size, canvasDpr);
+  g.globalAlpha = s.alpha;
+  g.drawImage(sp.cv, s.x - sp.size/2, s.y - sp.size/2, sp.size, sp.size);
+  g.globalAlpha = 1;
 }
 function spawnPopup(x, y, text, color){
   if (S.popups.length > 24) return;
@@ -3720,13 +3862,13 @@ const GUIDE = [
   ]],
   ['아이템', [
     ['#ff6b35', '💥', '폭탄',      '닿는 순간 주변 3×3을 즉시 부숴요.', '막힌 구간을 뚫을 때',
-      null, {type:'item', kind:'bomb'}],
+      'item-bomb'],
     ['#8b5cf6', '분열', '분열',   '이번 턴 동안 공이 벽에 튕길 때마다 늘어나요.', '오래 살아남을수록 많이 불어나요',
-      null, {type:'item', kind:'frenzy'}],
+      'item-frenzy'],
     ['#f59e0b', '점수', '점수 2배', '이번 턴에 얻는 점수가 2배가 돼요.', '많이 깰 수 있는 턴에',
-      null, {type:'item', kind:'gold'}],
+      'item-gold'],
     ['#c92615', '🔥', '화염',    `화염이 번져 판 위 제일 센 블록의 ${Math.round(CONFIG.FLAME_CUT*100)}%만큼 모든 블록이 똑같이 다쳐요.`, '약한 블록일수록 상대적으로 크게 다쳐요',
-      null, {type:'item', kind:'flame'}],
+      'item-flame'],
   ]],
   ['슬롯 아이템',
     STORED_ITEMS.map(k => {
@@ -3736,6 +3878,8 @@ const GUIDE = [
     `먹으면 아래 ${CONFIG.SLOT_CAPACITY}칸 슬롯에 담겨요 · 조준 중에만 쓸 수 있어요 · 슬롯이 꽉 차 있으면 블록이 그대로 남아요`],
 ];
 
+// 부제를 넘기면 도감과 같은 전체화면 판으로 그려진다(renderGuide 의 full 판정 기준).
+const HOWTO_SUB = '처음이라면 이것만 알고 시작해도 돼요';
 const HOWTO = [
   ['기본 규칙', [
     ['#5b8def', '1', '조준하고 쏘기', '쏘고 싶은 방향으로 드래그하면 점선으로 궤적이 미리 보여요.', '', 'n1'],
@@ -3743,10 +3887,13 @@ const HOWTO = [
     ['#ef4444', '3', '바닥에 닿으면 끝', '블록이 맨 아래에 닿으면 게임이 끝나요.', '', 'n3'],
   ]],
   ['핵심', [
-    ['#22c55e', '공', '공이 곧 자원', '공 4개로 시작해서 계속 불려나가요. 공이 많을수록 한 턴에 많이 부숴요.', '', 'ball'],
+    ['#22c55e', '공', '공이 곧 자원', `공 ${CONFIG.START_BALLS}개로 시작해요. 바닥에 닿은 공은 그대로 다음 턴 발사량이 되고, 블록에서 얻은 만큼 계속 불어나요.`,
+      `공은 ${CONFIG.MAX_BALLS}개가 끝이에요. 그 뒤로 모은 건 공격력으로 쌓여요`, 'ball'],
     ['#e11d63', 'HP', '같이 강해져요', '공이 늘면 블록 체력도 같이 올라가요. 그래서 끝없이 쉬워지지 않아요.', '', 'hp'],
-    ['#f59e0b', '순서', '순서가 실력', '−30을 먼저 맞고 ×2를 맞으면 손해예요. 순서를 뒤집으면 대박이고요.', '', 'order'],
+    ['#f59e0b', '순서', '순서가 실력', '×2는 일찍 맞힐수록 좋아요. 그 자리에서 늘어난 공이 남은 시간 동안 더 많이 깨거든요.', '−N은 턴이 끝날 때 한꺼번에 빠져요', 'order'],
     ['#38bdf8', '❄', '눈덩이 굴리기', '공이 벽돌을 깰 때마다 그 자리에서 커지고 세져요. 착지하면 다시 기본 크기로 녹아요.', '커진 공은 좁은 틈은 못 지나가요', 'grow-balls'],
+    ['#a855f7', '슬롯', '아이템은 담아 뒀다 써요', `주운 아이템은 화면 아래 ${CONFIG.SLOT_CAPACITY}칸에 담겨요. 조준하는 동안 눌러서 원하는 때에 꺼내 쓰면 돼요.`,
+      '슬롯이 꽉 차 있으면 아이템 블록이 그대로 남아요', 'slots'],
   ]],
 ];
 
@@ -3802,6 +3949,37 @@ function growthChip(){
   return cv;
 }
 
+// '아이템은 담아 뒀다 써요' 항목 그림. 아이템 하나를 대표로 세우면(예: 번개) 그 아이템
+// 설명으로 읽히므로, 화면 아래 슬롯 줄을 그대로 축소해서 '한 칸은 차 있고 나머지는 비어
+// 있는' 모습을 보여준다.
+function slotChip(){
+  const px = CHIP_PX, dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const cv = document.createElement('canvas');
+  cv.className = 'gChip brick';
+  cv.width = Math.round(px * dpr); cv.height = Math.round(px * dpr);
+  cv.style.width = px + 'px'; cv.style.height = px + 'px';
+  const g = cv.getContext('2d');
+  if (!g) return cv;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const n = CONFIG.SLOT_CAPACITY, gap = 4;
+  const s = (px - gap*(n-1)) / n, y = (px - s)/2;
+  const img = BADGE_IMG.item_thunder;
+  for (let i=0;i<n;i++){
+    const x = i*(s+gap);
+    roundRect(g, x, y, s, s, s*0.26);
+    if (i === 0 && badgeReady(img)) {
+      g.save(); g.clip(); g.drawImage(img, x, y, s, s); g.restore();
+      g.strokeStyle = 'rgba(80,170,255,.9)';
+    } else {
+      // 게임에서는 밤하늘 위라 흰 반투명이지만, 도감은 흰 카드 위라 그대로 쓰면 안 보인다
+      g.fillStyle = 'rgba(40,95,175,.14)'; g.fill();
+      g.strokeStyle = 'rgba(70,140,215,.55)';
+    }
+    g.lineWidth = 1.6; g.stroke();
+  }
+  return cv;
+}
+
 function renderGuide(data, title, art, sub){
   const t = document.getElementById('guideTitle');
   t.src = art; t.alt = title;
@@ -3827,6 +4005,8 @@ function renderGuide(data, title, art, sub){
         chip = brickChip(brick);
       } else if (art === 'grow-balls'){          // 눈덩이 굴리기 전용 - iceBall() 재사용
         chip = growthChip();
+      } else if (art === 'slots'){               // 슬롯 설명 전용 - 화면 아래 슬롯 줄 그대로
+        chip = slotChip();
       } else if (art && art.startsWith('item-') && STORED_ITEMS.includes(art.slice(5))){
         // 슬롯 아이템(보관형 6종)은 도감 시안에서 오려낸 타일 그대로
         chip = document.createElement('span');
@@ -3840,11 +4020,9 @@ function renderGuide(data, title, art, sub){
         chip.style.filter = art === 'grow'
           ? 'grayscale(1) contrast(2.15) brightness(.62) drop-shadow(0 4px 5px rgba(0,0,0,.55)) drop-shadow(0 0 5px #cbd5e1)'
           : `drop-shadow(0 4px 5px rgba(10,40,110,.4)) drop-shadow(0 0 9px ${color}80)`;
-        // 뱃지 그림에는 숫자가 없다(게임판은 그 위에 canvas 로 숫자를 덧그린다).
-        // 도감에서도 같은 구성이 되도록 예시 숫자를 얹는다. 아이템 그림은 이미
-        // 아이콘이 들어 있으므로 안 얹는다.
-        if (art.startsWith('blank') || ['hp','boss-block','curse-block','trap-block'].includes(art))
-          chip.textContent = icon;
+        // 예전엔 여기서 icon 글자를 그림 위에 덧씌웠다(숫자 없는 블록 뱃지용). 지금은
+        // 블록 항목이 전부 캔버스(brickChip)로 넘어가서, 남은 건 글자가 이미 박혀 있는
+        // badge-hp·badge-order 뿐이다 - 덧씌우면 'HP' 가 두 번 겹쳐 찍힌다.
       } else {                                   // 그림이 없는 항목은 CSS 로 비슷하게 세운다
         chip = document.createElement('div');
         chip.className = 'gChip' + (icon.length > 1 ? ' sm' : '');
@@ -4512,6 +4690,42 @@ function iceBallSprite(tierIdx, r, dim, dpr, blurScale){
   return s;
 }
 
+// 강화 공 안에서 빛나는 금빛 코어. 예전엔 공마다 그 자리에서 그라데이션을 만들고
+// shadowBlur 를 걸었는데, 이게 폰이 끊기던 진짜 이유였다 - 공 100개면 한 프레임에
+// 번짐 계산을 100번 새로 시킨다(실측: 코어만 빼도 574ms -> 3.9ms). 공 스프라이트와
+// 같은 방식으로 한 번 구워두고 갖다 붙인다.
+let coreSprites = new Map();
+function ballCoreSprite(bR, power, dpr){
+  const scale = bR / CONFIG.BALL_RADIUS;
+  // 반지름·화력이 조금씩 달라도 그림 차이는 눈에 안 띄므로, 키를 굵게 끊어
+  // 스프라이트 장수를 스무 장 안팎으로 묶는다.
+  const rad = Math.round(Math.min(3.6*scale, (2.2+Math.log2(power)*.35)*scale) * 4) / 4;
+  const key = scale.toFixed(2) + '|' + rad + '|' + dpr;
+  const hit = coreSprites.get(key);
+  if (hit) return hit;
+  const blur = 5*scale;
+  const pad = blur*BALL_GLOW_PAD + 2;
+  const devSize = Math.ceil((rad + pad) * dpr) * 2;
+  const size = devSize / dpr;
+  const cv = document.createElement('canvas');
+  cv.width = devSize; cv.height = devSize;
+  const g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const c = size/2;
+  g.shadowColor = 'rgba(120,210,255,.9)';
+  g.shadowBlur = blur;
+  const core = g.createRadialGradient(c-scale, c-scale, .2*scale, c, c, 3.2*scale);
+  core.addColorStop(0, '#ffffff');
+  core.addColorStop(.38, '#fff4b0');
+  core.addColorStop(1, 'rgba(84,177,255,0)');
+  g.fillStyle = core;
+  g.beginPath(); g.arc(c, c, rad, 0, Math.PI*2); g.fill();
+  const s = { cv, size };
+  if (coreSprites.size > 64) coreSprites = new Map();
+  coreSprites.set(key, s);
+  return s;
+}
+
 function iceBall(cx, cy, r, dim, flake, gctx = ctx){
   // 눈 결정이 박힌 발사구 공은 프레임당 하나뿐이라 캐시할 이유가 없고, 도감 칩은
   // 배율이 다른 별도 캔버스라 게임판 스프라이트를 나눠 쓰면 안 된다. 둘 다 예전처럼
@@ -5117,29 +5331,19 @@ function render(){
     }
   }
   for (const b of S.activeBalls) {
-    const bR = b.radius || CONFIG.BALL_RADIUS;
-    iceBall(b.x, b.y, bR, false);
-    if (ballPower(b) > 1) {
-      // 강화 공은 외곽선을 두르지 않는다. 공이 겹칠 때 노란 선처럼 이어져 보이므로
-      // 얼음구슬 안쪽의 작은 금빛 코어만 밝혀 구분한다.
-      // 코어 크기·번짐은 반지름 비례로 키운다 - 공이 2~3배 커졌는데 코어가
-      // 그대로면 눈덩이 속에 파묻혀 안 보인다.
-      const power = ballPower(b);
-      const scale = bR / CONFIG.BALL_RADIUS;
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.shadowColor = 'rgba(120,210,255,.9)';
-      ctx.shadowBlur = 5*scale;
-      const coreR = 3.2*scale;
-      const core = ctx.createRadialGradient(b.x-scale, b.y-scale, .2*scale, b.x, b.y, coreR);
-      core.addColorStop(0, '#ffffff');
-      core.addColorStop(.38, '#fff4b0');
-      core.addColorStop(1, 'rgba(84,177,255,0)');
-      ctx.fillStyle = core;
-      ctx.beginPath(); ctx.arc(b.x, b.y, Math.min(3.6*scale, (2.2+Math.log2(power)*.35)*scale), 0, Math.PI*2); ctx.fill();
-      ctx.restore();
-    }
+    iceBall(b.x, b.y, b.radius || CONFIG.BALL_RADIUS, false);
   }
+  // 강화 공의 금빛 코어. 공 그리기와 한 덩어리로 돌리면 공마다 합성 모드를 껐다 켜야
+  // 하므로, 코어만 따로 모아 'lighter' 를 한 번만 켠다(그림은 그대로 - 코어는 어차피
+  // 공 위에 얹히는 덧빛이다).
+  let coreOn = false;
+  for (const b of S.activeBalls) {
+    if (ballPower(b) <= 1) continue;
+    if (!coreOn) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; coreOn = true; }
+    const s = ballCoreSprite(b.radius || CONFIG.BALL_RADIUS, ballPower(b), canvasDpr);
+    ctx.drawImage(s.cv, b.x - s.size/2, b.y - s.size/2, s.size, s.size);
+  }
+  if (coreOn) ctx.restore();
   for (const r of S.returning)   iceBall(r.x, r.y, CONFIG.BALL_RADIUS*0.8, true);
 
   // 불티·번개는 공보다 앞, 글자보다 뒤. 앞에 다 깔면 점수 팝업을 가린다.
@@ -5437,14 +5641,8 @@ function setPaused(on){
   if (on) {
     document.getElementById('pauseScore').textContent = S.score.toLocaleString();
     document.getElementById('pauseRound').textContent = S.round.toLocaleString();
-    document.getElementById('pauseBalls').textContent = S.ballCount.toLocaleString();
+    document.getElementById('pausePower').textContent = totalOwnedPower().toLocaleString();
     document.getElementById('pauseBoss').textContent = (S.bossKills || 0).toLocaleString();
-    const effects = [];
-    if (S.bonusPower > 0) effects.push('💥 추가 공격력 +' + S.bonusPower.toLocaleString());
-    if (S.frenzyActive) effects.push('⚡ 공 분열');
-    if (S.scoreMult > 1) effects.push('💰 점수 2배');
-    document.getElementById('pauseEffect').textContent = effects.length
-      ? effects.join(' · ') : '적용 중인 효과가 없어요';
   }
 }
 document.getElementById('btnPause').addEventListener('click', () => setPaused(true));
@@ -5456,7 +5654,7 @@ document.getElementById('btnRestart').addEventListener('click', () => {
   updateHud();
 });
 document.getElementById('btnPauseHow').addEventListener('click', () =>
-  renderGuide(HOWTO, '게임 방법', 'img/t-howto.webp'));
+  renderGuide(HOWTO, '게임 방법', 'img/t-howto.webp', HOWTO_SUB));
 document.getElementById('btnPauseGuide').addEventListener('click', () =>
   renderGuide(GUIDE, '블록 도감', 'img/t-guide.webp', '게임에 등장하는 블록과 아이템을 확인해 보세요!'));
 
@@ -5526,10 +5724,10 @@ document.getElementById('btnChalResume').addEventListener('click', () => {
 });
 document.getElementById('btnGuide').addEventListener('click', () => renderGuide(GUIDE, '블록 도감', 'img/t-guide.webp',
     '게임에 등장하는 블록과 아이템을 확인해 보세요!'));
-document.getElementById('btnHow').addEventListener('click', () => renderGuide(HOWTO, '게임 방법', 'img/t-howto.webp'));
+document.getElementById('btnHow').addEventListener('click', () => renderGuide(HOWTO, '게임 방법', 'img/t-howto.webp', HOWTO_SUB));
 document.getElementById('btnGuideT').addEventListener('click', () => renderGuide(GUIDE, '블록 도감', 'img/t-guide.webp',
     '게임에 등장하는 블록과 아이템을 확인해 보세요!'));
-document.getElementById('btnHowT').addEventListener('click', () => renderGuide(HOWTO, '게임 방법', 'img/t-howto.webp'));
+document.getElementById('btnHowT').addEventListener('click', () => renderGuide(HOWTO, '게임 방법', 'img/t-howto.webp', HOWTO_SUB));
 document.getElementById('btnGuideBack').addEventListener('click', () => {
   document.getElementById('guideScreen').classList.remove('show');
   document.getElementById('mascot').classList.remove('front');
