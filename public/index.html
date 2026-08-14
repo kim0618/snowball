@@ -75,6 +75,11 @@
     /* 스탯 상자 위에 걸터앉는 하늘색 왕관 */
     --crown-gold:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 26'%3E%3Cpath d='M3 23 1 6l10 7 9-11 9 11 10-7-2 17z' fill='%23fff3c4' stroke='%237a5200' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E");
     --crown-ice:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 26'%3E%3Cpath d='M3 23 1 6l10 7 9-11 9 11 10-7-2 17z' fill='%23a9d6f7' stroke='%23ffffff' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
+    /* 일시정지 시안(일시정지.png)에서 그대로 오려낸 실사 자산 - 흰 눈/반짝임/얼음만
+       알파로 남기고 나머지는 투명 처리했다(로컬 블러 대비 하이라이트 차감 방식). */
+    /* 유리판을 가로지르는 밝은 반사띠 - 얼음 표면 특유의 광택 */
+    --shine:linear-gradient(122deg,rgba(255,255,255,0) 22%,rgba(255,255,255,0) 33%,
+      rgba(255,255,255,.9) 42%,rgba(255,255,255,.18) 52%,rgba(255,255,255,0) 64%);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
   html,body{margin:0;height:100%;overflow:hidden;color:var(--onSky);
@@ -307,111 +312,232 @@
     stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
   .err{min-height:18px;font-size:12.5px;color:var(--danger);margin:2px 0 4px;font-weight:600;}
 
-  /* ---- 게임오버 ---- */
+  /* ---- 게임오버 ----
+     일시정지(cut-pause.py)와 같은 방침이다. 얼음 재질은 CSS 로 흉내 내지 않는다.
+     시안(ref/gameover-design.png)에서 액자·배지·통계칸·순위판·버튼을 통째로 오려
+     (tools/cut-gameover.py) 배경으로 깔고, 그 위에 값과 라벨만 글자로 얹는다.
+
+     일시정지와 다른 점은 판 높이가 고정이 아니라는 것이다(순위 명단이 비면 접히고,
+     도전장 판이면 한 줄이 는다). 그래서 액자를 한 장으로 늘리지 않고 border-image 로
+     쓴다 - 네 변 조각은 원래 크기 그대로 찍히고 가운데 면만 세로로 늘어난다.
+
+     자리 잡는 법: 값은 전부 시안 좌표를 그대로 옮긴 것이다. #overlay .title 을 컨테이너로
+     잡아 1cqw = 액자 바깥폭(시안 844px)의 1% = 시안 8.44px 로 두고, 시안 좌표를 8.44 로
+     나눠 적는다. 액자가 커지든 작아지든 부품과 글자의 비율이 그대로 간다.
+     footer·일시정지와 같은 방식으로 cqw 는 @supports 안에 몰아 두고, 밖에는 최대폭
+     352px 기준 px 을 적어 둔다. cqw 를 모르는 브라우저에서 통째로 무효가 되면
+     음수 margin 까지 날아가 판이 무너지기 때문이다. */
+  #overlay .title{container-type:inline-size;}
+  .goPanelWrap{position:relative;width:100%;max-width:352px;}
+  /* 액자. border-width 는 '내용이 놓이는 안쪽 상자'를, border-image-width 는 '그림 조각의
+     두께'를 정한다. 둘이 다른 이유는 위 조각에 모서리 눈덩이가 통째로 들어 있어서다.
+     그림 조각은 눈덩이 끝(시안 y 525)까지 오고, 내용은 그보다 위(시안 y 372)에서
+     시작해야 해서 .goPanel 을 음수 margin 으로 도로 끌어올린다. */
+  .goFrame{position:relative;padding:0;background:none;box-shadow:none;
+    border-style:solid;border-color:transparent;
+    border-width:83.41px 22.94px 6.67px 22.52px;
+    border-image-source:url('img/go-frame.webp');
+    border-image-slice:233 75 33 70 fill;
+    border-image-repeat:stretch;
+    border-image-width:97.18px 31.28px 13.76px 29.19px;
+    border-image-outset:13.76px 8.34px 7.09px 6.67px;}
+  .goPanel{position:relative;width:100%;padding:0;border-radius:0;text-align:center;
+    background:none;box-shadow:none;overflow:visible;margin-top:-63.81px;}
+
+  /* 게임 오버 배지. 글자가 '최고 기록 갱신!'으로 길어지므로 border-image 로 쓴다 -
+     양 끝 둥근 마개는 원래 크기로 찍히고 가운데만 늘어난다. */
+  .goTag{position:relative;display:inline-block;margin:-5.84px 0 0;
+    height:33.78px;line-height:33.78px;min-width:79.24px;padding:0 16.68px;
+    border:0;border-radius:0;background:none;box-shadow:none;
+    border-image-source:url('img/go-tag-fixed.webp');
+    border-image-slice:0 40 fill;
+    border-image-width:0 16.68px;
+    border-image-outset:0 5.84px;
+    font-size:0;color:transparent;text-shadow:none;}
+  /* 배지 양옆 눈꽃도 시안에서 오려 온 그림이다 */
+  .goTag::before,.goTag::after{content:'';position:absolute;top:50%;
+    width:19.18px;height:19.18px;transform:translateY(-50%);
+    background:url('img/go-flake-s.webp') center/contain no-repeat;}
+  .goTag::before{right:100%;margin-right:2.11px;}
+  .goTag::after{left:100%;margin-left:2.11px;}
+  /* 신기록은 시안에 없는 상태다. 같은 얼음 배지에 글자만 금색으로 바꾼다
+     (금색 배지를 새로 그리면 시안에 없는 재질을 지어내는 셈이라 하지 않는다). */
+  /* 신기록 문구는 시안에 없는 상태라 고정 '게임 오버' 픽셀을 쓸 수 없다. */
+  .goTag.record{border-image-source:url('img/go-tag.webp');font-size:23.97px;
+    color:#ffe9a6;text-shadow:0 1px 2px rgba(90,55,0,.5);}
+
   /* 점수: 위는 밝고 아래로 갈수록 진해지는 파랑 + 흰 외곽선 + 얼음빛 후광.
      background-clip:text 로 그라데이션을 채우고, paint-order 로 외곽선을 글자
      뒤에 먼저 깔아야 획이 안 잠식된다. */
-  #overlay .final{font-size:47px;font-weight:900;letter-spacing:-.02em;line-height:1.15;
-    font-variant-numeric:tabular-nums;
-    /* 맨 위에 흰빛을 한 겹 더 얹어 얼음에 새긴 듯한 광택을 만든다 */
-    background:linear-gradient(180deg,#eaf6ff 0%,#4b9bf8 22%,#1550d0 58%,#0a3196 100%);
+  #overlay .final{height:66.73px;line-height:66.73px;margin-top:-3.75px;
+    font-family:'Noto Sans KR',sans-serif;font-size:53.50px;font-weight:900;letter-spacing:-.035em;
+    font-variant-numeric:tabular-nums;}
+  #overlay #finalScore{display:inline-block;
+    background:linear-gradient(180deg,#edfaff 0%,#69b8f7 13%,#176fd8 34%,
+                                      #0646ad 62%,#032b7d 84%,#021f61 100%);
     -webkit-background-clip:text;background-clip:text;color:transparent;
-    /* 테두리는 획 양쪽을 파고들어 실제로는 2배로 먹힌다. 3px 로 뒀더니 파란 심지가
-       거의 안 남아 뿌옇게 보였다 - 얇게 두르고 빛번짐으로 또렷함을 만든다. */
-    -webkit-text-stroke:1.7px #fff;paint-order:stroke fill;
-    filter:drop-shadow(0 0 7px rgba(255,255,255,.95))
-           drop-shadow(0 0 18px rgba(120,200,255,.7))
-           drop-shadow(0 3px 8px rgba(10,50,140,.4));}
-  #overlay .best{font-size:12.5px;color:#3c62a0;margin-top:4px;min-height:18px;font-weight:700;}
-  .goTag{display:inline-block;font-size:12.5px;font-weight:800;padding:6px 15px;
-    border-radius:20px;background:rgba(255,255,255,.9);color:var(--ink2);margin-bottom:8px;
-    box-shadow:0 2px 6px rgba(6,22,60,.16), inset 0 1px 0 rgba(255,255,255,.9);}
-  .goTag.record{background:linear-gradient(180deg,#ffd85c,#f0a92c);color:#4a3000;
-    box-shadow:0 4px 14px rgba(240,169,44,.5), inset 0 1px 0 rgba(255,255,255,.7);}
-  /* 신기록 배지 앞의 왕관. 이모지는 기기마다 모양이 달라 직접 그린 것을 쓴다. */
-  .goTag.record::before{content:'';display:inline-block;vertical-align:-2px;
-    width:15px;height:11px;margin-right:5px;
-    background:var(--crown-gold) center/contain no-repeat;}
-  /* 스탯 상자: 서리 낀 유리판 + 위 테두리에 걸터앉은 하늘색 왕관 + 눈꽃 한 송이 */
-  .goStats{display:flex;gap:9px;margin:20px 0 0;}
-  .goStats div{position:relative;flex:1;border-radius:15px;padding:13px 4px 9px;
-    background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(232,245,255,.72));
-    border:1.5px solid rgba(255,255,255,.95);
-    box-shadow:0 0 0 1.5px rgba(150,205,250,.5), 0 3px 8px rgba(20,60,140,.12),
-      inset 0 0 14px rgba(180,220,255,.35);}
-  /* 왕관은 상자 위 테두리에 반쯤 걸치고, 눈꽃은 오른쪽 위 구석에 */
-  .goStats div::before{content:'';position:absolute;left:50%;top:-9px;
-    width:22px;height:15px;transform:translateX(-50%);
-    background:var(--crown-ice) center/contain no-repeat;
-    filter:drop-shadow(0 2px 2px rgba(20,60,140,.2));}
-  .goStats div::after{content:'';position:absolute;right:5px;top:6px;
-    width:17px;height:17px;opacity:.5;
-    background:var(--flake-b) center/contain no-repeat;}
-  .goStats span{display:block;font-size:11px;color:#5b83b8;font-weight:800;margin-bottom:2px;}
-  .goStats b{font-size:19px;font-variant-numeric:tabular-nums;color:#123a86;letter-spacing:-.02em;}
-  /* 도전 결과 한 줄. 성공/실패가 색으로 먼저 읽히게 한다 */
-  .goChal{margin:0 0 8px;font-size:12.5px;font-weight:800;line-height:1.5;
-    border-radius:12px;padding:7px 12px;
-    background:rgba(226,242,255,.92);color:#0b2f5e;
-    box-shadow:inset 0 0 0 1px rgba(120,185,255,.55);}
-  .goChal[hidden]{display:none;}
-  .goChal.win{background:linear-gradient(180deg,#dcfce7,#bbf7d0);color:#14532d;
-    box-shadow:inset 0 0 0 1px rgba(34,197,94,.45);}
-  .goChal.lose{background:rgba(255,238,238,.95);color:#7f1d1d;
-    box-shadow:inset 0 0 0 1px rgba(248,113,113,.45);}
-  .goChal b{font-weight:900;}
-  .goFeed{margin-top:12px;font-size:12.5px;color:var(--ink2);font-weight:600;
-    line-height:1.6;min-height:20px;}
-  .goFeed .hi{color:#1b4fd6;font-weight:900;}
+    /* 테두리는 획 양쪽을 파고들어 실제로는 2배로 먹힌다. 두껍게 두르면 파란 심지가
+       거의 안 남아 뿌옇게 보인다 - 얇게 두르고 빛번짐으로 또렷함을 만든다. */
+    -webkit-text-stroke:1.55px #fff;paint-order:stroke fill;
+    filter:drop-shadow(0 0 6px rgba(255,255,255,.82))
+           drop-shadow(0 0 16px rgba(120,200,255,.58))
+           drop-shadow(0 3px 7px rgba(10,50,140,.34));}
+  /* 쉼표까지 숫자와 같은 굵은 외곽선을 주면 작은 글리프의 안쪽이 막혀 두 글자가
+     겹친 것처럼 보인다. 쉼표만 얇은 원본 형태로 분리한다. */
+  #overlay .final i{font-style:normal;font-size:.72em;color:#d9f3ff;
+    -webkit-text-stroke:.2px #fff;filter:none;}
+  /* '내 최고' 앞뒤의 선과 마름모도 시안 그림이다. 점수 길이가 변해도 선이 밀려날 뿐
+     늘어나지 않도록 고정 크기로 두고 가운데 글자만 자란다. */
+  #overlay .best{display:flex;align-items:center;justify-content:center;gap:9.18px;
+    height:16.68px;margin-top:-2.08px;
+    font-size:15.38px;font-weight:700;color:#e9f5ff;letter-spacing:-.02em;
+    text-shadow:0 1px 2px rgba(3,40,110,.48);}
+  #overlay .best::before,#overlay .best::after{content:'';flex:0 1 auto;height:14.18px;
+    background:center/100% 100% no-repeat;}
+  #overlay .best::before{width:79.24px;background-image:url('img/go-div-l.webp');}
+  #overlay .best::after{width:87.58px;background-image:url('img/go-div-r.webp');}
+  #overlay .best:empty{display:none;}
 
-  /* 순위 목록을 감싸는 얼음판 - 위엔 눈꽃 구분선(rankNote), 안엔 명단 */
+  /* 통계 세 칸: 칸·왕관·공·보스 그림이 모두 한 장씩(go-stat1~3.webp). 라벨과 숫자만 얹는다.
+     칸마다 그림 크기가 조금씩 달라(시안이 손으로 그린 것이라) 폭·왼쪽 자리를 따로 준다. */
+  .goStats{position:relative;height:80.91px;margin-top:-2.08px;}
+  .goStats div{position:absolute;top:0;height:100%;
+    background:center/100% 100% no-repeat;}
+  .goStats div:nth-child(1){left:-0.544%;width:34.29%;background-image:url('img/go-stat1.webp');}
+  .goStats div:nth-child(2){left:33.47%; width:33.74%;background-image:url('img/go-stat2.webp');}
+  .goStats div:nth-child(3){left:66.94%; width:34.01%;background-image:url('img/go-stat3.webp');}
+  .goStats span,.goStats b{position:absolute;left:0;right:0;display:block;
+    transform:translateY(-50%);line-height:1;white-space:nowrap;overflow:hidden;}
+  .goStats span{top:40.2%;font-size:12.60px;font-weight:700;color:#0841b9;letter-spacing:-.03em;}
+  .goStats b{top:67.0%;font-size:20.50px;font-weight:700;color:#052d8c;
+    letter-spacing:-.04em;font-variant-numeric:tabular-nums;}
+
+  /* 도전 결과 한 줄. 시안에 없는 줄이라(도전장 판에서만 뜬다) 얼음판 대신
+     글자만 얹고 색으로 승패를 가른다. */
+  .goChal{margin:2.50px 0 0;font-size:15.38px;font-weight:700;line-height:1.5;color:#e2f0fc;
+    text-shadow:0 1px 1px rgba(3,40,110,.3);}
+  .goChal[hidden]{display:none;}
+  .goChal.win{color:#b6f5c9;}
+  .goChal.lose{color:#ffc9c9;}
+  .goChal b{font-weight:700;}
+
+  .goFeed{display:flex;align-items:center;justify-content:center;gap:7.04px;
+    height:20.85px;margin-top:2.50px;
+    font-size:16.58px;font-weight:700;color:#edf7ff;letter-spacing:-.02em;
+    text-shadow:0 1px 2px rgba(3,40,110,.48);}
+  .goFeed::before{content:'';width:19.18px;height:19.18px;flex:0 0 auto;
+    background:url('img/go-flake-s.webp') center/contain no-repeat;}
+  .goFeed .hi{color:#72c7ff;font-weight:800;}
+  /* 순위 안내 줄. 시안처럼 눈꽃을 양옆에 하나씩 둔다(빈 줄이면 통째로 접힌다) */
   .rankNote:empty{display:none;}
-  .rankNote{display:flex;align-items:center;justify-content:center;gap:8px;
-    font-size:12.5px;color:#1c4a8c;margin:18px 0 8px;min-height:16px;font-weight:800;}
-  .rankNote:not(:empty)::before, .rankNote:not(:empty)::after{content:'';width:13px;height:13px;
-    background:var(--flake-b) center/contain no-repeat;opacity:.65;}
-  /* 명단이 비면(비로그인·오프라인) 상자를 아예 접는다. 예전엔 빈 얼음판이
-     회색 막대처럼 남아 로딩이 덜 된 화면으로 보였다.
-     :has() 대신 클래스로 - 구형 웹뷰까지 확실히 먹는다(renderRank 가 붙인다). */
+  .rankNote{display:flex;align-items:center;justify-content:center;gap:7.04px;
+    height:18.35px;font-size:15.38px;font-weight:700;color:#edf7ff;letter-spacing:-.02em;
+    text-shadow:0 1px 2px rgba(3,40,110,.48);}
+  .rankNote::before,.rankNote::after{content:'';width:19.18px;height:19.18px;flex:0 0 auto;
+    background:url('img/go-flake-s.webp') center/contain no-repeat;}
+
+  /* 순위판. 줄 수가 변하므로 액자와 같은 방식(border-image)으로 늘린다.
+     border-width 는 0 이다 - 줄이 판 안쪽을 꽉 채워야 시안과 같은 자리에 떨어진다. */
   .goRankBox.empty{display:none;}
-  .goRankBox{border-radius:19px;padding:7px;
-    background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(226,242,255,.55));
-    border:1.5px solid rgba(255,255,255,.9);
-    box-shadow:0 0 0 1.5px rgba(150,205,250,.4), inset 0 1px 0 rgba(255,255,255,.8),
-      inset 0 0 22px rgba(150,205,250,.22);}
+  .goRankBox{margin-top:2.50px;padding:0.84px 0;border:0;border-radius:0;
+    position:relative;background:none;box-shadow:none;
+    border-image-source:url('img/go-rank.webp');
+    border-image-slice:46 fill;
+    border-image-repeat:stretch;
+    border-image-width:19.18px;
+    border-image-outset:3.34px;}
+  /* 추출 과정에서 빈 순위판을 만들며 내부 서리층이 원본보다 밝아졌다.
+     시안 내부 실측 평균 RGB(99,157,228)에 맞춘 푸른 유리층만 안쪽에 얹는다.
+     테두리와 2위 강조 띠는 원본 이미지 색을 그대로 유지한다. */
+  .goRankBox::before{content:'';position:absolute;z-index:0;
+    inset:3.8% 2.2%;background:rgba(34,110,210,.46);pointer-events:none;}
   .rank{list-style:none;margin:0;padding:0;text-align:left;
-    max-height:214px;overflow-y:auto;}
-  .rank li{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:13px;
-    font-size:14.5px;color:#3c62a0;font-weight:700;}
-  .rank li + li{border-top:1px solid rgba(160,205,250,.35);}
-  /* 내 줄. 예전엔 흰 배경 + 하늘색 링 + 바깥 빛이라, 판 자체가 거의 흰색인 로비에서는
-     줄이 아니라 '카드 한 장이 명단 위에 얹힌 것'처럼 겉돌았다(링이 위아래 줄을 밀어냈다).
-     판이 밝으니 내 줄은 반대로 파랗게 깔아야 명단 안에 있으면서 도드라진다. */
-  .rank li.me{position:relative;border-top-color:transparent;
-    background:linear-gradient(180deg,rgba(212,235,255,.96),rgba(178,216,252,.93));
-    color:#0d3272;font-weight:900;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.75);}
-  .rank li.me .nm{color:#0d3272;}
-  .rank li.me .sc{color:#0a2f6e;}
-  .rank li.me + li{border-top-color:transparent;}
-  .rank .no{width:22px;color:var(--ink3);font-variant-numeric:tabular-nums;font-weight:800;
-    text-align:center;flex:0 0 auto;}
-  /* 1~3위 그림 메달은 img 라, CSS 로 그리는 동그라미는 span 에만 걸어야 한다
-     (예전엔 .no 전체에 걸려 메달 그림이 22px 동그라미로 눌려 있었다) */
-  .rank li:nth-child(-n+3) span.no{color:#fff;width:22px;height:22px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;font-size:12px;
-    box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6), 0 2px 5px rgba(10,40,110,.3);}
-  .rank li:nth-child(1) span.no{background:linear-gradient(180deg,#ffd979,#e8a33d);}
-  .rank li:nth-child(2) span.no{background:linear-gradient(180deg,#dfe6ef,#98a3b8);}
-  #overlay #btnRetry{margin-top:11px;}
-  /* 두 보조 버튼은 한 줄. 예전엔 inline-flex + width:50% 였는데 사이 공백 한 칸 때문에
-     100% 를 넘겨 매번 줄바꿈됐다 - 진짜 flex 줄로 묶는다. */
-  .goSubBtns{display:flex;gap:9px;margin-top:9px;}
-  #overlay #btnShare,#overlay #btnToLobby{flex:1;width:auto;margin:0;
-    padding:12px 4px;font-size:13px;}
-  .rank li:nth-child(3) span.no{background:linear-gradient(180deg,#e5ab7d,#c08457);}
-  .rank .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#2b5590;}
-  .rank .sc{font-variant-numeric:tabular-nums;font-weight:900;color:#1354c4;}
+    position:relative;z-index:1;max-height:174.13px;overflow-y:auto;}
+  .rank li{position:relative;display:flex;align-items:center;gap:5.01px;
+    height:34.82px;padding:0 17.52px 0 9.18px;border-radius:0;
+    font-size:15.38px;font-weight:500;color:#f2f9fd;}
+  /* 줄 사이 구분선도 시안에서 오려 온 그림이다 */
+  .rank li + li{background:url('img/go-rank-div.webp') top center/92.8% 7.51px no-repeat;}
+  /* 내 줄 강조 띠 */
+  .rank li.me{background:url('img/go-rank-me.webp') center/100% 100% no-repeat;
+    color:#e5f9fe;font-weight:700;}
+  .rank li.me + li{background-image:none;}
+  .rank .no{width:37.54px;flex:0 0 auto;text-align:center;
+    color:#dceafb;font-variant-numeric:tabular-nums;font-weight:700;
+    text-shadow:0 1px 1px rgba(3,40,110,.3);}
+  /* 1~3위는 시안에서 오려낸 메달 그림이라 글자용 꾸밈이 걸리면 안 된다 */
+  .rank img.no{height:36.70px;object-fit:contain;}
+  .rank .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    text-shadow:0 1px 1px rgba(3,40,110,.3);}
+  .rank .sc{flex:0 0 auto;font-size:13.90px;font-weight:700;color:#e8f4fc;
+    font-variant-numeric:tabular-nums;text-shadow:0 1px 1px rgba(3,40,110,.3);}
+
+  /* 버튼 셋. 눈 캡·눈꽃이 전부 그림이라 통째로 깔고 글자만 얹는다. */
+  #overlay #btnRetry{display:flex;align-items:center;justify-content:center;
+    width:311.13px;height:54.22px;margin:2.50px auto 0;padding:4.09px 0 0;
+    border:0;border-radius:0;box-shadow:none;
+    background:url('img/go-retry-fixed.webp') center/100% 100% no-repeat;
+    font-size:0;color:transparent;text-shadow:none;}
+  .goSubBtns{display:flex;gap:2.50px;width:311.13px;height:44.21px;
+    margin:0.83px auto 9.59px;}
+  #overlay #btnShare,#overlay #btnToLobby{flex:0 0 154.31px;width:154.31px;height:100%;
+    margin:0;padding:0 0 3.34px;border:0;border-radius:0;box-shadow:none;
+    background:center/100% 100% no-repeat;font-size:0;color:transparent;text-shadow:none;}
+  #overlay #btnShare{background-image:url('img/go-sub-l-fixed.webp');}
+  #overlay #btnToLobby{background-image:url('img/go-sub-r-fixed.webp');}
+  #overlay .shareBtn,#overlay .homeBtn{gap:7.04px;}
+  #overlay .shareBtn svg,#overlay .homeBtn svg{display:none;}
+  /* 누르는 느낌: 그림을 살짝 밝히고 눌러 넣는다(테두리 광택이 그림이라 색을 못 바꾼다) */
+  #overlay #btnRetry:active,#overlay #btnShare:active,#overlay #btnToLobby:active{
+    filter:brightness(1.07) saturate(1.05);transform:translateY(1.1px);}
+
+  /* 액자가 작아져도 부품·글자 비율이 그대로 따라가게 하는 본체.
+     위 px 값은 이게 없을 때(컨테이너 단위 미지원)의 대비다. */
+  @supports (container-type: inline-size){
+    .goFrame{border-width:23.697cqw 6.517cqw 1.896cqw 6.398cqw;
+      border-image-width:27.607cqw 8.886cqw 3.910cqw 8.294cqw;
+      border-image-outset:3.910cqw 2.370cqw 2.014cqw 1.896cqw;}
+    .goPanel{margin-top:-18.128cqw;}
+    .goTag{margin-top:-1.659cqw;height:9.597cqw;line-height:9.597cqw;
+      min-width:22.512cqw;padding:0 4.739cqw;font-size:6.81cqw;
+      border-image-width:0 4.739cqw;border-image-outset:0 1.659cqw;}
+    .goTag:not(.record){font-size:0;}
+    .goTag::before,.goTag::after{width:5.450cqw;height:5.450cqw;}
+    .goTag::before{margin-right:0.60cqw;}
+    .goTag::after{margin-left:0.60cqw;}
+    #overlay .final{height:18.957cqw;line-height:18.957cqw;margin-top:-1.066cqw;
+      font-size:15.20cqw;}
+    #overlay #finalScore{-webkit-text-stroke-width:0.44cqw;}
+    #overlay .best{gap:2.607cqw;height:4.739cqw;margin-top:-0.592cqw;font-size:4.37cqw;}
+    #overlay .best::before,#overlay .best::after{height:4.028cqw;}
+    #overlay .best::before{width:22.512cqw;}
+    #overlay .best::after{width:24.882cqw;}
+    .goStats{height:22.986cqw;margin-top:-0.592cqw;}
+    .goStats span{font-size:3.58cqw;}
+    .goStats b{font-size:5.82cqw;}
+    .goChal{margin-top:0.711cqw;font-size:4.37cqw;}
+    .goFeed{gap:2.0cqw;height:5.924cqw;margin-top:0.711cqw;font-size:4.71cqw;}
+    .goFeed::before{width:5.450cqw;height:5.450cqw;}
+    .rankNote{gap:2.0cqw;height:5.213cqw;font-size:4.37cqw;}
+    .rankNote::before,.rankNote::after{width:5.450cqw;height:5.450cqw;}
+    .goRankBox{margin-top:0.711cqw;padding:0.24cqw 0;
+      border-image-width:5.450cqw;border-image-outset:0.948cqw;}
+    .rank{max-height:49.47cqw;}
+    .rank li{gap:1.422cqw;height:9.893cqw;padding:0 4.976cqw 0 2.607cqw;font-size:4.37cqw;}
+    .rank li + li{background-size:92.8% 2.133cqw;}
+    .rank .no{width:10.664cqw;}
+    .rank img.no{height:10.427cqw;}
+    .rank .sc{font-size:3.95cqw;}
+    #overlay #btnRetry{width:88.389cqw;height:15.403cqw;margin-top:0.711cqw;
+      padding-top:1.161cqw;font-size:6.08cqw;}
+    .goSubBtns{gap:0.711cqw;width:88.389cqw;height:12.559cqw;margin:0.237cqw auto 2.725cqw;}
+    #overlay #btnShare,#overlay #btnToLobby{flex-basis:43.839cqw;width:43.839cqw;
+      padding-bottom:0.948cqw;font-size:4.87cqw;}
+    #overlay .shareBtn,#overlay .homeBtn{gap:2.0cqw;}
+    #overlay .shareBtn svg,#overlay .homeBtn svg{width:4.5cqw;height:4.5cqw;}
+    #overlay #btnRetry:active,#overlay #btnShare:active,#overlay #btnToLobby:active{
+      transform:translateY(.3cqw);}
+  }
 
   /* ---- 멈춤 설명 ---- */
   .stats{display:flex;gap:8px;margin-bottom:16px;}
@@ -424,63 +550,117 @@
     box-shadow:0 1px 3px rgba(21,29,51,.18);}
   .guide b{color:var(--ink);min-width:28px;display:inline-block;font-weight:800;}
 
-  /* ---- 일시정지: 시안의 얼음 액자와 정보 계층을 게임 UI 자산으로 재현 ---- */
-  #pausePanel{padding:14px;background:rgba(2,18,66,.66);backdrop-filter:blur(10px) saturate(1.15);
+  /* ---- 일시정지 ----
+     얼음 재질은 CSS 로 흉내 내지 않는다. 시안(일시정지.png)에서 액자·통계칸·버튼을 통째로
+     오려 배경으로 깔고(tools/cut-pause.py), 그 위에 값과 라벨만 글자로 얹는다.
+     액자 그림 쪽은 부품이 놓일 자리의 내용물을 지워 두었으므로 서로 겹쳐 보이지 않는다.
+
+     자리 잡는 법: 액자 그림이 852x1277 이라 .pauseCard 에 그 가로세로비를 박고
+     모든 부품을 % 로 절대배치한다. 값은 전부 시안 좌표를 852/1277 로 나눈 것이라
+     글꼴 높이가 어떻게 잡히든 부품이 그림 위 제자리에 떨어진다.
+     글자 크기와 미세 보정은 cqw(=액자 폭의 1%)로 준다. 액자가 커지든 작아지든 비율이 유지된다.
+     footer 와 같은 방식으로 cqw 는 @supports 안에 몰아 두고, 밖에는 액자 최대폭(376px)
+     기준 px 을 적어 둔다. cqw 를 모르는 브라우저에서 transform 이 통째로 무효가 되면
+     translateY(-50%) 까지 날아가 글자가 아래로 쏠리기 때문이다. */
+  #pausePanel{padding:10px;background:rgba(2,18,66,.66);backdrop-filter:blur(10px) saturate(1.15);
     -webkit-backdrop-filter:blur(10px) saturate(1.15);}
-  #pausePanel .pauseCard{position:relative;width:100%;max-width:360px;max-height:calc(100dvh - 28px);
-    overflow-y:auto;padding:24px 18px 16px;border-radius:30px;text-align:center;color:#fff;
-    background-image:var(--snowcap),var(--flake-w),
-      linear-gradient(180deg,rgba(43,137,242,.96),rgba(100,178,248,.92) 60%,rgba(218,241,255,.96));
-    background-repeat:no-repeat;background-position:top center,92% 8%,center;
-    background-size:100% 14px,42px 42px,auto;
-    border:3px solid rgba(235,250,255,.92);
-    box-shadow:0 0 0 3px rgba(72,177,255,.7),0 0 36px rgba(76,187,255,.75),
-      0 28px 70px rgba(0,15,65,.62),inset 0 0 0 7px rgba(196,233,255,.22),
-      inset 0 0 30px rgba(213,244,255,.42);}
-  #pausePanel .pauseCard::-webkit-scrollbar{width:0;}
-  .pauseTitle{margin:3px 0 2px;font-size:37px;font-weight:950;letter-spacing:-.055em;
-    color:#fff;-webkit-text-stroke:1.5px #ccecff;paint-order:stroke fill;
-    text-shadow:0 3px 0 #2572d2,0 6px 12px rgba(0,42,125,.35);}
-  .pauseSub{margin:0 0 15px;font-size:13px;font-weight:800;color:#e7f5ff;
-    text-shadow:0 2px 5px rgba(0,50,130,.38);}
-  .pauseSub::before,.pauseSub::after,.pauseSectionTitle::before,.pauseSectionTitle::after{
-    content:'❄';margin:0 7px;color:#dff4ff;font-size:11px;}
-  .pauseStats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:7px;
-    border-radius:19px;background:rgba(21,104,208,.25);border:1px solid rgba(255,255,255,.35);}
-  .pauseStat{min-width:0;padding:10px 3px 9px;border-radius:15px;color:#1254a6;
-    background:linear-gradient(180deg,#fff,#e8f4ff);border:1px solid rgba(255,255,255,.95);
-    box-shadow:0 4px 9px rgba(0,65,155,.18),inset 0 0 10px rgba(145,205,255,.22);}
-  .pauseStat i{display:block;height:19px;color:#398ee3;}
-  .pauseStat i svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;
-    stroke-linecap:round;stroke-linejoin:round;}
-  .pauseStat span{display:block;margin:4px 0 1px;font-size:10.5px;font-weight:800;white-space:nowrap;}
-  .pauseStat b{display:block;max-width:100%;overflow:hidden;font-size:clamp(13px,4.7vw,21px);
-    line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.04em;}
-  #pauseScore{font-size:clamp(12px,3.8vw,15px);letter-spacing:-.06em;}
-  .pauseSectionTitle{margin:17px 0 9px;font-size:13.5px;font-weight:900;color:#edf8ff;}
-  .pauseQuick{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  #pausePanel .pauseQuick button{margin:0;padding:10px 6px 11px;border:0;border-radius:17px;
-    color:#0d54b2;background-image:var(--flake-i),linear-gradient(180deg,#fff,#eaf5ff);
-    background-repeat:no-repeat;background-position:right 9px bottom 8px,center;
-    background-size:25px 25px,auto;box-shadow:0 5px 12px rgba(0,64,150,.2);
-    font-size:13.5px;font-weight:900;}
-  .pauseQuick img{display:block;width:auto;height:45px;margin:0 auto 3px;
-    filter:drop-shadow(0 4px 5px rgba(0,50,140,.28));}
-  #pausePanel .pauseActions{margin-top:14px;}
-  #pausePanel .pauseActions button{width:100%;border:0;font-weight:900;}
-  #pausePanel #btnResume{margin:0;padding:16px 0 14px;font-size:17px;color:#fff;
-    border-style:solid;border-width:0;border-image-source:url('img/btn-primary.webp');
-    border-image-slice:55 95 35 95 fill;border-image-width:19px 32px 12px 32px;
-    background:none;text-shadow:0 2px 4px rgba(0,45,130,.5);box-shadow:none;}
-  .pauseSubActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
-  #pausePanel .pauseSubActions button{margin:0;padding:13px 4px;border-radius:14px;color:#1256ae;
-    background-image:var(--flake-i),linear-gradient(180deg,#fff,#e8f4ff);
-    background-repeat:no-repeat;background-position:right 8px center,center;background-size:22px,auto;
-    box-shadow:0 4px 10px rgba(0,65,150,.16);font-size:14px;}
-  .pauseSave{margin:13px 0 0;padding-top:11px;border-top:1px solid rgba(42,126,211,.35);
-    color:#3f83c9;font-size:11.5px;font-weight:800;}
-  @media (max-height:700px){
-    #pausePanel .pauseCard{zoom:.82;max-height:calc(100dvh / .82 - 20px);}
+  #pausePanel .pauseCard{position:relative;container-type:inline-size;
+    width:min(100%,376px,(100dvh - 20px) * 852 / 1277);aspect-ratio:852 / 1277;
+    background:url('img/pause-panel.webp') center/100% 100% no-repeat;
+    text-align:center;color:#fff;}
+  /* 제목 '일시정지'와 부제는 얼음을 깎은 그림이라 글꼴로 못 낸다. 액자 그림에 박힌 채로 쓴다. */
+  .pauseTitle,.pauseSub{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+
+  /* 통계 네 칸: 홈·칸·아이콘까지 한 장(pause-stats.webp). 라벨과 숫자만 얹는다.
+     칸 폭·사이 간격은 시안 그림(폭 748) 안의 실제 칸 좌표를 안쪽 상자 기준 %로 옮긴 값이다. */
+  .pauseStats{position:absolute;left:6.103%;top:22.005%;width:87.793%;height:19.342%;
+    display:grid;grid-template-columns:repeat(4,23.9437%);gap:1.4085%;
+    padding-left:2.6738%;padding-right:2.4064%;
+    background:url('img/pause-stats.webp') center/100% 100% no-repeat;}
+  .pauseStat{position:relative;min-width:0;}
+  .pauseStat span,.pauseStat b{position:absolute;left:0;right:0;transform:translateY(-50%);
+    display:block;overflow:hidden;white-space:nowrap;line-height:1;}
+  .pauseStat span{top:50.0%;font-size:11.3px;font-weight:800;color:#042a9a;letter-spacing:-.03em;}
+  .pauseStat b{top:68.2%;font-size:22.5px;font-weight:900;color:#04329a;
+    font-variant-numeric:tabular-nums;letter-spacing:-.04em;}
+  /* 점수·공격력은 자릿수가 계속 늘어 칸을 넘긴다. 글자 수(쉼표 포함)마다 setPaused 가 등급을 붙인다.
+     칸 안쪽 연한 면은 칸 170 중 155 뿐이라(시안 실측) 칸 폭으로 재면 넘치는 걸 놓친다.
+     각 등급은 숫자 폭이 시안의 22,914(폭 129, 한쪽 여백 13)와 같아지도록 실측해서 맞췄다.
+     쉼표가 붙어 4자·8자는 안 나오지만 등급은 이어지게 채워 둔다. */
+  .pauseStat b.w6{font-size:18.8px;}
+  .pauseStat b.w7{font-size:15.9px;}
+  .pauseStat b.w8{font-size:14.3px;}
+  .pauseStat b.w9{font-size:12.9px;}
+  .pauseStat b.w10{font-size:11.5px;}
+  .pauseStat b.w11{font-size:10.3px;}
+  .pauseStat b.w12{font-size:9.4px;}
+
+  .pauseSectionTitle{position:absolute;left:0;right:0;top:45.184%;transform:translate(-1.3px,-50%);
+    font-size:14.7px;font-weight:900;color:#f9fdfe;letter-spacing:-.02em;
+    text-shadow:0 1.1px 2.3px rgba(0,50,130,.4);}
+  .pauseSectionTitle::before,.pauseSectionTitle::after{content:'❄';margin:0 7.1px;
+    color:#dff4ff;font-size:.78em;vertical-align:.06em;}
+
+  /* 빠른 메뉴: 눈 캡·크리스털·아이콘 위치가 좌우가 달라 시안에서 칸을 따로 오렸다. */
+  .pauseQuick{position:absolute;left:7.746%;top:47.533%;width:84.507%;height:18.951%;
+    display:grid;grid-template-columns:1fr 1fr;gap:0;}
+  #pausePanel .pauseQuick button{position:relative;margin:0;padding:0;border:0;border-radius:0;
+    box-shadow:none;background:center/100% 100% no-repeat;}
+  #pausePanel #btnPauseHow{background-image:url('img/pause-quick-l.webp');}
+  #pausePanel #btnPauseGuide{background-image:url('img/pause-quick-r.webp');}
+  #pausePanel .pauseQuick button span{position:absolute;left:0;right:0;top:82.6%;
+    transform:translate(.9px,-50%);font-size:15.6px;font-weight:900;color:#023199;
+    line-height:1;letter-spacing:-.03em;text-shadow:0 .5px 0 rgba(255,255,255,.75);}
+  /* 시안은 오른쪽 칸 글자를 칸 한가운데가 아니라 살짝 왼쪽에 뒀다(오른쪽 아래 크리스털을 피한 자리) */
+  #pausePanel #btnPauseGuide span{transform:translate(-4.4px,-50%);}
+  #pausePanel #btnRestart span{transform:translate(-3.5px,-50%);}
+
+  #pausePanel .pauseActions{display:contents;}
+  #pausePanel #btnResume{position:absolute;left:7.746%;top:67.267%;width:84.507%;height:12.686%;
+    margin:0;padding:0;border:0;border-radius:0;box-shadow:none;
+    background:url('img/pause-resume.webp') center/100% 100% no-repeat;}
+  #pausePanel #btnResume span{position:absolute;left:0;right:0;top:56.5%;transform:translateY(-50%);
+    font-size:23px;font-weight:900;color:#fefefe;line-height:1;letter-spacing:-.03em;
+    text-shadow:0 1.1px 1.9px rgba(0,45,130,.45);}
+  .pauseSubActions{position:absolute;left:7.746%;top:80.971%;width:84.507%;height:8.692%;
+    display:grid;grid-template-columns:1fr 1fr;gap:0;}
+  #pausePanel .pauseSubActions button{position:relative;margin:0;padding:0;border:0;border-radius:0;
+    box-shadow:none;background:center/100% 100% no-repeat;}
+  #pausePanel #btnName{background-image:url('img/pause-sub-l.webp');}
+  #pausePanel #btnRestart{background-image:url('img/pause-sub-r.webp');}
+  #pausePanel .pauseSubActions button span{position:absolute;left:0;right:0;top:51.4%;
+    transform:translateY(-50%);font-size:14.7px;font-weight:900;color:#063db0;
+    line-height:1;letter-spacing:-.03em;}
+
+  .pauseSave{position:absolute;left:7.746%;right:7.746%;top:90.955%;margin:0;padding-top:11.1px;
+    border-top:1px solid rgba(42,126,211,.32);color:#1760c8;font-size:12px;font-weight:800;
+    line-height:1;letter-spacing:-.03em;text-indent:-3.8px;}
+
+  /* 누르는 느낌: 그림을 살짝 밝히고 눌러 넣는다(테두리 광택이 그림이라 색을 못 바꾼다) */
+  #pausePanel button:active{filter:brightness(1.07) saturate(1.05);transform:translateY(1.1px);}
+
+  /* 액자가 작아져도 글자 비율이 그대로 따라가게 하는 본체. 위 px 값은 이게 없을 때의 대비다. */
+  @supports (container-type: inline-size){
+    .pauseStat span{font-size:3.01cqw;}
+    .pauseStat b{font-size:5.99cqw;}
+    .pauseStat b.w6{font-size:5.01cqw;}
+    .pauseStat b.w7{font-size:4.24cqw;}
+    .pauseStat b.w8{font-size:3.80cqw;}
+    .pauseStat b.w9{font-size:3.43cqw;}
+    .pauseStat b.w10{font-size:3.05cqw;}
+    .pauseStat b.w11{font-size:2.74cqw;}
+    .pauseStat b.w12{font-size:2.50cqw;}
+    .pauseSectionTitle{transform:translate(-.35cqw,-50%);font-size:3.90cqw;
+      text-shadow:0 .3cqw .6cqw rgba(0,50,130,.4);}
+    .pauseSectionTitle::before,.pauseSectionTitle::after{margin:0 1.9cqw;}
+    #pausePanel .pauseQuick button span{transform:translate(.23cqw,-50%);font-size:4.15cqw;
+      text-shadow:0 .12cqw 0 rgba(255,255,255,.75);}
+    #pausePanel #btnPauseGuide span{transform:translate(-1.17cqw,-50%);}
+    #pausePanel #btnRestart span{transform:translate(-.94cqw,-50%);}
+    #pausePanel #btnResume span{font-size:6.11cqw;text-shadow:0 .3cqw .5cqw rgba(0,45,130,.45);}
+    #pausePanel .pauseSubActions button span{font-size:3.92cqw;}
+    .pauseSave{padding-top:2.95cqw;font-size:3.20cqw;text-indent:-1cqw;}
+    #pausePanel button:active{transform:translateY(.3cqw);}
   }
 
   /* ---- 배너 / 버프 테두리 ---- */
@@ -542,60 +722,8 @@
   #overlay .brand{margin-bottom:12px;}
   #overlay .brand .markImg{width:74px;}
   #overlay .brand .wordImg{width:56%;}
-  .goPanelWrap{position:relative;width:100%;max-width:352px;}
-  /* 얼음 액자: 시안의 핵심은 "얇은 흰 선"이 아니라 두툼한 반투명 얼음 띠다.
-     바깥 틀(goFrame)이 그 띠를 만들고, 안쪽 판(goPanel)이 내용을 담는다. */
-  .goFrame{position:relative;border-radius:38px;padding:12px;
-    background:
-      linear-gradient(180deg,rgba(236,250,255,.85) 0%,rgba(168,216,252,.6) 45%,
-                              rgba(214,240,255,.8) 100%);
-    box-shadow:
-      0 0 0 2px rgba(160,220,255,.8),            /* 바깥 얼음 선 */
-      0 0 40px rgba(110,195,255,.6),             /* 번지는 빛 */
-      0 26px 60px rgba(6,22,60,.55),
-      inset 0 2px 0 rgba(255,255,255,.95),       /* 위쪽 하이라이트 */
-      inset 0 -2px 0 rgba(255,255,255,.55);}
-  .goPanel{position:relative;overflow:hidden;width:100%;
-    text-align:center;border-radius:27px;padding:22px 13px 16px;
-    /* 판 안쪽: 아주 밝은 서리빛. 배경 사진을 옅게 깔아 반짝임만 얻는다
-       (판 자기 크기 기준이라 화면 크기가 달라져도 톤이 안 변한다). */
-    background-image:
-      linear-gradient(180deg,rgba(255,255,255,.82) 0%,rgba(226,242,255,.78) 50%,
-                              rgba(203,231,255,.8) 100%),
-      url('img/bg-lobby.webp');
-    background-repeat:no-repeat;
-    background-position:center, center bottom;
-    background-size:auto, cover;
-    box-shadow:
-      inset 0 0 0 2px rgba(255,255,255,.9),      /* 안쪽 흰 테 */
-      inset 0 0 30px rgba(150,210,255,.4);}
-  /* 점수 뒤로 터지는 빛살 무늬 */
-  .goBurst{position:absolute;left:50%;top:130px;width:400px;height:400px;
-    transform:translate(-50%,-50%);pointer-events:none;z-index:0;
-    background:repeating-conic-gradient(from 0deg,
-      rgba(255,255,255,.6) 0deg 3deg, transparent 3deg 11deg);
-    -webkit-mask-image:radial-gradient(circle, #000 42%, transparent 76%);
-    mask-image:radial-gradient(circle, #000 42%, transparent 76%);
-    opacity:.75;}
-  /* 판 위쪽 모서리에 비치는 얼음 결정 단면 */
-  .goFacets{position:absolute;inset:0;pointer-events:none;z-index:0;}
-  .goFacets i{position:absolute;top:-4px;width:72px;height:72px;
-    background:var(--ice-facet) center/contain no-repeat;opacity:.22;}
-  .goFacets .l{left:-6px;}
-  .goFacets .r{right:-6px;transform:scaleX(-1);}
-  /* 장식은 맨 뒤, 실제 내용물은 그 위로 */
-  .goPanel > *{position:relative;z-index:1;}
-  .goPanel > .gFlakes, .goPanel > .goBurst, .goPanel > .goFacets{z-index:0;}
-  /* 액자 모서리에 쌓여 옆으로 흘러내리는 눈 - goPanel 의 overflow 에 안 잘리도록
-     제일 바깥 래퍼에 얹어 액자 위로 튀어나오게 한다. */
-  .goSnow{position:absolute;inset:0;pointer-events:none;z-index:5;
-    filter:drop-shadow(0 5px 7px rgba(20,60,140,.26));}
-  /* 시안의 눈은 위 전체를 덮는 '띠'가 아니라 양 모서리에 뭉쳐 옆으로 흘러내리는
-     '더미'다. 띠로 깔았더니 판 위에 흰 막대를 얹은 꼴이 됐다. */
-  .goSnow i{position:absolute;top:-10px;width:52px;height:112px;
-    background:var(--snow-drape) top center/contain no-repeat;}
-  .goSnow .l{left:1px;}
-  .goSnow .r{right:1px;transform:scaleX(-1);}
+  /* 구형 CSS 장식은 시안에서 오린 액자 자산과 겹치므로 사용하지 않는다. */
+  .goBurst,.goFacets,.gFlakes,.goSnow{display:none;}
   #naverNickPanel .field{margin-bottom:13px;}
   #namePanel .tag{margin-bottom:22px;}
   /* 도감은 얼음판이 밝아야 하니 뒤를 덜 어둡게 깐다 */
@@ -666,7 +794,7 @@
   .title .more:active{transform:none;box-shadow:none;opacity:.7;}
   .panel .rank{margin:0;max-height:none;}
   .panel .rank li{padding:7px 8px;}
-  .rank .no.medal{width:28px;height:auto;flex:0 0 auto;
+  .panel .rank .no.medal{width:28px;height:auto;flex:0 0 auto;
     filter:drop-shadow(0 2px 4px rgba(10,40,110,.28));}
   /* 3위 밖이면 내 순위를 한 줄 띄워 따로 보여준다 */
   .rank li.apart{margin-top:8px;border-top:1.5px dashed rgba(120,170,225,.5);padding-top:10px;}
@@ -1255,21 +1383,6 @@
     #overlay .brand{margin-bottom:7px;}
     #overlay .brand .markImg{width:56px;margin-bottom:3px;}
     #overlay .brand .wordImg{width:44%;margin-top:0;}
-    .goFrame{padding:8px;border-radius:30px;}
-    .goPanel{padding:14px 10px 10px;border-radius:23px;}
-    .goSnow i{width:43px;height:92px;top:-8px;}
-    .goTag{padding:5px 13px;margin-bottom:4px;}
-    #overlay .final{font-size:40px;line-height:1.08;}
-    #overlay .best{margin-top:2px;min-height:15px;font-size:11.5px;}
-    .goStats{gap:7px;margin-top:14px;}
-    .goStats div{padding:10px 3px 7px;}
-    .goFeed{margin-top:8px;min-height:17px;line-height:1.4;}
-    .rankNote{margin:10px 0 6px;}
-    .goRankBox{padding:5px;border-radius:15px;}
-    #overlay .rank{max-height:190px;}
-    #overlay .rank li{padding:7px 9px;font-size:13px;}
-    #overlay #btnRetry{margin-top:8px;padding:13px 0 11px;}
-    #overlay #btnShare,#overlay #btnToLobby{margin-top:6px;padding:10px 3px;font-size:12px;}
   }
   @media (max-width: 900px) and (max-height: 780px){
     #titleScreen .title, #namePanel .title{zoom:.84;}
@@ -1354,28 +1467,30 @@
 </div>
 <div id="pausePanel" class="veil">
   <div class="pauseCard">
+    <!-- 제목·부제는 액자 그림(pause-panel.webp)에 박혀 있다. 여기 글자는 읽어주기용이라 감춘다. -->
     <h2 class="pauseTitle">일시정지</h2>
     <p class="pauseSub">게임이 잠시 멈췄어요</p>
+    <!-- 아이콘(트로피·깃발·별·해골)은 pause-stats.webp 안에 그려져 있다 -->
     <div class="pauseStats">
-      <div class="pauseStat"><i><svg viewBox="0 0 24 24"><path d="M8 4h8v4c0 3-1.8 5-4 5s-4-2-4-5zM12 13v4M8 21h8M9 17h6M8 6H4v2c0 2 1.4 3.5 3.4 3.5M16 6h4v2c0 2-1.4 3.5-3.4 3.5"/></svg></i><span>점수</span><b id="pauseScore">0</b></div>
-      <div class="pauseStat"><i><svg viewBox="0 0 24 24"><path d="M6 21V3M7 4h10l-2 4 2 4H7"/></svg></i><span>라운드</span><b id="pauseRound">1</b></div>
+      <div class="pauseStat"><span>점수</span><b id="pauseScore">0</b></div>
+      <div class="pauseStat"><span>라운드</span><b id="pauseRound">1</b></div>
       <!-- 공 개수는 100 에서 멈추므로(MAX_BALLS) 후반엔 늘 100 만 찍혀 아무것도 안 알려준다.
            그 뒤로 자라는 건 화력이라 총 공격력(공 + 추가 공격력)을 보여준다. -->
-      <div class="pauseStat"><i><svg viewBox="0 0 24 24"><path d="M12 2c.7 5 3 7.3 8 8-5 .7-7.3 3-8 8-.7-5-3-7.3-8-8 5-.7 7.3-3 8-8z"/></svg></i><span>공격력</span><b id="pausePower">4</b></div>
-      <div class="pauseStat"><i><svg viewBox="0 0 24 24"><path d="M5 10a7 7 0 0 1 14 0v4l-2 2v3h-3v-2h-4v2H7v-3l-2-2z"/><circle cx="9" cy="11" r="1"/><circle cx="15" cy="11" r="1"/></svg></i><span>보스 처치</span><b id="pauseBoss">0</b></div>
+      <div class="pauseStat"><span>공격력</span><b id="pausePower">4</b></div>
+      <div class="pauseStat"><span>보스 처치</span><b id="pauseBoss">0</b></div>
     </div>
     <div class="pauseSectionTitle">빠른 메뉴</div>
     <div class="pauseQuick">
-      <button id="btnPauseHow"><img src="img/icon-howto.webp" alt="">게임 방법</button>
-      <button id="btnPauseGuide"><img src="img/icon-guide.webp" alt="">블록 도감</button>
+      <button id="btnPauseHow"><span>게임 방법</span></button>
+      <button id="btnPauseGuide"><span>블록 도감</span></button>
     </div>
     <!-- '이번 턴 효과' 칸은 뺐다. 분열·점수 2배는 게임 화면 HUD 배지(hudFx)에 이미 떠 있어
          같은 걸 두 번 보여주는 자리였고, 대개 '적용 중인 효과가 없어요'만 차지하고 있었다. -->
     <div class="pauseActions">
-      <button id="btnResume">이어하기</button>
+      <button id="btnResume"><span>이어하기</span></button>
       <div class="pauseSubActions">
-        <button id="btnName">로비로</button>
-        <button id="btnRestart">처음부터</button>
+        <button id="btnName"><span>로비로</span></button>
+        <button id="btnRestart"><span>처음부터</span></button>
       </div>
     </div>
     <p class="pauseSave">ⓘ 진행 상황은 자동으로 저장됩니다.</p>
@@ -3458,13 +3573,17 @@ function fitFinalScore(){
   box.style.fontSize = '';
   const avail = box.clientWidth, w = span.getBoundingClientRect().width;
   if (!avail || w <= avail) return;
-  const base = parseFloat(box.style.fontSize) || 47;
+  const base = parseFloat(getComputedStyle(box).fontSize) || 47;
   box.style.fontSize = Math.max(20, Math.floor(base * avail / w)) + 'px';
+}
+
+function putFinalScore(value){
+  const parts = Number(value || 0).toLocaleString().split(',');
+  document.getElementById('finalScore').innerHTML = parts.join('<i>,</i>');
 }
 
 // 0 에서 최종 점수까지 굴러 올라간다. 큰 숫자가 그냥 찍히는 것보다 훨씬 잘 남는다.
 function countUpScore(target){
-  const span = document.getElementById('finalScore');
   if (target <= 0) return;
   const DUR = 900;
   let t0 = null;
@@ -3472,9 +3591,9 @@ function countUpScore(target){
     if (t0 === null) t0 = now;
     const t = Math.min(1, (now - t0) / DUR);
     const eased = 1 - Math.pow(1 - t, 3);
-    span.textContent = Math.round(target * eased).toLocaleString();
+    putFinalScore(Math.round(target * eased));
     if (t < 1) requestAnimationFrame(step);
-    else span.textContent = target.toLocaleString();
+    else putFinalScore(target);
   };
   requestAnimationFrame(step);
 }
@@ -3512,8 +3631,7 @@ function enterGameOver(){
     chal.hidden = true;
   }
 
-  const finalEl = document.getElementById('finalScore');
-  finalEl.textContent = S.score.toLocaleString();
+  putFinalScore(S.score);
   document.getElementById('goRound').textContent = S.round;
   document.getElementById('goBalls').textContent = S.maxBalls;
   document.getElementById('goBoss').textContent = S.bossKills || 0;
@@ -3803,7 +3921,12 @@ function renderRank(list, note){
   // 로비와 같은 줄 생성기를 쓴다 - 1~3위 그림 메달까지 그대로 따라온다
   // (예전엔 여기서만 따로 만들면서 숫자 동그라미로 떨어졌다)
   const rows = (list || []).slice(0, 20);
-  rows.forEach((r, i) => ol.appendChild(rankRow(r, i)));
+  rows.forEach((r, i) => {
+    const row = rankRow(r, i);
+    const medal = row.querySelector('img.medal');
+    if (medal && i < 3) medal.src = 'img/go-medal-' + (i + 1) + '.webp';
+    ol.appendChild(row);
+  });
   ol.parentElement.classList.toggle('empty', rows.length === 0);
   document.getElementById('rankNote').textContent = note || '';
 }
@@ -5796,10 +5919,16 @@ function setPaused(on){
   S.paused = on;
   pausePanel.classList.toggle('show', on);
   if (on) {
-    document.getElementById('pauseScore').textContent = S.score.toLocaleString();
-    document.getElementById('pauseRound').textContent = S.round.toLocaleString();
-    document.getElementById('pausePower').textContent = totalOwnedPower().toLocaleString();
-    document.getElementById('pauseBoss').textContent = (S.bossKills || 0).toLocaleString();
+    // 통계칸은 시안에서 오린 그림이라 칸 폭이 고정이다. 자릿수가 늘면 글자를 등급으로 줄인다.
+    const put = (id, v) => {
+      const el = document.getElementById(id), t = v.toLocaleString();
+      el.textContent = t;
+      el.className = t.length < 6 ? '' : 'w' + Math.min(t.length, 12);
+    };
+    put('pauseScore', S.score);
+    put('pauseRound', S.round);
+    put('pausePower', totalOwnedPower());
+    put('pauseBoss', S.bossKills || 0);
   }
 }
 document.getElementById('btnPause').addEventListener('click', () => setPaused(true));
