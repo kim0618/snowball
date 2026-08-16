@@ -370,7 +370,7 @@
      background-clip:text 로 그라데이션을 채우고, paint-order 로 외곽선을 글자
      뒤에 먼저 깔아야 획이 안 잠식된다. */
   #overlay .final{height:66.73px;line-height:66.73px;margin-top:-3.75px;
-    font-family:'Noto Sans KR',sans-serif;font-size:53.50px;font-weight:900;letter-spacing:-.035em;
+    font-family:'Noto Sans KR',sans-serif;font-size:44px;font-weight:900;letter-spacing:-.035em;
     font-variant-numeric:tabular-nums;}
   #overlay #finalScore{display:inline-block;
     background:linear-gradient(180deg,#edfaff 0%,#69b8f7 13%,#176fd8 34%,
@@ -390,7 +390,7 @@
      늘어나지 않도록 고정 크기로 두고 가운데 글자만 자란다. */
   #overlay .best{display:flex;align-items:center;justify-content:center;gap:9.18px;
     height:16.68px;margin-top:-2.08px;
-    font-size:15.38px;font-weight:700;color:#e9f5ff;letter-spacing:-.02em;
+    font-size:12.60px;font-weight:700;color:#e9f5ff;letter-spacing:-.02em;
     text-shadow:0 1px 2px rgba(3,40,110,.48);}
   #overlay .best::before,#overlay .best::after{content:'';flex:0 1 auto;height:14.18px;
     background:center/100% 100% no-repeat;}
@@ -423,7 +423,7 @@
 
   .goFeed{display:flex;align-items:center;justify-content:center;gap:7.04px;
     height:20.85px;margin-top:2.50px;
-    font-size:16.58px;font-weight:700;color:#edf7ff;letter-spacing:-.02em;
+    font-size:13.40px;font-weight:700;color:#edf7ff;letter-spacing:-.02em;
     text-shadow:0 1px 2px rgba(3,40,110,.48);}
   .goFeed::before{content:'';width:19.18px;height:19.18px;flex:0 0 auto;
     background:url('img/go-flake-s.webp') center/contain no-repeat;}
@@ -431,7 +431,7 @@
   /* 순위 안내 줄. 시안처럼 눈꽃을 양옆에 하나씩 둔다(빈 줄이면 통째로 접힌다) */
   .rankNote:empty{display:none;}
   .rankNote{display:flex;align-items:center;justify-content:center;gap:7.04px;
-    height:18.35px;font-size:15.38px;font-weight:700;color:#edf7ff;letter-spacing:-.02em;
+    height:18.35px;font-size:12.60px;font-weight:700;color:#edf7ff;letter-spacing:-.02em;
     text-shadow:0 1px 2px rgba(3,40,110,.48);}
   .rankNote::before,.rankNote::after{content:'';width:19.18px;height:19.18px;flex:0 0 auto;
     background:url('img/go-flake-s.webp') center/contain no-repeat;}
@@ -451,25 +451,25 @@
      테두리와 2위 강조 띠는 원본 이미지 색을 그대로 유지한다. */
   .goRankBox::before{content:'';position:absolute;z-index:0;
     inset:3.8% 2.2%;background:rgba(34,110,210,.46);pointer-events:none;}
-  .rank{list-style:none;margin:0;padding:0;text-align:left;
+  .goRankBox .rank{list-style:none;margin:0;padding:0;text-align:left;
     position:relative;z-index:1;max-height:174.13px;overflow-y:auto;}
-  .rank li{position:relative;display:flex;align-items:center;gap:5.01px;
+  .goRankBox .rank li{position:relative;display:flex;align-items:center;gap:5.01px;
     height:34.82px;padding:0 17.52px 0 9.18px;border-radius:0;
-    font-size:15.38px;font-weight:500;color:#f2f9fd;}
+    font-size:13.70px;font-weight:500;color:#f2f9fd;}
   /* 줄 사이 구분선도 시안에서 오려 온 그림이다 */
-  .rank li + li{background:url('img/go-rank-div.webp') top center/92.8% 7.51px no-repeat;}
+  .goRankBox .rank li + li{background:url('img/go-rank-div.webp') top center/92.8% 7.51px no-repeat;}
   /* 내 줄 강조 띠 */
-  .rank li.me{background:url('img/go-rank-me.webp') center/100% 100% no-repeat;
+  .goRankBox .rank li.me{background:url('img/go-rank-me.webp') center/100% 100% no-repeat;
     color:#e5f9fe;font-weight:700;}
-  .rank li.me + li{background-image:none;}
-  .rank .no{width:37.54px;flex:0 0 auto;text-align:center;
+  .goRankBox .rank li.me + li{background-image:none;}
+  .goRankBox .rank .no{width:32.50px;flex:0 0 auto;text-align:center;
     color:#dceafb;font-variant-numeric:tabular-nums;font-weight:700;
     text-shadow:0 1px 1px rgba(3,40,110,.3);}
   /* 1~3위는 시안에서 오려낸 메달 그림이라 글자용 꾸밈이 걸리면 안 된다 */
-  .rank img.no{height:36.70px;object-fit:contain;}
-  .rank .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  .goRankBox .rank img.no{height:31px;object-fit:contain;}
+  .goRankBox .rank .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
     text-shadow:0 1px 1px rgba(3,40,110,.3);}
-  .rank .sc{flex:0 0 auto;font-size:13.90px;font-weight:700;color:#e8f4fc;
+  .goRankBox .rank .sc{flex:0 0 auto;font-size:12.50px;font-weight:700;color:#e8f4fc;
     font-variant-numeric:tabular-nums;text-shadow:0 1px 1px rgba(3,40,110,.3);}
 
   /* 버튼 셋. 눈 캡·눈꽃이 전부 그림이라 통째로 깔고 글자만 얹는다. */
@@ -506,9 +506,9 @@
     .goTag::before{margin-right:0.60cqw;}
     .goTag::after{margin-left:0.60cqw;}
     #overlay .final{height:18.957cqw;line-height:18.957cqw;margin-top:-1.066cqw;
-      font-size:15.20cqw;}
+      font-size:12.50cqw;}
     #overlay #finalScore{-webkit-text-stroke-width:0.44cqw;}
-    #overlay .best{gap:2.607cqw;height:4.739cqw;margin-top:-0.592cqw;font-size:4.37cqw;}
+    #overlay .best{gap:2.607cqw;height:4.739cqw;margin-top:-0.592cqw;font-size:3.58cqw;}
     #overlay .best::before,#overlay .best::after{height:4.028cqw;}
     #overlay .best::before{width:22.512cqw;}
     #overlay .best::after{width:24.882cqw;}
@@ -516,18 +516,18 @@
     .goStats span{font-size:3.58cqw;}
     .goStats b{font-size:5.82cqw;}
     .goChal{margin-top:0.711cqw;font-size:4.37cqw;}
-    .goFeed{gap:2.0cqw;height:5.924cqw;margin-top:0.711cqw;font-size:4.71cqw;}
+    .goFeed{gap:2.0cqw;height:5.924cqw;margin-top:0.711cqw;font-size:3.81cqw;}
     .goFeed::before{width:5.450cqw;height:5.450cqw;}
-    .rankNote{gap:2.0cqw;height:5.213cqw;font-size:4.37cqw;}
+    .rankNote{gap:2.0cqw;height:5.213cqw;font-size:3.58cqw;}
     .rankNote::before,.rankNote::after{width:5.450cqw;height:5.450cqw;}
     .goRankBox{margin-top:0.711cqw;padding:0.24cqw 0;
       border-image-width:5.450cqw;border-image-outset:0.948cqw;}
-    .rank{max-height:49.47cqw;}
-    .rank li{gap:1.422cqw;height:9.893cqw;padding:0 4.976cqw 0 2.607cqw;font-size:4.37cqw;}
-    .rank li + li{background-size:92.8% 2.133cqw;}
-    .rank .no{width:10.664cqw;}
-    .rank img.no{height:10.427cqw;}
-    .rank .sc{font-size:3.95cqw;}
+    .goRankBox .rank{max-height:49.47cqw;}
+    .goRankBox .rank li{gap:1.422cqw;height:9.893cqw;padding:0 4.976cqw 0 2.607cqw;font-size:3.90cqw;}
+    .goRankBox .rank li + li{background-size:92.8% 2.133cqw;}
+    .goRankBox .rank .no{width:9.24cqw;}
+    .goRankBox .rank img.no{height:8.82cqw;}
+    .goRankBox .rank .sc{font-size:3.55cqw;}
     #overlay #btnRetry{width:88.389cqw;height:15.403cqw;margin-top:0.711cqw;
       padding-top:1.161cqw;font-size:6.08cqw;}
     .goSubBtns{gap:0.711cqw;width:88.389cqw;height:12.559cqw;margin:0.237cqw auto 2.725cqw;}
@@ -772,32 +772,54 @@
     color:#cfe6ff;text-shadow:0 2px 4px rgba(5,25,70,.5);}
   .title .play:active{transform:translateY(4px) scale(.995);filter:brightness(.95);}
 
-  .statRow{display:flex;gap:9px;margin-bottom:14px;}
-  .statRow div{flex:1;border-radius:16px;padding:13px 6px;
-    background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(233,244,255,.88));
-    box-shadow:0 5px 0 rgba(150,190,235,.65), 0 10px 20px rgba(10,40,110,.24),
-               inset 0 2px 0 rgba(255,255,255,.9);}
-  .statRow span{display:block;font-size:11px;color:#5b86bd;font-weight:800;margin-bottom:4px;}
-  .statRow b{font-size:21px;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
-    color:#123a86;}
+  .statRow{display:flex;gap:2px;height:78px;margin-bottom:12px;}
+  .statRow div{position:relative;flex:1;min-width:0;padding:0;
+    border:0;border-radius:13px;background:none;}
+  .statRow div::before{content:'';position:absolute;z-index:0;inset:0;
+    border-radius:13px;background-position:center;background-size:100% 100%;
+    background-repeat:no-repeat;pointer-events:none;}
+  .statRow div:nth-child(1)::before{background-image:url('img/lobby-stat1.webp');}
+  .statRow div:nth-child(2)::before{background-image:url('img/lobby-stat2.webp');}
+  .statRow div:nth-child(3)::before{background-image:url('img/lobby-stat3.webp');}
+  .statRow span,.statRow b{position:absolute;left:7px;right:7px;display:block;
+    z-index:1;transform:translateY(-50%);line-height:1;white-space:nowrap;overflow:hidden;}
+  .statRow span{top:43%;font-size:10.5px;color:#245aa4;font-weight:800;}
+  .statRow b{top:68%;font-size:19px;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+    color:#0b398d;}
+  /* 최고 점수는 쉼표까지 들어가므로 같은 크기면 왕관 칸의 안쪽 테두리에 붙는다. */
+  #stBest{font-size:15.5px;letter-spacing:-.045em;}
 
-  .panel{background:linear-gradient(180deg,rgba(242,249,255,.97),rgba(214,233,250,.94));
-    border:1.5px solid rgba(255,255,255,.88);border-radius:16px;padding:14px 14px 8px;
-    box-shadow:0 7px 18px rgba(5,35,100,.22),inset 0 1px 0 #fff;margin-bottom:12px;}
+  .panel{position:relative;background:none;border:0;border-radius:0;padding:14px 15px 10px;
+    border-image-source:url('img/go-rank.webp');border-image-slice:46 fill;
+    border-image-repeat:stretch;border-image-width:18px;border-image-outset:2px;
+    box-shadow:none;filter:none;margin-bottom:12px;}
+  .panel::before{content:'';position:absolute;z-index:0;inset:9px 10px;
+    border-radius:8px;background:rgba(225,240,254,.34);pointer-events:none;}
   .panelHead{display:flex;align-items:center;justify-content:space-between;
-    margin-bottom:6px;}
+    position:relative;z-index:1;margin-bottom:5px;}
   .panelHead span{font-size:12.5px;font-weight:800;color:var(--ink2);}
   .title .more{width:auto;margin:0;padding:2px 0;border:none;border-radius:0;
     background:none;border-image:none;color:#2f7ff0;font-size:12.5px;font-weight:800;
     box-shadow:none;flex:0 0 auto;text-shadow:none;}
   .title .more::before{display:none;}
   .title .more:active{transform:none;box-shadow:none;opacity:.7;}
-  .panel .rank{margin:0;max-height:none;}
-  .panel .rank li{padding:7px 8px;}
-  .panel .rank .no.medal{width:28px;height:auto;flex:0 0 auto;
+  .panel .rank{position:relative;z-index:1;list-style:none;margin:0;padding:0;max-height:none;
+    overflow:visible;text-align:left;}
+  .panel .rank li{display:flex;align-items:center;gap:5.01px;height:31.5px;
+    padding:0 9.18px;color:#123a86;font-size:13.70px;font-weight:500;background:none;}
+  .panel .rank .no{width:32.50px;flex:0 0 auto;text-align:center;color:#5b86bd;
+    font-variant-numeric:tabular-nums;font-weight:700;}
+  .panel .rank .no.medal{width:32.50px;height:26px;object-fit:contain;flex:0 0 auto;
     filter:drop-shadow(0 2px 4px rgba(10,40,110,.28));}
-  /* 3위 밖이면 내 순위를 한 줄 띄워 따로 보여준다 */
-  .rank li.apart{margin-top:8px;border-top:1.5px dashed rgba(120,170,225,.5);padding-top:10px;}
+  /* 투명 여백이 메달 파일마다 달라 같은 박스에서도 실제 문양 크기가 다르다.
+     1위의 보이는 크기를 기준으로 2·3위만 시각적으로 보정한다. */
+  .panel .rank li:nth-child(2) .no.medal{transform:scale(1.12);}
+  .panel .rank li:nth-child(3) .no.medal{transform:scale(.92);}
+  .panel .rank .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;}
+  .panel .rank .sc{flex:0 0 auto;color:#123a86;font-size:12.50px;font-weight:700;
+    font-variant-numeric:tabular-nums;}
+  .panel .rank li.me{border-radius:10px;background:rgba(75,145,235,.13);font-weight:700;}
   .emptyRank{padding:14px 8px;font-size:12.5px;color:var(--ink3);text-align:center;}
 
   /* 로비의 '받은 도전장' 버튼. 메인 시작 버튼(그림 테두리)보다 한 급 낮게 보여야
@@ -825,9 +847,13 @@
      이러면 slice 40 × .766 = 30.6px, 세로 가운데 조각 14.6px = 원본 19 × .766 로 정확히 일치한다.
      (k=.5 로 뒀더니 세로 가운데만 1.88배 늘어나 위아래에 옅은 줄이 남았다) */
   #btnHow, #btnGuide{
-    border-image-source:url('img/btn-gender.webp');
-    border-image-slice:40 fill;
-    border-image-width:30.6px;}
+    height:84px;margin:0;padding:0 0 8px;border:0;border-image:none;
+    background:center/100% 100% no-repeat;color:#0b429c;text-shadow:none;
+    justify-content:flex-end;line-height:1;font-size:13px;
+    filter:none;clip-path:inset(2px round 13px);}
+  #btnHow{background-image:url('img/pause-quick-l.webp');}
+  #btnGuide{background-image:url('img/pause-quick-r.webp');}
+  #btnHow img,#btnGuide img{display:none;}
 
   /* ---- 도감·게임 방법 ---- */
   /* 얼음판 한 장 위에 제목 + 섹션(탭 + 카드 묶음)이 얹힌다 */
@@ -4328,13 +4354,9 @@ async function refreshLobbyRank(){
       d.textContent = '아직 기록이 없어요. 첫 주인공이 되어보세요';
       ol.appendChild(d); return;
     }
-    data.scores.slice(0, 3).forEach((r, i) => ol.appendChild(rankRow(r, i)));
-    if (mine > 3){
-      const me = data.scores[mine-1];
-      const row = rankRow(me, mine-1);
-      row.classList.add('apart');          // 위 3줄과 떨어뜨려 '내 순위'로 읽히게
-      ol.appendChild(row);
-    }
+    // 로비는 상위 5위만 보여준다. 내 순위는 바로 위 통계 칸에서 따로 표시한다.
+    // 기본 스크롤바가 점수 열을 누르고 얼음 카드와도 어울리지 않아 목록은 고정한다.
+    data.scores.slice(0, 5).forEach((r, i) => ol.appendChild(rankRow(r, i)));
   } catch(e){
     ol.innerHTML = '';
     const d = document.createElement('li'); d.className = 'emptyRank';
@@ -4349,6 +4371,8 @@ function rankRow(r, i){
   let no;
   if (i < 3) {                       // 1~3위는 시안에서 오려낸 메달 그림
     no = document.createElement('img');
+    // 로비는 투명 배경 메달을 쓴다. 게임오버 전용 메달은 파란 판 배경까지
+    // 함께 잘린 이미지라 밝은 로비 카드에서는 네모난 테두리가 드러난다.
     no.className = 'no medal'; no.src = 'img/medal-' + (i+1) + '.webp'; no.alt = (i+1) + '위';
   } else {
     no = document.createElement('span'); no.className = 'no'; no.textContent = i+1;
